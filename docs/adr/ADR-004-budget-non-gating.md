@@ -1,6 +1,6 @@
 # ADR-004 — Budget does not affect readiness gates or confidence
 
-**Status:** Architect decision recorded; formal S1 contract approval and independent review pending
+**Status:** Architect decision recorded; S1 approved for development progression, while independent golden-case review and real-world validation remain pending
 
 ## Context
 

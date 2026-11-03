@@ -1,13 +1,13 @@
-# S1 Contract Review — Draft, not frozen
+# S1 Contract Review — Approved for progression with exceptions
 
-**Status:** `review_requested`; development-only S0→S1 override is active  
-**Prepared:** 2026-11-03  
-**Branch:** `codex`  
-**Purpose:** Contract inventory, structural cross-reference audit, and explicit decisions required before S1 can be signed. This document is not a signed contract catalog.
+**Status:** S1 approved by the Product Owner / Architect for progression to S2 on 2026-11-03; research and independent-validation exceptions remain
+**Prepared:** 2026-11-03
+**Branch:** `codex`
+**Purpose:** Record the contract inventory, structural cross-reference audit, Architect-directed budget decision, and accepted exceptions. This does not claim empirical calibration or public-release readiness.
 
 ## 1. Authority and evidence boundary
 
-The Architect's instruction in this Copilot conversation to proceed to S1 is recorded as a **scope-limited development override** under `docs/ARCHITECT_AUTHORITY.md` v1.4. The override permits S1 contract review using synthetic scenarios; it does not mark the real-world S0 pilot complete, approve the full domain catalog, approve public release, or authorize S2 implementation. The specific budget non-gating decision is recorded in `docs/adr/ADR-004-budget-non-gating.md`; formal S1 signoff remains pending.
+The Architect's instruction in this Copilot conversation to proceed to S1 is recorded as a **scope-limited development override** under `docs/ARCHITECT_AUTHORITY.md` v1.4. The owner subsequently approved S1 for S2 progression in Copilot chat on 2026-11-03. This does not mark the real-world S0 pilot complete, establish empirical validity, or approve public release. The specific budget non-gating decision is recorded in `docs/adr/ADR-004-budget-non-gating.md`; independent golden-case review and real-world calibration remain outstanding, and the domain manifest remains `DRAFT_UNAPPROVED`.
 
 `docs/S0_SYNTHETIC_PILOT_SUMMARY.md` is explicitly `SYNTHETIC_DEVELOPMENT_FIXTURE`, `NOT_CONDUCTED`, and `NOT_REAL_WORLD_VALIDATED`: 0 real participants, 0 independent consultant reviews, and 0 actual technical reviewers. Its numeric values are invented simulation outputs and are not validation results. No real-world success, comprehension, score-discrimination, or false-safe rate is claimed.
 
@@ -89,10 +89,10 @@ Read-only checks found:
 4. **Budget field semantics.** The profile contains a one-off 90-day ceiling and qualitative band; discovery adds a monthly recurring ceiling and budget window. Handling of missing, `unknown`, `prefer_not_to_say`, and zero, and how the two ceilings combine without implying an actual quote, still requires review.
 5. **Unmapped technical flags.** Six unmapped flags remain diagnostic findings for consultant review with no automatic action, consistent with the product-specification rule.
 6. **Report handoff destination.** Report requirements include a consultation CTA/WhatsApp handoff, but a verified destination is not recorded in these contracts. This remains a later release dependency; no destination should be guessed.
-7. **Approval and version status.** Contracts remain `DRAFT_UNAPPROVED`. Architect/independent review is still required before S1 can be called frozen or S2 can begin.
+7. **Approval and version status.** The Architect approved S1 progression to S2. The domain manifest remains `DRAFT_UNAPPROVED` pending independent golden-case review and real-world validation; this status is not a claim that the S1 stage approval is pending.
 
 ## 5. S1 disposition
 
-**Completed under override:** inventory, structural cross-reference checks, crosswalk check, and Architect-directed budget-gate contract update.  
-**Not completed:** independent golden-case approval, real-world validation, final S1 approval, scorer implementation, or release approval.  
-**Next safe action:** Architect reviews and resolves the numbered decisions; then an independent reviewer verifies the resulting contract diff and fixture expectations. Keep S1 `review_requested` and S2 blocked until that review is recorded.
+**Completed:** inventory, structural cross-reference checks, crosswalk check, Architect-directed budget-gate contract update, and owner approval for S2 progression.
+**Exceptions:** independent golden-case approval, real-world validation, scorer implementation, and release approval remain incomplete.
+**Next safe action:** Proceed with the bounded S2 foundation. Revisit unresolved budget-field and golden-case details before implementing the S3/S4 behaviors that depend on them; do not make an external-validity or release claim.

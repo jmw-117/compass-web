@@ -1,13 +1,11 @@
-# Silverspark Compass — Working Developer Starter v1.3.1
+# Silverspark Compass — Developer starter v1.3.1
 
-**This is a repaired, executable starter for the S0 pilot, not the completed Compass application.** The previous ZIP contained only specifications and a GitHub Actions template; it had no `package.json`, HTML entry, npm scripts or running server. This release fixes those omissions without pretending the AI readiness engine or final report has been built.
+The repository now has a strict TypeScript, React, and Vite application shell for GitHub Pages. **This S2 foundation is not yet the working assessment product:** it provides a designed landing page, progressive enhancement, a lazy-loaded report-module placeholder, and reproducible checks. It does not collect answers, score readiness, recommend actions, or generate reports.
 
 ## Quick start (Windows, macOS, Linux)
 
-1. Extract the **contents** of this ZIP into the root of a folder named `silverspark-compass`, preserving hidden `.github/` files. Do not put the entire ZIP file inside the repository.
-2. Open that folder in VS Code (File → Open Folder). Open the terminal in this exact folder. You should see `package.json`, `AGENTS.md`, `README.md`, `docs/` and `.github/` at its root.
-3. Install Node.js 22 LTS or any version >= 20.19.
-4. Run:
+1. Install Node.js 22 LTS (20.19 or later is required).
+2. From the repository root, run:
 
    ```bash
    npm ci
@@ -15,8 +13,8 @@
    npm run dev
    ```
 
-5. Visit **http://localhost:4173/** and use the fourteen-question S0 pilot. The pilot is local-only, saves answers in `sessionStorage` where available and supports a user-controlled JSON download. It deliberately does **not** score readiness or send leads.
-6. To test the GitHub Pages build, run:
+3. Visit the project-base URL printed by Vite (normally **http://127.0.0.1:5173/silverspark-compass/**).
+4. To inspect the production build locally:
 
    ```bash
    npm run build
@@ -24,38 +22,16 @@
    npm run preview
    ```
 
-7. Set the GitHub repository name to `silverspark-compass`. Under **Settings → Pages → Build and deployment**, select **GitHub Actions**. The workflow in `.github/workflows/deploy-pages.yml` builds and deploys the static pilot on pushes to `main`. The pilot is **not** an approved commercial deployment.
+The build uses `/silverspark-compass/` as the Vite base path for GitHub Pages project hosting. The existing `public/` files are retained as S0 pilot source material and are not copied into the S2 application build.
 
-**What works now:** npm install (no third-party dependencies for the bootstrap), local pilot website, question navigation, session responses, JSON export, Node contract checks, unit tests, static build and static hosting. No dependency installation is required beyond Node for these commands.
+## Continuous integration and Pages
 
-**What still needs implementation:** client discovery enhancements, conditional probes, production UX, scoring/risk-gate engine, budget-aware action ranking, technical extension, verified reporting, QA/a11y and consultant workflow. These are fully specified in `docs/PRODUCT_TECHNICAL_SPECIFICATION.md`, but remain pending stages S1–S8.
+`.github/workflows/deploy-pages.yml` runs locked dependency installation, contract checks, type checking, tests, production build, asset checks, and the Python contract validators on pushes and pull requests for `main`, `codex`, `develop`, `maintenance`, and `upgrade`.
 
-## Codex and Copilot
+The Pages deploy job is manually gated: normal pushes and pull requests do not publish. A maintainer can dispatch the workflow on `main` with `deploy` enabled only after the S7 release approval and the GitHub Pages commercial-use policy review. The workflow has not been run against the hosted repository here; branch protection and environment approvals must be configured and verified by a maintainer.
 
-- **Codex** reads root `AGENTS.md` automatically. Start with `CODEX_STARTER_PROMPT.md` and `.github/prompts/S0.prompt.md`.
-- **Copilot** uses `.github/copilot-instructions.md`, and can use `.github/prompts/S0.prompt.md` with the relevant agent workflow.
-- `docs/handoffs/ledger.json` is the source for stage status. Stages are not auto-approved.
-- S0: validate instrument, collect real pilot evidence, request human approval.
-- S1: freeze business rules, independent golden-case review.
-- S2: migrate this dependency-free bootstrap to the specified **React + Vite + TypeScript** application with a new lockfile, type checks and full CI. Keep the GitHub Pages project-base path `/silverspark-compass/`.
-- S3–S8: follow `docs/stages/` and handoffs. Do not let agents invent approved business rules.
+## Product and privacy boundary
 
-## Troubleshooting
+Compass is intended to give prospective clients a self-reported readiness assessment. The core questionnaire, interval evaluator, recommendations, technical diagnostic, full report, and voluntary sharing flow belong to later authorized stages and are not implemented by this foundation. This shell sends no answers to any service and uses no analytics or model API. Do not enter real confidential client data into repository files or test logs.
 
-- `npm ERR! enoent package.json`: you are not in the extracted repository root.
-- `npm ci` fails: ensure `package.json` and `package-lock.json` are both present; Node 22 recommended.
-- Page blank: open the link printed by `npm run dev`, not the local `index.html` as a `file://` URL. Use browser developer tools for errors.
-- GitHub Pages 404: choose GitHub Actions as source, check Actions run and repository name, and visit `https://<user>.github.io/silverspark-compass/`.
-- No working readiness result yet: expected. This package is an S0 pilot and agent engineering scaffold, not the completed V1 product.
-- Windows: use PowerShell or the VS Code terminal; run `node --version` and `npm --version` before setup.
-
-## Manual independent validators
-
-```bash
-python scripts/validate_kit.py
-python scripts/validate_product_v13.py
-```
-
-## Privacy and hosting constraints
-
-This local prototype sends no answer data to a server. GitHub hosting logs and platform telemetry are separate from app-level submission. Do not put real confidential customer information into the repo. A GitHub Pages commercial launch must still be assessed against GitHub's published terms. Do not use this unvalidated pilot as a client-facing accredited score.
+The legacy S0 preview sources remain in `public/`; they are not the current app entry point and are excluded from `dist/`. See `docs/stages/` and `docs/handoffs/ledger.json` for stage scope and approval state.

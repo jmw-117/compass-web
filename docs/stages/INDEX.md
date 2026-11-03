@@ -1,6 +1,6 @@
 # Staged execution index — Silverspark Compass v1.2
 
-**Protocol:** strict order S0 → S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8; a human-signed handoff unlocks the next stage. No stage is currently approved.
+**Protocol:** stages normally proceed S0 → S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8. The Product Owner / Architect may explicitly approve or override development sequencing under `docs/ARCHITECT_AUTHORITY.md`; no override implies empirical validation or release approval.
 
 | Stage | Contract | Main output |
 |---|---|---|
@@ -21,4 +21,4 @@ A preceding stage must have human approval and its referenced artifacts must exi
 Use `.github/prompts/SN.prompt.md` for a fresh session. Keep the stage implementation and reviewer separate. Human product owner is final signatory.
 
 ## Current evidence
-S0 real-world validation remains incomplete and unapproved (0 actual participants and 0 independent reviews per the explicitly synthetic summary). Under the Architect's documented development-only override, S1 contract inventory and structural audit are `review_requested`; no contract is frozen or human-approved. S2 is `blocked` pending human S1 decisions/review. S3–S8 remain `not_started`. Synthetic cases are not validated customer cases.
+S0 real-world validation remains incomplete and unapproved (0 actual participants and 0 independent reviews per the explicitly synthetic summary). The Product Owner / Architect approved S1 in Copilot chat on 2026-11-03; the S1 handoff records the approval, while the domain manifest remains draft because independent golden-case review and real-world calibration have not occurred. S2 foundation implementation is complete and `review_requested`; S3 is `blocked` pending S2 review. S4–S8 remain `not_started`. Synthetic cases are not validated customer cases, and no public launch is approved.

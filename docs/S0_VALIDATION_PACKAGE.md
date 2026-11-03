@@ -1,8 +1,8 @@
 # S0 Concierge Validation Package
 
-**Status:** Proposed study materials; product-owner, privacy and consent review required  
-**Prepared:** 2026-11-03  
-**Stage:** S0 only  
+**Status:** Proposed study materials; product-owner, privacy and consent review required
+**Prepared:** 2026-11-03
+**Stage:** S0 only
 **Evidence status:** No participants recruited or interviewed; no outcomes or approvals are claimed
 
 ## 1. Purpose and boundaries
@@ -262,6 +262,6 @@ Human authors must write expected outcomes before implementation behavior is gen
 - [ ] At least five cases receive independent consultant review, including explicit challenge for critical false-safe recommendations.
 - [ ] Completion, timing, unknown, comprehension, participant usefulness, and consultant usefulness evidence is summarized with denominators and limitations.
 - [ ] Human-authored expected results are independently reviewed before any evaluator implementation.
-- [ ] Product owner records unresolved decisions and signs S0; S1 remains blocked until that signature is recorded in the ledger.
+- [ ] Product owner records unresolved decisions and signs S0; absent a separate Architect override, S1 remains blocked until that signature is recorded in the ledger.
 
 **No checklist item is marked complete by this draft.**

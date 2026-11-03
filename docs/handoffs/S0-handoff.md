@@ -1,11 +1,11 @@
 # S0 — Concierge validation handoff
 
-**Stage:** S0 — Concierge validation  
-**Status:** review_requested; `overridden_for_development` for S1 only (real-world S0 is incomplete and not approved)  
-**Submitted by:** Copilot engineering assistant  
-**Reviewer:** Pending human assignment  
-**Date:** 2026-11-03  
-**Input handoff and commit SHA:** No preceding stage. Starting commit: `7e595da87e7b4a4b0259ffe2c9bc3e055f89b833`. Current documentation changes are uncommitted; no handoff commit SHA exists.  
+**Stage:** S0 — Concierge validation
+**Status:** review_requested; `overridden_for_development` for S1 only (real-world S0 is incomplete and not approved)
+**Submitted by:** Copilot engineering assistant
+**Reviewer:** Pending human assignment
+**Date:** 2026-11-03
+**Input handoff and commit SHA:** No preceding stage. Starting commit: `7e595da87e7b4a4b0259ffe2c9bc3e055f89b833`. Current documentation changes are uncommitted; no handoff commit SHA exists.
 **Domain contract versions:** Manifest 1.3.0 (`DRAFT_UNAPPROVED`); question bank 1.1.0; probes 1.1.0; rules 1.1.0; decision predicates 1.1.0; action catalog 1.1.0; golden cases 1.1.0 (13 proposed cases); profile schema 1.1.0; discovery 1.3.0; technical extension 1.3.0; report contract 1.3.0; product requirements 1.3.0; user journeys 1.3.0. No domain contract was modified.
 
 ## 1. Scope and deliverables
@@ -14,7 +14,7 @@
 - **Changed file paths:**
   - `docs/S0_VALIDATION_PACKAGE.md` — proposed 10–15 participant protocol, draft consent framework, structured worksheets, comprehension review, usefulness measures, independent consultant rubric, blank golden-result template, assumptions and unresolved decisions.
   - `docs/handoffs/S0-handoff.md` — this evidence-based handoff.
-  - `docs/handoffs/ledger.json` — S0 remains `review_requested`; S1 is `review_requested` under the development-only override; S2 remains blocked pending human S1 review.
+  - `docs/handoffs/ledger.json` — S0 remains `review_requested`; the Product Owner / Architect later approved S1 for development progression; S2 is proceeding without implying S0 completion.
   - `docs/stages/INDEX.md` — current-evidence summary synchronized with the ledger.
 - **Owner-provided override inputs:** `docs/ARCHITECT_AUTHORITY.md` v1.4 and `docs/S0_SYNTHETIC_PILOT_SUMMARY.md`. The owner explicitly directed in Copilot chat on 2026-11-03 to proceed to S1. This waives the S0 research/sequencing prerequisite for development review only; it does not complete or approve the real S0 pilot.
 - **Out-of-scope items intentionally untouched:** App code, product/domain contracts, golden cases, later stage documents, GitHub Pages architecture, and UI assets. The user identified a supplied image as the official Silverspark logo; it was not copied or integrated because S0 is research-document work.
@@ -59,14 +59,14 @@
 - [ ] Contract/path/version checks complete — Node checks passed; the two requested Python validators could not run.
 - [ ] Independent reviewer verified key outputs — pending.
 - [ ] All stage-specific acceptance criteria satisfied — pending; the documents are proposals and no human research approval was supplied.
-- [ ] Human product owner approved S0 — pending. S1 must remain blocked.
+- [ ] Human product owner approved S0 — pending. The later S1 approval/override does not constitute S0 approval.
 
 ## 4. Open issues, risks, decisions
 
 - **Unresolved product/privacy question:** Named study owner, privacy/consent approver, responsible contact, data-handling basis, approved storage, retention/deletion, and withdrawal process have not been supplied.
 - **Known limitation:** The current pilot implements only the 14 core questions. Optional discovery fields and the technical diagnostic are draft-contract review exercises, not running UI features. The pilot does not score or generate recommendations.
 - **Research status:** No real respondents or outcomes are claimed. Existing examples and golden cases are synthetic/proposed, not validated ground truth.
-- **Development-only override:** Architect instruction authorizes S1 contract review using synthetic scenarios. S0 remains `review_requested` / not approved; do not cite simulation statistics as observed outcomes.
+- **Development-only override:** Architect instruction authorized S1 contract review using synthetic scenarios; the Architect later approved S1 progression to S2. S0 remains `review_requested` / not approved; do not cite simulation statistics as observed outcomes.
 - **Environment blocker:** Python validators remain unavailable; install/provide a supported Python interpreter before relying on those checks.
 - **Git status:** Branches `main`, `codex`, `develop`, `maintenance`, and `upgrade` exist locally; current branch is `codex`. Branches have not been pushed. Changes are uncommitted.
 - **ADRs / proposed contract changes:** None created; no contract changes proposed as adopted.
@@ -74,13 +74,13 @@
 
 ## 5. Next-stage handoff
 
-- **Input files and exact versions:** `docs/S0_VALIDATION_PACKAGE.md`; draft contract versions listed above; current ledger reflects review requested / S1 blocked.
+- **Input files and exact versions:** `docs/S0_VALIDATION_PACKAGE.md`; draft contract versions listed above; current ledger reflects S0 `review_requested`, S1 `approved`, and S2 `review_requested`.
 - **Deferred checks:** Human approval of consent/data plan; real 10–15 participant sessions; experienced AI-workload stakeholder comprehension review; lower-maturity owner-operator evidence; at least five independent consultant reviews; Python validation environment.
 - **Safe next task:** Proceed with S1 contract review under the recorded development-only Architect override. Keep real S0 validation outstanding and do not proceed to S2 until S1 contract decisions and human review are recorded.
 
 ## 6. Human approval (not agent self-certification)
 
-**Decision:** pending for real-world S0; Architect override for S1 development only recorded above  
-**Human approver:** [name]  
-**Date:** [date]  
+**Decision:** pending for real-world S0; S1 development override and later S1 approval are recorded above
+**Human approver:** [name]
+**Date:** [date]
 **Notes:** Review the proposed protocol, privacy/consent plan, actual evidence, independent reviewer notes, and outstanding Python checks. Package review alone does not satisfy S0 exit criteria.
