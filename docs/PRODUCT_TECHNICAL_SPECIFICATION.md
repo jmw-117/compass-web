@@ -561,6 +561,8 @@ const coverage = coverageUnits / 2;
 
 **Client-facing display:** Exact scores use one nearest whole number. Differing endpoints use “lower to upper out of 100,” accompanied by an explanation that this is a range and confirming “I am not sure” answers may narrow it. Results show known answers out of 14 and identify triggered formal gates as safety checks to review; they do not expose weighted coverage units without explanation. These are presentation rules only and do not alter the scoring algorithm.
 
+**Traffic-light signal:** Red maps to Foundational (0–under 25), Amber maps to Emerging/Developing (25–under 75), and Green maps to Established (75–100). When an uncertainty range spans colors, use the lower endpoint's cautious color and explain the higher signal it reaches. Always retain the score/range and state that a Green signal is not approval to deploy AI; use-case-specific safeguards still require review.
+
 ### 7.2 Worked example with unknowns
 
 | Dimension | Core answers | Lower numerator contribution | Upper numerator contribution |

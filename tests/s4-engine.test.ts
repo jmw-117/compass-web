@@ -180,6 +180,8 @@ test('report guidance avoids asserting a single maturity band when the interval 
   assert.match(guidance.scoreNote, /range, not a single score/);
   assert.match(guidance.bandText, /spans the Foundational to Established bands/);
   assert.match(guidance.bandText, /does not support one maturity band/);
+  assert.equal(guidance.signal.color, 'red');
+  assert.match(guidance.signal.rangeNote, /cautious signal follows the lower bound/);
   assert.equal(guidance.title, 'Verify The Unknowns');
 });
 
@@ -194,6 +196,9 @@ test('report guidance describes uncertain endpoints in plain language', () => {
   assert.equal(guidance.scoreText, '24 to 80 out of 100');
   assert.doesNotMatch(guidance.scoreText, /[\[\]]/);
   assert.match(guidance.scoreNote, /“I am not sure” answers can change the result/);
+  assert.equal(guidance.signal.color, 'red');
+  assert.equal(guidance.signal.title, 'Not Ready Yet');
+  assert.match(guidance.signal.rangeNote, /also reaches green territory/);
 });
 
 test('report guidance names one band when both score endpoints fall in the same band', () => {
@@ -201,6 +206,8 @@ test('report guidance names one band when both score endpoints fall in the same 
 
   assert.equal(guidance.scoreLabel, 'Readiness Score');
   assert.equal(guidance.scoreText, '75 out of 100');
+  assert.equal(guidance.signal.color, 'green');
+  assert.equal(guidance.signal.title, 'Strong Foundations');
   assert.match(guidance.bandText, /score is in the Established band/);
 });
 
@@ -215,6 +222,24 @@ test('report guidance rounds an exact fractional score to one whole number witho
   assert.equal(guidance.scoreText, '28 out of 100');
   assert.doesNotMatch(guidance.scoreText, /\.\d/);
   assert.match(guidance.bandText, /score is in the Emerging band/);
+});
+
+test('traffic-light signal follows existing band boundaries and uses the lower color for a crossing range', () => {
+  const guidanceFor = (lowerEighths: number, upperEighths = lowerEighths) =>
+    getReportGuidance({
+      score: {lowerEighths, upperEighths, coverageUnits: 200},
+      primaryPath: 'P1',
+      actionIds: [],
+    });
+
+  assert.equal(guidanceFor(199).signal.color, 'red');
+  assert.equal(guidanceFor(200).signal.color, 'amber');
+  assert.equal(guidanceFor(599).signal.color, 'amber');
+  assert.equal(guidanceFor(600).signal.color, 'green');
+
+  const crossingRange = guidanceFor(200, 600);
+  assert.equal(crossingRange.signal.color, 'amber');
+  assert.match(crossingRange.signal.rangeNote, /reaches green territory/);
 });
 
 test('report guidance keeps specialist review ahead of a high score in a high-impact context', () => {

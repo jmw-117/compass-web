@@ -1,6 +1,7 @@
 import {useEffect, useMemo, useRef, useState, type ReactNode} from 'react';
 import type {ReadinessResult} from '../domain/evaluate';
 import {getReportGuidance} from '../domain/report-guidance';
+import ReadinessSignal from '../ReadinessSignal';
 
 type ProfileLike = {
   organizationType?: string;
@@ -168,6 +169,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
           </div>
         </div>
         {reportGuidance.scoreNote && <p className="report-score-note">{reportGuidance.scoreNote}</p>}
+        <ReadinessSignal signal={reportGuidance.signal} />
       </ReportSection>
 
       <ReportSection id="business-snapshot" title="Business Snapshot" expanded={openSections.has('business-snapshot')} printMode={printMode} onToggle={toggleSection}>

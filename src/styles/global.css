@@ -987,6 +987,102 @@ h3 {
   max-width: 34rem;
 }
 
+.readiness-signal {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: #fff;
+}
+
+.readiness-signal--red {
+  border-color: #e2b9b6;
+  background: #fff8f7;
+}
+
+.readiness-signal--amber {
+  border-color: #e2d0a6;
+  background: #fffcf4;
+}
+
+.readiness-signal--green {
+  border-color: #b7d5c5;
+  background: #f5fbf7;
+}
+
+.traffic-light {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  border-radius: 999px;
+  background: #263345;
+}
+
+.traffic-light__bulb {
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: 50%;
+  opacity: 0.3;
+}
+
+.traffic-light__bulb--red {
+  background: #b42318;
+}
+
+.traffic-light__bulb--amber {
+  background: #946200;
+}
+
+.traffic-light__bulb--green {
+  background: #167046;
+}
+
+.traffic-light--red .traffic-light__bulb--red,
+.traffic-light--amber .traffic-light__bulb--amber,
+.traffic-light--green .traffic-light__bulb--green {
+  border-color: #fff;
+  box-shadow: 0 0 0.45rem currentColor;
+  opacity: 1;
+}
+
+.readiness-signal--red .readiness-signal__copy h3 {
+  color: #8f1d15;
+}
+
+.readiness-signal--amber .readiness-signal__copy h3 {
+  color: #765000;
+}
+
+.readiness-signal--green .readiness-signal__copy h3 {
+  color: #125c3a;
+}
+
+.readiness-signal__copy .eyebrow {
+  margin: 0 0 0.25rem;
+}
+
+.readiness-signal__copy h3 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.readiness-signal__copy > p:not(.eyebrow) {
+  margin: 0.4rem 0 0;
+  line-height: 1.5;
+}
+
+.readiness-signal__range-note,
+.readiness-signal__caveat {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .dimension-list {
   display: grid;
   gap: 1rem;

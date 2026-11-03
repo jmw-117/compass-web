@@ -2,6 +2,51 @@ import {getDisplayBand, type ReadinessResult} from './evaluate.ts';
 
 type ReadinessSummary = Pick<ReadinessResult, 'score' | 'primaryPath' | 'actionIds'>;
 
+export type TrafficLightSignal = {
+  color: 'red' | 'amber' | 'green';
+  label: 'Red' | 'Amber' | 'Green';
+  title: string;
+  description: string;
+  rangeNote: string;
+};
+
+const SIGNALS_BY_BAND: Record<string, TrafficLightSignal> = {
+  Foundational: {
+    color: 'red',
+    label: 'Red',
+    title: 'Not Ready Yet',
+    description: 'Address foundational gaps and priority actions before piloting.',
+    rangeNote: '',
+  },
+  Emerging: {
+    color: 'amber',
+    label: 'Amber',
+    title: 'Building Readiness',
+    description: 'Strengthen the outstanding foundations and verify unknowns before piloting.',
+    rangeNote: '',
+  },
+  Developing: {
+    color: 'amber',
+    label: 'Amber',
+    title: 'Building Readiness',
+    description: 'Strengthen the outstanding foundations and verify unknowns before piloting.',
+    rangeNote: '',
+  },
+  Established: {
+    color: 'green',
+    label: 'Green',
+    title: 'Strong Foundations',
+    description: 'The core indicators suggest stronger foundations; validate the specific use case and safeguards before deployment.',
+    rangeNote: '',
+  },
+};
+
+function getSignalForBand(band: string): TrafficLightSignal {
+  const signal = SIGNALS_BY_BAND[band];
+  if (!signal) throw new Error(`Unsupported readiness band: ${band}`);
+  return signal;
+}
+
 const PATH_RECOMMENDATIONS: Record<string, {title: string; guidance: string}> = {
   P0: {
     title: 'Verify The Unknowns',
@@ -45,9 +90,18 @@ export function getReportGuidance(readiness: ReadinessSummary) {
   const upperScore = Math.ceil(readiness.score.upperEighths / 8);
   const lowerBand = getDisplayBand(readiness.score.lowerEighths);
   const upperBand = getDisplayBand(readiness.score.upperEighths);
+  const lowerSignal = getSignalForBand(lowerBand);
+  const upperSignal = getSignalForBand(upperBand);
+  const signal: TrafficLightSignal = {
+    ...lowerSignal,
+    rangeNote: lowerSignal.color === upperSignal.color
+      ? ''
+      : `This range also reaches ${upperSignal.label.toLowerCase()} territory. The cautious signal follows the lower bound until uncertain answers are confirmed.`,
+  };
 
   return {
     title: recommendation.title,
+    signal,
     scoreLabel: isExactScore ? 'Readiness Score' : 'Readiness Range',
     scoreText: isExactScore
       ? `${Math.round(readiness.score.lowerEighths / 8)} out of 100`

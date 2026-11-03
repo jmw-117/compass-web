@@ -1,6 +1,7 @@
 import {lazy, Suspense, useEffect, useMemo, useState} from 'react';
 import {evaluate} from './domain/evaluate';
 import {getReportGuidance} from './domain/report-guidance';
+import ReadinessSignal from './ReadinessSignal';
 
 const ReportModule = lazy(() => import('./report/ReportModule'));
 const STORAGE_KEY = 'silverspark-compass-draft-v1';
@@ -643,6 +644,8 @@ export default function App() {
             <h3>{scoreSummary.answered} of {coreQuestions.length}</h3>
           </div>
         </div>
+
+        <ReadinessSignal signal={reportGuidance.signal} />
 
         <aside className="pragmatic-recommendation" aria-labelledby="practical-next-step-title">
           <p className="eyebrow">Practical Next Step</p>

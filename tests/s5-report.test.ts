@@ -5,6 +5,7 @@ import test from 'node:test';
 test('S5 builds a report contract with the mandatory report sections and voluntary handoff controls', async () => {
   const app = await readFile('src/App.tsx', 'utf8');
   const report = await readFile('src/report/ReportModule.tsx', 'utf8');
+  const signal = await readFile('src/ReadinessSignal.tsx', 'utf8');
   const styles = await readFile('src/styles/global.css', 'utf8');
 
   assert.match(app, /<ReportModule\s+profile=\{reportProfile\}/);
@@ -25,6 +26,9 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(report, /A Practical Recommendation/);
   assert.match(report, /reportGuidance\.guidance/);
   assert.match(report, /reportGuidance\.scoreNote/);
+  assert.match(app, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
+  assert.match(report, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
+  assert.match(signal, /This signal is not approval to deploy AI/);
   assert.match(report, /to \$\{Math\.ceil\(\(metric\.upper \/ 4\) \* 100\)\}% possible/);
   assert.doesNotMatch(report, /\[\$\{metric\.lower\}, \$\{metric\.upper\}\]/);
   for (const title of [
