@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { evaluate } from '../src/domain/evaluate.ts';
+import { getReportGuidance } from '../src/domain/report-guidance.ts';
 
 const fixtureF01 = {
   assessmentId: 'F01',
@@ -146,4 +147,74 @@ test('S4 keeps path selection monotonic and scores within the valid range', () =
   assert.ok(result.score.upperEighths <= 800);
   assert.equal(result.dimensions.STR.lower, 3);
   assert.equal(result.dimensions.GOV.upper, 3);
+});
+
+test('report guidance follows the score interval and evaluator-selected safety path', () => {
+  const safetyResult = evaluate({
+    ...fixtureF01,
+    coreAnswers: {
+      ...fixtureF01.coreAnswers,
+      'GOV-01': 'GOV-01-L1',
+      'GOV-02': 'GOV-02-L1',
+    },
+    profile: {
+      ...fixtureF01.profile,
+      data_category: 'restricted',
+      planned_ai_use: 'yes',
+      planned_use_real_data: 'yes',
+    },
+  });
+  const guidance = getReportGuidance(safetyResult);
+
+  assert.equal(safetyResult.primaryPath, 'P2');
+  assert.equal(guidance.title, 'Protect information first');
+  assert.match(guidance.guidance, /before using real or sensitive information/);
+  assert.equal(guidance.firstActionId, safetyResult.actionIds[0]);
+});
+
+test('report guidance avoids asserting a single maturity band when the interval crosses one', () => {
+  const guidance = getReportGuidance(evaluate(fixtureF05));
+
+  assert.equal(guidance.scoreLabel, 'Readiness interval');
+  assert.equal(guidance.scoreText, '[0, 100] / 100');
+  assert.match(guidance.bandText, /spans the Foundational to Established bands/);
+  assert.match(guidance.bandText, /not a single band/);
+  assert.equal(guidance.title, 'Verify the unknowns');
+});
+
+test('report guidance names one band when both score endpoints fall in the same band', () => {
+  const guidance = getReportGuidance(evaluate(fixtureF03));
+
+  assert.equal(guidance.scoreLabel, 'Readiness score');
+  assert.equal(guidance.scoreText, '75 / 100');
+  assert.match(guidance.bandText, /score is in the Established band/);
+});
+
+test('report guidance rounds an exact fractional score to one whole number without decimals', () => {
+  const guidance = getReportGuidance({
+    score: {lowerEighths: 220, upperEighths: 220, coverageUnits: 200},
+    primaryPath: 'P1',
+    actionIds: [],
+  });
+
+  assert.equal(guidance.scoreLabel, 'Readiness score');
+  assert.equal(guidance.scoreText, '28 / 100');
+  assert.doesNotMatch(guidance.scoreText, /\.\d/);
+  assert.match(guidance.bandText, /score is in the Emerging band/);
+});
+
+test('report guidance keeps specialist review ahead of a high score in a high-impact context', () => {
+  const result = evaluate({
+    ...fixtureF03,
+    profile: {
+      ...fixtureF03.profile,
+      high_impact_ai_workflow: 'yes',
+      planned_ai_use: 'yes',
+    },
+  });
+  const guidance = getReportGuidance(result);
+
+  assert.equal(result.primaryPath, 'P6');
+  assert.equal(guidance.title, 'Get specialist review before piloting');
+  assert.match(guidance.guidance, /Pause piloting and seek appropriate domain-specific review/);
 });

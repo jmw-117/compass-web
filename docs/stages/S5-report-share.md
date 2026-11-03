@@ -6,7 +6,7 @@
 S4 accepted; verified WhatsApp destination and approved copy. Confirm `docs/handoffs/ledger.json` shows previous stage as `approved` by named human; if not, only draft proposals and stop.
 
 ## Bounded execution scope
-Seven dimensions, range, evidence, prioritized actions, print CSS, share preview + copy + WhatsApp fallback. Implement tests/evidence appropriate to scope and do not modify unrelated stages.
+Seven dimensions, score interval (or one nearest whole-number score when exact), evidence, prioritized actions, print CSS, share preview + copy + WhatsApp fallback. Implement tests/evidence appropriate to scope and do not modify unrelated stages.
 
 ## Deliverables
 Accessible results/print flows, exact outbound payload examples, report-version evidence. Create `docs/handoffs/S5-handoff.md` using the standard handoff template.
@@ -23,4 +23,4 @@ State precise artifact paths, git SHA if available, input JSON versions, scope o
 
 ## v1.3 technical-product handoff addition
 
-Implement all report_contract.json mandatory sections and consultant review template. Show score interval, each dimension, evidence gaps, formal gates, actions, budget constraints, optional technical annex. Use HTML first, print second, consented user-previewed handoff.
+Implement all report_contract.json mandatory sections and consultant review template. Show one whole-number score only when exact; otherwise preserve the score interval, alongside each dimension, evidence gaps, formal gates, actions, budget constraints, and optional technical annex. Use HTML first, print second, consented user-previewed handoff.

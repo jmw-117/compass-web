@@ -22,6 +22,7 @@ const predicateIds=new Set(Object.keys(documents['decision_predicates.json'].pre
 const gateIds=new Set(documents['rules.json'].gates.map(g=>g.id));
 const manifest=documents['VERSION_MANIFEST.json'];
 if(documents['rules.json'].version!==manifest.gates_version||documents['decision_predicates.json'].version!==manifest.gates_version)throw Error('Rules, predicate and manifest gate versions must match.');
+if(documents['report_contract.json'].version!==manifest.report_version)throw Error('Report contract and manifest report versions must match.');
 const containsBudgetReference=value=>typeof value==='string'?/budget/i.test(value):Array.isArray(value)?value.some(containsBudgetReference):value&&typeof value==='object'?Object.values(value).some(containsBudgetReference):false;
 if(documents['rules.json'].gates.some(g=>g.id.includes('BUDGET')||containsBudgetReference(documents['decision_predicates.json'].predicates[g.predicate_ast_id])))throw Error('Budget must not influence a formal gate.');
 if(!documents['rules.json'].budget.effect_scope?.includes('never changes readiness scores')||!documents['rules.json'].budget.effect_scope.includes('formal gates'))throw Error('Budget non-effect policy is missing.');

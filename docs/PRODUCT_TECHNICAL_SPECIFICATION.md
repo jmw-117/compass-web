@@ -83,7 +83,7 @@ Landing / privacy explanation
   → optional extended technical assessment (18 questions; only relevant questions shown)
   → capacity, timeline, budget ceiling, sensitive/high-impact use flags
   → pure evaluate(profile, answers, activeProbes, extension)
-  → readiness interval + seven dimensions + gates + top 3 feasible actions
+  → nearest whole-number readiness score when exact, otherwise an interval + seven dimensions + gates + top 3 feasible actions
   → full HTML report + print/save-as-PDF + summary copy
   → voluntary WhatsApp contact / consultation request; user approves transfer
   → Silverspark consultant separately records enquiry, validates assertions,
@@ -116,7 +116,7 @@ Journey states: `landing → start_3 → core_14 → expanded_opt_in → technic
 
 **J4 — Unsure Respondent:** Unknown answers and scarce information. Expected outcome: 0-100 possible if all unknown, no false zero or blocked output.
 
-Journey states: `start_3 → core_14_with_unknowns → results_interval → verify_actions`.
+Journey states: `start_3 → core_14_with_unknowns → results_score_or_interval → verify_actions`.
 
 **J5 — Regulated Workflow:** High impact decision + intended AI use. Expected outcome: specialist review first despite a strong maturity score.
 

@@ -32,7 +32,7 @@
       "Developing",
       "Established"
     ],
-    "rounding": "Store exact integer eighths; display lower as floor(lower_eighths/8), upper as ceil(upper_eighths/8); determine maturity band using raw integer endpoints, never the displayed rounded values.",
+    "rounding": "Store exact integer eighths; when lower and upper are equal, display their nearest whole-number score; otherwise display lower as floor(lower_eighths/8) and upper as ceil(upper_eighths/8). Determine maturity band using raw integer endpoints, never the displayed rounded values.",
     "unknown_policy": "Unknown is a set of possible scores 0..4, never imputed. Every unknown produces a verification action or open question; no complete-score suppression.",
     "band_policy": "Show one band only when lower and upper raw integer eighths are inside the same band; otherwise show all intersected bands without asserting one label.",
     "high_score_warning": "A high self-reported score never bypasses governance gates or proves suitability for a specific AI use case."

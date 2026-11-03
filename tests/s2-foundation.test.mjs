@@ -9,8 +9,19 @@ test('static landing shell remains semantic and usable without JavaScript', asyn
   assert.match(html, /<a class="skip-link" href="#main">Skip to content<\/a>/);
   assert.match(html, /<main id="main">/);
   assert.match(html, /<noscript>/);
-  assert.match(html, /Take the assessment/);
+  assert.match(html, /<span class="wordmark-mark">[\s\S]*class="wordmark-logo"/);
+  assert.match(await readFile('src/styles/global.css', 'utf8'), /\.wordmark-mark[\s\S]*overflow:\s*hidden/);
+  assert.match(await readFile('src/styles/global.css', 'utf8'), /\.wordmark-logo[\s\S]*width:\s*7rem/);
+  assert.match(html, /Assess Your Readiness/);
   assert.match(html, /No account required/);
+  assert.match(html, /<p>AI readiness, considered\.<\/p>/);
+  assert.doesNotMatch(html, /Development foundation|Not an assessment result/);
+
+  const styles = await readFile('src/styles/global.css', 'utf8');
+  assert.match(styles, /font-family:\s*ui-sans-serif,\s*system-ui,\s*sans-serif,\s*"Apple Color Emoji",\s*"Segoe UI Emoji",\s*"Segoe UI Symbol",\s*"Noto Color Emoji";/);
+  assert.doesNotMatch(styles, /font-family:\s*(?:Inter|Georgia|Arial)/);
+  assert.match(styles, /button,\s*input,\s*select,\s*textarea\s*\{\s*font:\s*inherit/);
+  assert.match(styles, /\.site-footer\s*>\s*p\s*\{[^}]*text-align:\s*right/);
 });
 
 test('assessment mounts only after the launch button is clicked and then fills the hero section', async () => {
@@ -39,9 +50,10 @@ test('React enhancement loads the report preview on demand and keeps it user-con
 
   assert.match(app, /lazy\(\(\) => import\('\.\/report\/ReportModule'\)\)/);
   assert.match(app, /aria-expanded=\{isReportModuleOpen\}/);
-  assert.match(app, /<ReportModule\s+profile=\{profile\}/);
+  assert.match(app, /<ReportModule\s+profile=\{reportProfile\}/);
   assert.match(report, /Self-reported assessment — not independently verified/);
-  assert.match(report, /Copy summary/);
+  assert.match(report, /Save as PDF/);
+  assert.doesNotMatch(report, /Copy summary/);
   assert.match(report, /Share via WhatsApp/);
 });
 

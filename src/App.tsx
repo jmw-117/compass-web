@@ -1,5 +1,6 @@
 import {lazy, Suspense, useEffect, useMemo, useState} from 'react';
 import {evaluate} from './domain/evaluate';
+import {getReportGuidance} from './domain/report-guidance';
 
 const ReportModule = lazy(() => import('./report/ReportModule'));
 const STORAGE_KEY = 'silverspark-compass-draft-v1';
@@ -24,6 +25,31 @@ const emptyProfile: Profile = {
   industry: '',
   businessGoal: '',
 };
+
+const INDUSTRY_OPTIONS = [
+  ['retail', 'Retail'],
+  ['professional_services', 'Professional services'],
+  ['hospitality', 'Hospitality'],
+  ['health', 'Health'],
+  ['education', 'Education'],
+  ['financial_services', 'Financial services'],
+  ['manufacturing', 'Manufacturing'],
+  ['logistics', 'Logistics'],
+  ['technology', 'Technology'],
+  ['other', 'Other'],
+] as const;
+
+const BUSINESS_GOAL_OPTIONS = [
+  ['efficiency', 'Improve efficiency'],
+  ['growth', 'Support growth'],
+  ['service', 'Improve customer service'],
+  ['risk', 'Reduce risk'],
+  ['explore', 'Explore AI opportunities'],
+] as const;
+
+function getProfileOptionLabel(options: readonly (readonly [string, string])[], value: string) {
+  return options.find(([optionValue]) => optionValue === value)?.[1] ?? value;
+}
 
 const coreQuestions: Question[] = [
   {
@@ -225,19 +251,12 @@ function getDimensionLabel(dimension: Question['dimension']) {
   }[dimension];
 }
 
-function getResultBand(score: number) {
-  if (score < 35) return 'Early exploration';
-  if (score < 55) return 'Developing';
-  if (score < 75) return 'Promising';
-  return 'Ready to test';
-}
-
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [storageStatus, setStorageStatus] = useState('Draft autosaves locally in this browser.');
+  const [storageError, setStorageError] = useState('');
   const [isReportModuleOpen, setIsReportModuleOpen] = useState(false);
 
   useEffect(() => {
@@ -248,16 +267,15 @@ export default function App() {
       if (draft.profile) setProfile(draft.profile);
       if (draft.answers) setAnswers(draft.answers);
     } catch {
-      setStorageStatus('Draft storage is unavailable in this browser, so the assessment will only stay in this tab.');
+      setStorageError('Draft storage is unavailable in this browser, so the assessment will only stay in this tab.');
     }
   }, []);
 
   useEffect(() => {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({profile, answers}));
-      setStorageStatus('Draft saved locally in this browser.');
     } catch {
-      setStorageStatus('Draft storage is blocked, so you can continue in this session without saving.');
+      setStorageError('Draft storage is blocked, so you can continue in this session without saving.');
     }
   }, [profile, answers]);
 
@@ -278,7 +296,9 @@ export default function App() {
     }
   }, [isReportModuleOpen]);
 
-  const answeredCount = Object.keys(answers).length;
+  const answeredCount = coreQuestions.filter((question) =>
+    question.options.some((option) => option.id === answers[question.id]),
+  ).length;
   const readinessResult = useMemo(
     () =>
       evaluate({
@@ -304,38 +324,34 @@ export default function App() {
       })
       .filter((entry) => entry.score !== null);
 
-    const rawTotal = scoredEntries.reduce((total, entry) => total + (entry.score ?? 0), 0);
-    const maximum = coreQuestions.length * 4;
-    const percentage = maximum === 0 ? 0 : Math.round((rawTotal / maximum) * 100);
-
     return {
-      rawTotal,
-      percentage,
-      band: getResultBand(percentage),
       answered: scoredEntries.length,
-      maximum,
     };
   }, [answers]);
 
-  const dimensionSummary = useMemo(() => {
-    const totals = new Map<Question['dimension'], {score: number; max: number}>();
-
-    for (const question of coreQuestions) {
-      const selected = answers[question.id];
-      const option = question.options.find((item) => item.id === selected);
-      const score = option?.score ?? 0;
-      const current = totals.get(question.dimension) ?? {score: 0, max: 0};
-      totals.set(question.dimension, {score: current.score + score, max: current.max + 4});
-    }
-
-    return Array.from(totals.entries()).map(([dimension, values]) => ({
+  const dimensionSummary = (['STR', 'PRO', 'DAT', 'TEC', 'PEO', 'GOV', 'MET'] as const).map((dimension) => {
+    const metric = readinessResult.dimensions[dimension];
+    return {
       dimension,
       label: getDimensionLabel(dimension),
-      score: Math.round((values.score / values.max) * 100),
-    }));
-  }, [answers]);
+      lower: Math.floor((metric.lower / 4) * 100),
+      upper: Math.ceil((metric.upper / 4) * 100),
+      known: metric.known,
+    };
+  });
 
-  const profileComplete = Boolean(profile.organizationType && profile.industry && profile.businessGoal.trim());
+  const profileComplete = Boolean(
+    profile.organizationType &&
+      INDUSTRY_OPTIONS.some(([value]) => value === profile.industry) &&
+      BUSINESS_GOAL_OPTIONS.some(([value]) => value === profile.businessGoal),
+  );
+  const reportProfile = {
+    ...profile,
+    industry: getProfileOptionLabel(INDUSTRY_OPTIONS, profile.industry),
+    businessGoal: getProfileOptionLabel(BUSINESS_GOAL_OPTIONS, profile.businessGoal),
+  };
+  const reportGuidance = getReportGuidance(readinessResult);
+  const allCoreQuestionsAnswered = answeredCount === coreQuestions.length;
 
   function updateProfile(field: keyof Profile, value: string) {
     setProfile((current) => ({...current, [field]: value}));
@@ -343,19 +359,6 @@ export default function App() {
 
   function setAnswer(questionId: string, optionId: string) {
     setAnswers((current) => ({...current, [questionId]: optionId}));
-  }
-
-  function resetAssessment() {
-    setProfile(emptyProfile);
-    setAnswers({});
-    setQuestionIndex(0);
-    setScreen('start');
-    setStorageStatus('Draft cleared. You can start a fresh assessment.');
-    try {
-      sessionStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Ignore storage failure.
-    }
   }
 
   function handleQuestionBack() {
@@ -373,7 +376,11 @@ export default function App() {
     setQuestionIndex((current) => Math.max(0, current - 1));
   }
 
-  function handleQuestionContinue() {
+  function handleQuestionContinue(question: Question) {
+    if (!question.options.some((option) => option.id === answers[question.id])) {
+      return;
+    }
+
     if (screen === 'preview') {
       if (questionIndex < previewQuestions.length - 1) {
         setQuestionIndex((current) => current + 1);
@@ -429,25 +436,33 @@ export default function App() {
 
           <label>
             <span>Industry or sector</span>
-            <input
-              type="text"
+            <select
               value={profile.industry}
               onChange={(event) => updateProfile('industry', event.target.value)}
-              placeholder="Professional services, retail, education, healthcare…"
               aria-label="Industry or sector"
-            />
+            >
+              <option value="">Select an industry</option>
+              {INDUSTRY_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
           </label>
 
           <label>
             <span>Business goal</span>
-            <textarea
+            <select
               value={profile.businessGoal}
               onChange={(event) => updateProfile('businessGoal', event.target.value)}
-              placeholder="What outcome would a meaningful AI improvement unlock?"
               aria-label="Business goal"
-              rows={4}
-            />
+            >
+              <option value="">Select a business goal</option>
+              {BUSINESS_GOAL_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
           </label>
+
+          <p className="inline-note">Your progress is saved only in this browser.</p>
 
           {!profileComplete && (
             <p className="inline-note" aria-live="polite">
@@ -473,14 +488,15 @@ export default function App() {
     currentIndex: number,
   ) {
     const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) {
+      return null;
+    }
+
     const progressQuestionNumber = step === 'preview'
       ? currentIndex + 1
       : previewQuestions.length + currentIndex + 1;
     const isFinalQuestion = currentIndex === questions.length - 1;
-
-    if (!currentQuestion) {
-      return null;
-    }
+    const hasCurrentAnswer = currentQuestion.options.some((option) => option.id === answers[currentQuestion.id]);
 
     return (
       <section className="assessment-panel question-panel" aria-labelledby="question-panel-title">
@@ -510,7 +526,11 @@ export default function App() {
           </div>
         </div>
 
-        <fieldset key={currentQuestion.id} className="question-block">
+        <fieldset
+          key={currentQuestion.id}
+          className="question-block"
+          aria-describedby={!hasCurrentAnswer ? 'question-answer-hint' : undefined}
+        >
           <legend>
             <span className="question-number">{currentIndex + 1}</span>
             {currentQuestion.prompt}
@@ -530,11 +550,22 @@ export default function App() {
           </div>
         </fieldset>
 
+        {!hasCurrentAnswer && (
+          <p id="question-answer-hint" className="inline-note answer-required-note" role="status" aria-live="polite">
+            Choose one response to continue. “I am not sure” is a valid answer.
+          </p>
+        )}
+
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={handleQuestionBack}>
             {screen === 'preview' && currentIndex === 0 ? 'Back to profile' : 'Previous'}
           </button>
-          <button type="button" className="button-primary" onClick={handleQuestionContinue}>
+          <button
+            type="button"
+            className="button-primary"
+            onClick={() => handleQuestionContinue(currentQuestion)}
+            disabled={!hasCurrentAnswer}
+          >
             {isFinalQuestion ? (step === 'preview' ? 'Continue to core assessment' : 'Review your answers') : 'Next question'}
           </button>
         </div>
@@ -554,14 +585,13 @@ export default function App() {
           <div className="summary-card">
             <h3>Profile</h3>
             <p><strong>Type:</strong> {profile.organizationType || 'Not entered'}</p>
-            <p><strong>Industry:</strong> {profile.industry || 'Not entered'}</p>
-            <p><strong>Goal:</strong> {profile.businessGoal || 'Not entered'}</p>
+            <p><strong>Industry:</strong> {getProfileOptionLabel(INDUSTRY_OPTIONS, profile.industry) || 'Not entered'}</p>
+            <p><strong>Goal:</strong> {getProfileOptionLabel(BUSINESS_GOAL_OPTIONS, profile.businessGoal) || 'Not entered'}</p>
           </div>
           <div className="summary-card">
             <h3>Progress</h3>
             <p>{answeredCount} of {coreQuestions.length} questions answered</p>
             <p>{scoreSummary.answered} scored answers included</p>
-            <p>{storageStatus}</p>
           </div>
         </div>
 
@@ -572,10 +602,22 @@ export default function App() {
           }}>
             Edit answers
           </button>
-          <button type="button" className="button-primary" onClick={() => setScreen('results')}>
+          <button
+            type="button"
+            className="button-primary"
+            onClick={() => {
+              if (allCoreQuestionsAnswered) setScreen('results');
+            }}
+            disabled={!allCoreQuestionsAnswered}
+          >
             See readiness snapshot
           </button>
         </div>
+        {!allCoreQuestionsAnswered && (
+          <p className="inline-note answer-required-note" role="status">
+            Answer all {coreQuestions.length} questions before viewing your results.
+          </p>
+        )}
       </section>
     );
   }
@@ -590,24 +632,30 @@ export default function App() {
 
         <div className="result-summary">
           <div>
-            <p className="result-label">Overall draft interval</p>
-            <h3>{scoreSummary.percentage}%</h3>
+            <p className="result-label">{reportGuidance.scoreLabel}</p>
+            <h3>{reportGuidance.scoreText}</h3>
           </div>
           <div>
-            <p className="result-label">Current band</p>
-            <h3>{scoreSummary.band}</h3>
+            <p className="result-label">Coverage</p>
+            <h3>{readinessResult.score.coverageUnits} / 200</h3>
           </div>
         </div>
+
+        <aside className="pragmatic-recommendation" aria-labelledby="practical-next-step-title">
+          <p className="eyebrow">Practical next step</p>
+          <h3 id="practical-next-step-title">{reportGuidance.title}</h3>
+          <p>{reportGuidance.bandText} {reportGuidance.guidance}</p>
+        </aside>
 
         <div className="dimension-list" aria-label="Dimension summary">
           {dimensionSummary.map((dimension) => (
             <div key={dimension.dimension} className="dimension-row">
               <div className="dimension-label-row">
                 <span>{dimension.label}</span>
-                <span>{dimension.score}%</span>
+                <span>{dimension.lower}–{dimension.upper}% · {dimension.known}/2 known</span>
               </div>
               <div className="dimension-track" aria-hidden="true">
-                <span style={{width: `${dimension.score}%`}} />
+                <span style={{width: `${dimension.upper}%`}} />
               </div>
             </div>
           ))}
@@ -637,18 +685,26 @@ export default function App() {
             className="button-primary"
             aria-expanded={isReportModuleOpen}
             aria-controls="report-module-panel"
-            onClick={() => setIsReportModuleOpen((open) => !open)}
+            disabled={!allCoreQuestionsAnswered}
+            onClick={() => {
+              if (allCoreQuestionsAnswered) setIsReportModuleOpen((open) => !open);
+            }}
           >
             {isReportModuleOpen ? 'Hide report preview' : 'View report preview'}
           </button>
         </div>
+        {!allCoreQuestionsAnswered && (
+          <p className="inline-note answer-required-note" role="status">
+            Answer all {coreQuestions.length} questions before viewing the report.
+          </p>
+        )}
 
         <div id="report-module-panel" className="report-module-panel">
           {isReportModuleOpen && (
             <Suspense
               fallback={<p role="status">Preparing your report preview…</p>}
             >
-              <ReportModule profile={profile} answers={answers} readiness={readinessResult} />
+              <ReportModule profile={reportProfile} answers={answers} readiness={readinessResult} />
             </Suspense>
           )}
         </div>
@@ -664,6 +720,8 @@ export default function App() {
           <span>{screen === 'preview' ? 'Quick preview' : screen === 'core' ? 'Core questions' : screen === 'review' ? 'Review' : 'Results'}</span>
         )}
       </div>
+
+      {storageError && <p className="storage-error" role="alert">{storageError}</p>}
 
       {screen === 'start' && renderStartScreen()}
       {screen === 'preview' &&
@@ -684,13 +742,6 @@ export default function App() {
         )}
       {screen === 'review' && renderReviewScreen()}
       {screen === 'results' && renderResultsScreen()}
-
-      <div className="assessment-footer" aria-live="polite">
-        <p>{storageStatus}</p>
-        <button type="button" className="text-button" onClick={resetAssessment}>
-          Clear saved draft
-        </button>
-      </div>
     </div>
   );
 }

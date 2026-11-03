@@ -36,7 +36,7 @@ if(entryGzipBytes>90*1024)throw Error(`Initial JavaScript exceeds the proposed 9
 const reportChunk=await Promise.all(javascript.map(async name=>({
   name,
   source:await readFile(path.join(assets,name),'utf8'),
-}))).then(chunks=>chunks.find(chunk=>chunk.source.includes('appendix_answers_and_provenance')));
-if(!reportChunk)throw Error('Code-split report placeholder chunk is missing.');
+}))).then(chunks=>chunks.find(chunk=>chunk.source.includes('appendix-answers-and-provenance')));
+if(!reportChunk)throw Error('Code-split report component is missing.');
 
-console.log(`PASS: Static app uses ${base}; fallback and nonempty assets resolve; report placeholder is code-split; entry JS gzip is ${(entryGzipBytes/1024).toFixed(2)} KiB / 90 KiB.`);
+console.log(`PASS: Static app uses ${base}; fallback and nonempty assets resolve; report component is code-split; entry JS gzip is ${(entryGzipBytes/1024).toFixed(2)} KiB / 90 KiB.`);

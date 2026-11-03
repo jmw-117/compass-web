@@ -1,5 +1,6 @@
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState, type ReactNode} from 'react';
 import type {ReadinessResult} from '../domain/evaluate';
+import {getReportGuidance} from '../domain/report-guidance';
 
 type ProfileLike = {
   organizationType?: string;
@@ -24,8 +25,40 @@ const DIMENSION_LABELS: Record<string, string> = {
   MET: 'Measurement',
 };
 
+type ReportSectionProps = {
+  id: string;
+  title: string;
+  expanded: boolean;
+  printMode: boolean;
+  onToggle: (id: string, open: boolean) => void;
+  children: ReactNode;
+};
+
+function ReportSection({id, title, expanded, printMode, onToggle, children}: ReportSectionProps) {
+  const isOpen = printMode || expanded;
+
+  return (
+    <details
+      className="report-section"
+      open={isOpen}
+      onToggle={(event) => {
+        if (!printMode) onToggle(id, event.currentTarget.open);
+      }}
+    >
+      <summary className="report-section-summary">
+        <h4 id={`report-${id}-title`}>{title}</h4>
+        <span className="report-section-toggle" aria-hidden="true" />
+      </summary>
+      <div className="report-section-content">{children}</div>
+    </details>
+  );
+}
+
 export default function ReportModule({profile, answers, readiness}: ReportModuleProps) {
-  const [copied, setCopied] = useState(false);
+  const [openSections, setOpenSections] = useState(() => new Set(['executive-summary']));
+  const [printMode, setPrintMode] = useState(false);
+  const [printError, setPrintError] = useState('');
+  const previousOpenSections = useRef<Set<string> | null>(null);
 
   const unknownQuestions = useMemo(
     () => Object.keys(answers).filter((questionId) => !answers[questionId] || answers[questionId].endsWith('-UNK')),
@@ -37,32 +70,52 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
     return `SELF-${seed.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24).toUpperCase()}`;
   }, [profile]);
 
+  const reportGuidance = getReportGuidance(readiness);
+
   const shareText = useMemo(
     () =>
       [
         'Silverspark Compass readiness summary',
         `Assessment ID: ${assessmentId}`,
         `Primary path: ${readiness.primaryPath}`,
-        `Readiness interval: [${readiness.score.lowerEighths}, ${readiness.score.upperEighths}]`,
+        `${reportGuidance.scoreLabel}: ${reportGuidance.scoreText}`,
         `Critical gate codes: ${readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'none'}`,
         'Request to discuss: yes',
       ].join('\n'),
-    [assessmentId, readiness],
+    [assessmentId, readiness, reportGuidance.scoreLabel, reportGuidance.scoreText],
   );
 
-  async function handleCopySummary() {
-    setCopied(false);
-    if (typeof navigator === 'undefined' || !navigator.clipboard) {
-      window.alert('Clipboard access is unavailable in this browser. Please copy the summary manually.');
-      return;
-    }
+  useEffect(() => {
+    if (!printMode) return;
 
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setCopied(true);
-    } catch {
-      window.alert('Copy was blocked. Please copy the summary manually from the report.');
-    }
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        window.print();
+      } catch {
+        setPrintError('The print dialog could not be opened. Please try again or use your browser print menu.');
+      } finally {
+        setPrintMode(false);
+        if (previousOpenSections.current) setOpenSections(previousOpenSections.current);
+        previousOpenSections.current = null;
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [printMode]);
+
+  function toggleSection(id: string, open: boolean) {
+    setOpenSections((current) => {
+      const next = new Set(current);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  function handleSaveAsPdf() {
+    setPrintError('');
+    previousOpenSections.current = openSections;
+    setPrintMode(true);
   }
 
   function handleWhatsAppClick() {
@@ -72,17 +125,15 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
 
   return (
     <article className="report-module" aria-live="polite">
+      {printError && <p className="storage-error" role="alert">{printError}</p>}
       <header className="report-header">
         <div>
-          <p className="eyebrow">document_identity</p>
+          <p className="eyebrow">Assessment report</p>
           <h3>Self-reported assessment — not independently verified</h3>
         </div>
         <div className="report-actions">
-          <button type="button" className="button-secondary" onClick={handleCopySummary}>
-            {copied ? 'Summary copied' : 'Copy summary'}
-          </button>
-          <button type="button" className="button-secondary" onClick={() => window.print()}>
-            Print / save as PDF
+          <button type="button" className="button-secondary" onClick={handleSaveAsPdf} disabled={printMode}>
+            Save as PDF
           </button>
           <button type="button" className="button-primary" onClick={handleWhatsAppClick}>
             Share via WhatsApp
@@ -90,18 +141,21 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         </div>
       </header>
 
-      <section className="report-section" aria-labelledby="report-executive-summary-title">
-        <h4 id="report-executive-summary-title">executive_summary</h4>
+      <ReportSection
+        id="executive-summary"
+        title="Executive summary"
+        expanded={openSections.has('executive-summary')}
+        printMode={printMode}
+        onToggle={toggleSection}
+      >
         <div className="report-grid">
           <div>
             <p className="report-label">Assessment ID</p>
             <strong>{assessmentId}</strong>
           </div>
           <div>
-            <p className="report-label">Overall readiness</p>
-            <strong>
-              [{readiness.score.lowerEighths}, {readiness.score.upperEighths}] / {readiness.score.coverageUnits}
-            </strong>
+            <p className="report-label">{reportGuidance.scoreLabel}</p>
+            <strong>{reportGuidance.scoreText}</strong>
           </div>
           <div>
             <p className="report-label">Primary path</p>
@@ -112,27 +166,32 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
             <strong>{readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'none'}</strong>
           </div>
         </div>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-business-snapshot-title">
-        <h4 id="report-business-snapshot-title">business_snapshot</h4>
+      <ReportSection id="business-snapshot" title="Business snapshot" expanded={openSections.has('business-snapshot')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           <li>Organisation type: {profile.organizationType || 'Not shared'}</li>
           <li>Industry: {profile.industry || 'Not shared'}</li>
           <li>Business goal: {profile.businessGoal || 'Not yet defined'}</li>
           <li>Budget fit: {readiness.costFit}</li>
         </ul>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-methodology-title">
-        <h4 id="report-methodology-title">methodology_limitations</h4>
+      <ReportSection id="methodology-limitations" title="Methodology and limitations" expanded={openSections.has('methodology-limitations')} printMode={printMode} onToggle={toggleSection}>
         <p>
           This report is a self-reported assessment based on the browser answers collected in this session. It is not an independent verification, legal review, or certification of client readiness.
         </p>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-dimensions-title">
-        <h4 id="report-dimensions-title">seven_dimension_results</h4>
+      <ReportSection id="practical-recommendation" title="A practical recommendation" expanded={openSections.has('practical-recommendation')} printMode={printMode} onToggle={toggleSection}>
+        <p>{reportGuidance.bandText}</p>
+        <p>{reportGuidance.guidance}</p>
+        {reportGuidance.firstActionId && (
+          <p>Start with priority action {reportGuidance.firstActionId} in the action list below.</p>
+        )}
+      </ReportSection>
+
+      <ReportSection id="seven-dimension-results" title="Seven dimension results" expanded={openSections.has('seven-dimension-results')} printMode={printMode} onToggle={toggleSection}>
         <div className="dimension-report-list">
           {Object.entries(readiness.dimensions).map(([dimensionId, metric]) => (
             <div key={dimensionId} className="report-dimension-item">
@@ -148,10 +207,9 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
             </div>
           ))}
         </div>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-uncertainty-title">
-        <h4 id="report-uncertainty-title">uncertainty_coverage</h4>
+      <ReportSection id="uncertainty-coverage" title="Uncertainty and coverage" expanded={openSections.has('uncertainty-coverage')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {unknownQuestions.length ? (
             unknownQuestions.map((questionId) => <li key={questionId}>Verify {questionId}: confirm the answer before acting on this recommendation.</li>)
@@ -159,10 +217,9 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
             <li>No unknown answers were declared in this draft.</li>
           )}
         </ul>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-positive-title">
-        <h4 id="report-positive-title">positive_capabilities</h4>
+      <ReportSection id="positive-capabilities" title="Positive capabilities" expanded={openSections.has('positive-capabilities')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {readiness.actionIds.length ? (
             readiness.actionIds.map((actionId) => <li key={actionId}>Action {actionId} is relevant to the current read-out.</li>)
@@ -170,10 +227,9 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
             <li>No action ID was triggered in this draft; the result remains exploratory.</li>
           )}
         </ul>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-gaps-title">
-        <h4 id="report-gaps-title">gaps_and_evidence</h4>
+      <ReportSection id="gaps-and-evidence" title="Gaps and evidence" expanded={openSections.has('gaps-and-evidence')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {readiness.formalGates.length ? (
             readiness.formalGates.map((gate) => <li key={gate.id}>{gate.id} — {gate.severity}</li>)
@@ -181,64 +237,56 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
             <li>No formal gates are currently triggered for this self-reported profile.</li>
           )}
         </ul>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-gates-title">
-        <h4 id="report-gates-title">critical_safety_gates</h4>
+      <ReportSection id="critical-safety-gates" title="Critical safety gates" expanded={openSections.has('critical-safety-gates')} printMode={printMode} onToggle={toggleSection}>
         <p>{readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'No critical safety gates are triggered in this draft.'}</p>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-path-title">
-        <h4 id="report-path-title">primary_path</h4>
+      <ReportSection id="primary-path" title="Primary path" expanded={openSections.has('primary-path')} printMode={printMode} onToggle={toggleSection}>
         <p>
           Recommended primary path: <strong>{readiness.primaryPath}</strong>. Secondary paths: {readiness.secondaryPaths.length ? readiness.secondaryPaths.join(', ') : 'none'}.
         </p>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-actions-title">
-        <h4 id="report-actions-title">three_priority_actions</h4>
+      <ReportSection id="three-priority-actions" title="Three priority actions" expanded={openSections.has('three-priority-actions')} printMode={printMode} onToggle={toggleSection}>
         <ol className="report-list ordered">
           {readiness.actionIds.slice(0, 3).map((actionId) => (
             <li key={actionId}>{actionId}</li>
           ))}
           {readiness.actionIds.length === 0 && <li>No action is recommended in the current local draft.</li>}
         </ol>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-budget-title">
-        <h4 id="report-budget-title">budget_and_capacity_fit</h4>
+      <ReportSection id="budget-and-capacity-fit" title="Budget and capacity fit" expanded={openSections.has('budget-and-capacity-fit')} printMode={printMode} onToggle={toggleSection}>
         <p>Budget capacity fit: {readiness.costFit}. This does not imply a verified affordability conclusion.</p>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-plan-title">
-        <h4 id="report-plan-title">next_30_60_90_days</h4>
+      <ReportSection id="next-30-60-90-days" title="Next 30, 60 and 90 days" expanded={openSections.has('next-30-60-90-days')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           <li>Next 30 days: confirm the current evidence trail and resolve any unknown answers.</li>
           <li>Next 60 days: test one or two low-risk workflows using the primary path recommendations.</li>
           <li>Next 90 days: review progress, confirm owners, and decide whether to continue or pause.</li>
         </ul>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-cta-title">
-        <h4 id="report-cta-title">client_consultation_cta</h4>
+      <ReportSection id="client-consultation-cta" title="Client consultation" expanded={openSections.has('client-consultation-cta')} printMode={printMode} onToggle={toggleSection}>
         <p>Ask the client whether they want a short consult to discuss the readiness profile and next practical step.</p>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-appendix-title">
-        <h4 id="report-appendix-title">appendix_answers_and_provenance</h4>
+      <ReportSection id="appendix-answers-and-provenance" title="Appendix answers and provenance" expanded={openSections.has('appendix-answers-and-provenance')} printMode={printMode} onToggle={toggleSection}>
         <p>Source answers: {Object.keys(answers).length ? Object.keys(answers).join(', ') : 'No answers recorded yet'}.</p>
-      </section>
+      </ReportSection>
 
-      <section className="report-section" aria-labelledby="report-consultant-title">
-        <h4 id="report-consultant-title">consultant_review_template</h4>
+      <ReportSection id="consultant-review-template" title="Consultant review template" expanded={openSections.has('consultant-review-template')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           <li>Assessment ID: {assessmentId}</li>
-          <li>Receipt method: user-controlled copy or WhatsApp preview</li>
+          <li>Receipt method: user-controlled WhatsApp preview</li>
           <li>Manual verification status: pending</li>
           <li>Reviewed by: [consultant name]</li>
           <li>Approval state: draft</li>
         </ul>
-      </section>
+      </ReportSection>
     </article>
   );
 }
