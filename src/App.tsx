@@ -311,6 +311,7 @@ export default function App() {
           organizationType: profile.organizationType,
           industry: profile.industry,
           businessGoal: profile.businessGoal,
+          primary_goal: profile.businessGoal,
         },
         coreAnswers: answers,
       }),

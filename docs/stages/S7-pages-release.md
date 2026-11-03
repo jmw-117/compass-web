@@ -1,7 +1,5 @@
 # S7 — GitHub Pages release
 
-**Stage outcome:** Publish only approved build via gated GitHub Actions.
-
 ## Inputs and prior approvals
 S6 human approval, GitHub Pages commercial policy suitability review, branch/protection checks. Confirm `docs/handoffs/ledger.json` shows previous stage as `approved` by named human; if not, only draft proposals and stop.
 

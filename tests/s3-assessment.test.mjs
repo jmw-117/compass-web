@@ -39,6 +39,12 @@ test('S3 keeps local draft behavior explicit and self-reported results separate 
   assert.match(app, /Unknown answers widen uncertainty/);
 });
 
+test('S3 maps the selected business goal to the evaluator profile contract', async () => {
+  const app = await readFile('src/App.tsx', 'utf8');
+
+  assert.match(app, /primary_goal:\s*profile\.businessGoal/);
+});
+
 test('S3 retains the lazy report preview contract required by the foundation shell', async () => {
   const app = await readFile('src/App.tsx', 'utf8');
 

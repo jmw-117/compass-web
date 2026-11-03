@@ -77,32 +77,42 @@
       "commitSha": null,
       "evidence": [
         "Pure evaluator implemented with score intervals, gates, path selection, and budget independence; targeted engine tests passed",
-        "Human owner approved the stage progression to S5 on 2026-11-03"
+        "Human owner approved the stage progression to S5 on 2026-11-03",
+        "Retrospective S4 handoff restored and accepted by the Product Owner in chat on 2026-11-03; unrun Python validators and independent golden-case review remain open"
       ]
     },
     {
       "id": "S5",
       "name": "Report and voluntary handoff",
-      "status": "review_requested",
+      "status": "approved",
       "requiredPrevious": "S4",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "Product Owner (explicit chat approval; personal name not provided)",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S5-handoff.md",
       "commitSha": null,
       "evidence": [
-        "Report module implemented with mandatory report sections, copy summary, and WhatsApp handoff; local validation pending human review"
+        "Report module implemented with mandatory report sections and user-controlled WhatsApp handoff; 320px full-ID wrapping checked in browser",
+        "npm run verify passed with 23 tests, typecheck, production build, and asset checks",
+        "Product Owner explicitly approved S5 and progression to S6 in chat on 2026-11-03",
+        "Python validators and a new GitHub Actions run after restoring the S4 handoff remain outstanding"
       ]
     },
     {
       "id": "S6",
       "name": "Independent QA and hardening",
-      "status": "not_started",
+      "status": "review_requested",
       "requiredPrevious": "S5",
       "approvedBy": null,
       "approvedAt": null,
       "handoffPath": "docs/handoffs/S6-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "docs/handoffs/S6-handoff.md records the QA matrix for all 23 product requirements, prioritized defects, and verification limits",
+        "npm run verify passed with 26 tests, typecheck, production build, and static asset checks on 2026-11-03",
+        "tests/s6-quality.test.mjs adds a source-level no-submission regression guard; a separate code-review agent identified a high-severity false-safe risk that remains unresolved",
+        "The UI businessGoal-to-primary_goal mapping was corrected and tested; human S6 approval remains pending",
+        "Python validators and a post-restoration GitHub Actions run remain outstanding; no push or deployment was made"
+      ]
     },
     {
       "id": "S7",

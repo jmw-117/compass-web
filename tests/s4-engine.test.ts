@@ -147,6 +147,19 @@ test('F05 uses the unknown path and keeps the total interval open', () => {
   assert.ok(result.flags.length >= 14);
 });
 
+test('the mapped business goal activates the missing-baseline gate', () => {
+  const result = evaluate({
+    ...fixtureF01,
+    profile: {
+      ...fixtureF01.profile,
+      businessGoal: 'efficiency',
+      primary_goal: 'efficiency',
+    },
+  });
+
+  assert.ok(result.formalGates.some(({id}) => id === 'BASELINE-MISSING'));
+});
+
 test('S4 keeps path selection monotonic and scores within the valid range', () => {
   const result = evaluate(fixtureF03);
   assert.ok(result.score.lowerEighths <= result.score.upperEighths);

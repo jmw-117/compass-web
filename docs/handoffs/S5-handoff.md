@@ -1,7 +1,7 @@
 # S5 — Report and voluntary handoff
 
 **Stage:** S5 — Report and voluntary handoff  
-**Status:** review_requested (not approved until signed by a human)  
+**Status:** approved by Product Owner in chat
 **Submitted by:** Copilot engineering assistant  
 **Reviewer:** Pending  
 **Date:** 2026-11-03  
@@ -13,7 +13,7 @@
 - **Authority/source:** Product Owner's explicit chat approval on 2026-11-03 authorizing the implementation map and development-only override for this expanded scope.
 - **Waived condition at implementation time:** `docs/handoffs/S4-handoff.md` was absent although the ledger records S4 as approved. A retrospective evidence record has since been restored at that path; it is pending human review and does not create a new S4 approval.
 - **Reason and scope:** Implement answer-required navigation, score-interval-aware practical guidance using the existing evaluator paths and band helper, progressive report disclosure, full-content Save as PDF behavior, centered question-number badges, and the Product Owner-approved exact-score display (nearest whole number only; ranges retained for genuine uncertainty).
-- **Consequence/deferred work:** The S4 handoff artifact gap is repaired, but its retrospective record still needs human review. This override does not represent S4 artifact validation, S5 approval, or public-release approval.
+- **Consequence/deferred work:** The Product Owner accepted the retrospective S4 handoff and approved S5 in chat on 2026-11-03. This does not certify unrun Python checks, independent golden-case review, or public-release approval.
 
 ## 1. Scope and deliverables
 - Requirement(s):
@@ -69,9 +69,10 @@
 ## 2. Tests and reproducible evidence
 | Command / manual action | Status: passed / failed / not_run | Evidence or run link |
 |---|---|---|
-| `npm run verify` | passed | Contract checks, lint/typecheck, 23 Node tests, Vite production build, and GitHub Pages asset validation all passed. Entry JavaScript gzip: 67.18 KiB / 90 KiB. |
+| `npm run verify` | passed | Contract checks, lint/typecheck, 23 Node tests, Vite production build, and GitHub Pages asset validation all passed after the readable-report update. Entry JavaScript gzip: 67.18 KiB / 90 KiB. |
 | Human-readable report fields and long-value wrapping | passed | Report text now explains readiness paths, actions, unknown questions, gates, severity, and cost fit in plain language while retaining identifiers as secondary references. Assessment IDs are no longer shortened; report content uses `overflow-wrap: anywhere` in screen and print layouts. Focused S4/S5 tests and typecheck passed. |
 | 320px report-field browser check | passed | Completed the 14-question flow with unknown answers and opened the consultant template. The full `SELF-SOLE-PROPRIETOR-PROFESSIONAL-SERVICES-...` identifier remained present; at 320px its list item wrapped to 109px high with `scrollWidth` equal to `clientWidth` (188px). Path, action, and question references were accompanied by readable explanations. |
+| Python validators / GitHub Actions | not_run after handoff restoration | The previous CI run failed because the S4 handoff was missing; the artifact now exists. Local Python was unavailable. CI must rerun on a subsequent push before the workflow is claimed green. |
 | Traffic-light styling follow-up | passed | The updated stylesheet is included in the successful `npm run verify` build. The larger horizontal housing and gradient bulbs are implemented; a separate visual/mobile regression check was not run in this pass. |
 | `git diff --check` | passed | No whitespace errors. |
 | Browser check at `/silverspark-compass/` | passed | Landing headline reads “Understand your AI readiness”. Assessment shows “Organisation Type”, “Industry / Sector”, and “Business Goal” in both visible labels and accessible names. A full assessment displayed title-cased result and recommendation headings; all 16 report section titles and report field labels use title-style capitalization. The question numeral's measured center differed from its circle by only 0.01px horizontally and 0.11px vertically. A synthetic exact 27.5 score rendered as `28 / 100` with no decimal. All 14 questions required an answer; “I am not sure” remains valid. |
@@ -83,16 +84,16 @@
 | Native PDF output after this correction | not_run | The browser print dialog/PDF output was not generated as part of this correction. |
 
 ## 3. Acceptance and review
-- [x] Required S4 handoff artifact exists; the retrospective record is pending human review
+- [x] Required S4 handoff artifact exists and was accepted by the Product Owner in chat
 - [x] Contract/path/version checks complete
-- [ ] Independent reviewer verified key outputs (where applicable)
-- [ ] Manual mobile sharing and print checks complete
+- [ ] Independent reviewer verified key outputs (where applicable; S6 scope)
+- [ ] Manual mobile sharing and print checks complete (S6 scope)
 
 ## 4. Open issues, risks, decisions
 - Public GitHub Pages launch remains gated by the commercial-use review and deployment approval.
 - Current report output is intentionally self-reported and not independently verified.
 - The handoff remains voluntary; no automatic send or delivery is triggered.
-- `docs/handoffs/S4-handoff.md` has been restored as a retrospective evidence record; its human review remains pending, and the Python validator must be rerun in CI.
+- `docs/handoffs/S4-handoff.md` has been restored as a retrospective evidence record and accepted by the Product Owner; Python validation must still be rerun in CI.
 - Manual mobile share and physical/browser PDF output checks remain for the independent reviewer.
 - ADR: `docs/adr/ADR-005-exact-score-display.md` records Product Owner approval for exact-score whole-number presentation; broader S1 independent review remains pending.
 - Rollback/restoration approach: revert only the presentation, report-contract, and ADR-005 changes if rejected; preserve unrelated pre-existing working-tree changes and the existing S5 implementation. Score calculations and evaluator behavior remain unchanged.
@@ -104,13 +105,12 @@
   - `docs/domain/VERSION_MANIFEST.json` 1.3.5
   - `docs/stages/S5-report-share.md` stage definition
 - Prerequisites still missing:
-  - Human review of the report content and approval of the voluntary handoff UX
-  - Later stages remain dependent on this human signoff and the static Pages deployment policy check
+  - Independent QA and static Pages deployment policy review remain required before release
 - Safe next task:
-  - Continue to S6 quality hardening only after the human reviewer accepts this report slice and confirms the static handoff remains privacy-safe.
+  - Perform S6 independent quality hardening; keep all unverified browser/device and Python-validator results explicitly not_run.
 
 ## 6. Human approval (not agent self-certification)
-**Decision:** pending  
-**Human approver:** [name]  
-**Date:** [date]  
-**Notes:** The S5 report flow has been implemented and locally validated, but it has not yet been signed off by a human reviewer.
+**Decision:** approved
+**Human approver:** Product Owner (explicit chat approval; personal name not provided)
+**Date:** 2026-11-03
+**Notes:** The Product Owner explicitly approved the S4 retrospective handoff and S5 report stage, authorizing progression to S6. This approval does not constitute S6 review or public-release approval.
