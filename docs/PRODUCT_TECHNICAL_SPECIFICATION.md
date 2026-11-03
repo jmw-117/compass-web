@@ -1,7 +1,7 @@
 # SILVERSPARK COMPASS
 ## Product Technical Specification — AI Readiness & Prospective Client Discovery
 
-**Version:** 1.3.0 — 3 November 2026  
+**Version:** 1.3.1 — 3 November 2026
 **Status:** Proposed product contract; not yet empirically calibrated or implemented  
 **Product owner:** Silverspark Consulting · Strategy in Action  
 **Deployment requirement:** GitHub Pages static artifact; React + Vite + TypeScript; zero paid runtime APIs  
@@ -529,7 +529,7 @@ Shown when: `ALL`; related dimension: `GOV`.
 
 `docs/domain/technical_extension.json` defines `flag_generation` as **exact answer value → flag** mappings and `flag_to_existing_action_ids` as **exact flag → action ID** mappings. Flags are append-only findings with evidence IDs, not free-text instructions, and are deduplicated by flag name. Any flag without a prescribed action is a diagnostic finding pending consultant review; never fabricate a solution.
 
-**Pilot gating:** Current formal hard gates remain `URGENT-REGULATED`, `GOV-DATA`, `DATA-UNKNOWN`, `OWN-NONE`, `BASELINE-MISSING` and `BUDGET-UNKNOWN` as already defined in `docs/domain/decision_predicates.json`. Deep-dive red flags (e.g. no fallback, uncontrolled sharing, high impact) are **referred to human review** and can block an affirmative “pilot-ready” claim; they must not silently override the signed decision AST. S1 must reconcile any new gate predicate before implementation.
+**Pilot gating:** Current formal gates are `URGENT-REGULATED`, `GOV-DATA`, `DATA-UNKNOWN`, `OWN-NONE`, and `BASELINE-MISSING`, as defined in `docs/domain/decision_predicates.json`. Budget availability is a cost-fit status, not a gate. Deep-dive red flags (e.g. no fallback, uncontrolled sharing, high impact) are **referred to human review** and can block an affirmative “pilot-ready” claim; they must not silently override the signed decision AST.
 
 ---
 
@@ -604,9 +604,10 @@ The full engine and fixture contract remains in `docs/domain/rules.json`, `docs/
 | `DATA-UNKNOWN` | Both DAT indicators unknown OR vital records absent | Verify what data exists before proposing integrations |
 | `OWN-NONE` | No accountable authorization role | Ownership is a required preliminary action |
 | `BASELINE-MISSING` | Measurable goal and weak measurement with no baseline | No financial value claims |
-| `BUDGET-UNKNOWN` | Cash ceiling/band unavailable | No affordability claim |
 
 **Normative syntax:** the *machine-readable* predicate AST in `docs/domain/decision_predicates.json` overrides this human-readable summary. An agent must not implement threshold comparisons from prose if the AST differs. Report contradictions for human resolution.
+
+An unavailable budget produces an **unverified cost-fit status**, not a formal gate. Budget may inform action feasibility and cost-fit labels, but never changes readiness scores, readiness bands, formal gates, or assessment confidence.
 
 ### 8.3 Seven actionable recommendation paths
 
@@ -927,4 +928,3 @@ Validate the questionnaire and recommendations *before* optimizing the interface
 - GitHub Pages custom workflows: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 
 **Document control:** V1.3 is a complete proposed *product specification* and agent handoff, not a shipped app, completed pilot, signed regulatory opinion, certified standard, measured user experience or approved commercial deployment. S0/S1 must validate the substance before S2–S7 produce code and publish it.
-

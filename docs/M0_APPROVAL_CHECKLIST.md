@@ -4,7 +4,7 @@
 - [ ] Pilot participants genuinely interviewed; record and label actual vs simulated cases separately.
 - [ ] Comprehension, time, unknown rate, score distribution, path concentration and usefulness evidence reviewed.
 - [ ] Independent consultant reviews at least five cases and challenges critical false-safe recommendations.
-- [ ] Seven dimensions, weights, fourteen item choices, seven distinct probes, six gates, P0–P6 ranking, twenty-four actions and budget class mapping approved.
+- [ ] Seven dimensions, weights, fourteen item choices, seven distinct probes, five formal gates, P0–P6 ranking, twenty-four actions and separate budget cost-fit behavior approved.
 - [ ] Golden expected results written by human before implementation; synthetic expectations never cited as measured evidence.
 - [ ] Real-world contact number verified for WhatsApp; no automatic data handoff assumed.
 - [ ] GitHub Pages policy suitability for proposed public business use reviewed and recorded; no commercial-use assumption.

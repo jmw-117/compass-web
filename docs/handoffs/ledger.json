@@ -1,40 +1,54 @@
 {
   "blueprintVersion": "1.2.0",
   "hosting": "github-pages",
-  "ruleContractVersions": "retain existing docs/domain/*.json version values until approved",
+  "ruleContractVersions": "draft version increments may be proposed for review; no contract version is approved or publishable until S1 signoff",
   "stages": [
     {
       "id": "S0",
       "name": "Concierge validation",
-      "status": "not_started",
+      "status": "review_requested",
       "requiredPrevious": null,
       "approvedBy": null,
       "approvedAt": null,
       "handoffPath": "docs/handoffs/S0-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "gateDecision": "architect_override",
+      "developmentState": "overridden_for_development",
+      "overrideScope": "S1 contract review only; does not approve real-world S0 or permit S2",
+      "evidence": [
+        "docs/S0_VALIDATION_PACKAGE.md (proposed; requires human approval)",
+        "docs/S0_SYNTHETIC_PILOT_SUMMARY.md (synthetic only; 0 participants and 0 independent reviews)",
+        "docs/ARCHITECT_AUTHORITY.md (development-only override policy)",
+        "docs/handoffs/S0-handoff.md (real-world S0 incomplete; override recorded)"
+      ]
     },
     {
       "id": "S1",
       "name": "Freeze decision contracts",
-      "status": "not_started",
+      "status": "review_requested",
       "requiredPrevious": "S0",
       "approvedBy": null,
       "approvedAt": null,
       "handoffPath": "docs/handoffs/S1-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "gateDecision": "architect_override",
+      "evidence": [
+        "docs/S1_CONTRACT_REVIEW.md (draft audit; contracts not frozen)",
+        "docs/handoffs/S1-handoff.md (review_requested; unresolved human decisions remain)"
+      ]
     },
     {
       "id": "S2",
       "name": "Repository, GitHub Pages and CI foundation",
-      "status": "not_started",
+      "status": "blocked",
       "requiredPrevious": "S1",
       "approvedBy": null,
       "approvedAt": null,
       "handoffPath": "docs/handoffs/S2-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "Blocked pending human S1 contract review and resolution of documented ambiguities"
+      ]
     },
     {
       "id": "S3",

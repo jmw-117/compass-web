@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "status": "Proposed, needs human validation",
   "grammar": {
     "all": "all of the expressions",
@@ -170,19 +170,6 @@
               "Yes"
             ]
           }
-        }
-      ]
-    },
-    "G-BUDGET-UNKNOWN": {
-      "all": [
-        {
-          "unknown": "profile.budget_ceiling"
-        },
-        {
-          "eq": [
-            "profile.budget_band",
-            "unknown"
-          ]
         }
       ]
     },

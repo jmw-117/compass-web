@@ -21,4 +21,4 @@ A preceding stage must have human approval and its referenced artifacts must exi
 Use `.github/prompts/SN.prompt.md` for a fresh session. Keep the stage implementation and reviewer separate. Human product owner is final signatory.
 
 ## Current evidence
-All stages are `not_started` and none of the included synthetic cases is a validated customer case.
+S0 real-world validation remains incomplete and unapproved (0 actual participants and 0 independent reviews per the explicitly synthetic summary). Under the Architect's documented development-only override, S1 contract inventory and structural audit are `review_requested`; no contract is frozen or human-approved. S2 is `blocked` pending human S1 decisions/review. S3–S8 remain `not_started`. Synthetic cases are not validated customer cases.
