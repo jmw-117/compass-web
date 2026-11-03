@@ -40,52 +40,58 @@
     {
       "id": "S2",
       "name": "Repository, GitHub Pages and CI foundation",
-      "status": "review_requested",
+      "status": "approved",
       "requiredPrevious": "S1",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "User approval on 2026-11-03",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S2-handoff.md",
       "commitSha": null,
       "gateDecision": "auto_continue",
       "evidence": [
         "S1 approved by the Product Owner / Architect on 2026-11-03",
-        "S2 foundation implementation complete; review requested in docs/handoffs/S2-handoff.md"
+        "S2 foundation implementation complete; user approval received on 2026-11-03"
       ]
     },
     {
       "id": "S3",
       "name": "Guided assessment and storage",
-      "status": "blocked",
+      "status": "approved",
       "requiredPrevious": "S2",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "User approval on 2026-11-03",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S3-handoff.md",
       "commitSha": null,
       "evidence": [
-        "Blocked pending human S2 handoff review and approval"
+        "S3 assessment wizard, local draft save, and review flow implemented and locally validated",
+        "Human owner explicitly proceeded to S4 on 2026-11-03"
       ]
     },
     {
       "id": "S4",
       "name": "Deterministic readiness evaluator",
-      "status": "not_started",
+      "status": "approved",
       "requiredPrevious": "S3",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "User approval on 2026-11-03",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S4-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "Pure evaluator implemented with score intervals, gates, path selection, and budget independence; targeted engine tests passed",
+        "Human owner approved the stage progression to S5 on 2026-11-03"
+      ]
     },
     {
       "id": "S5",
       "name": "Report and voluntary handoff",
-      "status": "not_started",
+      "status": "review_requested",
       "requiredPrevious": "S4",
       "approvedBy": null,
       "approvedAt": null,
       "handoffPath": "docs/handoffs/S5-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "Report module implemented with mandatory report sections, copy summary, and WhatsApp handoff; local validation pending human review"
+      ]
     },
     {
       "id": "S6",

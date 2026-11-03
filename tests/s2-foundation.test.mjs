@@ -9,18 +9,20 @@ test('static landing shell remains semantic and usable without JavaScript', asyn
   assert.match(html, /<a class="skip-link" href="#main">Skip to content<\/a>/);
   assert.match(html, /<main id="main">/);
   assert.match(html, /<noscript>/);
-  assert.match(html, /The questionnaire, scoring, recommendations,/);
-  assert.match(html, /This page remains readable without JavaScript/);
+  assert.match(html, /Explore the assessment/);
+  assert.match(html, /No account required/);
 });
 
-test('React enhancement only loads the report placeholder on demand', async () => {
+test('React enhancement loads the report preview on demand and keeps it user-controlled', async () => {
   const app = await readFile('src/App.tsx', 'utf8');
   const report = await readFile('src/report/ReportModule.tsx', 'utf8');
 
   assert.match(app, /lazy\(\(\) => import\('\.\/report\/ReportModule'\)\)/);
   assert.match(app, /aria-expanded=\{isReportModuleOpen\}/);
-  assert.match(report, /No assessment responses or scores are present/);
-  assert.doesNotMatch(report, /readiness score|assessment result/i);
+  assert.match(app, /<ReportModule\s+profile=\{profile\}/);
+  assert.match(report, /Self-reported assessment — not independently verified/);
+  assert.match(report, /Copy summary/);
+  assert.match(report, /Share via WhatsApp/);
 });
 
 test('quality checks cover the agreed branches and deployment stays manually gated', async () => {
