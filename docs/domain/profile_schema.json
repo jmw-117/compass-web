@@ -1,0 +1,144 @@
+{
+  "version": "1.1.0",
+  "early_fields": [
+    {
+      "id": "org_type",
+      "values": [
+        "sole_proprietor",
+        "small_sme",
+        "established_sme",
+        "enterprise",
+        "nonprofit",
+        "other"
+      ]
+    },
+    {
+      "id": "industry",
+      "values": [
+        "retail",
+        "professional_services",
+        "hospitality",
+        "health",
+        "education",
+        "financial_services",
+        "manufacturing",
+        "logistics",
+        "technology",
+        "other"
+      ]
+    },
+    {
+      "id": "primary_goal",
+      "values": [
+        "efficiency",
+        "growth",
+        "service",
+        "risk",
+        "explore"
+      ]
+    }
+  ],
+  "later_fields": [
+    {
+      "id": "country",
+      "default": "KE"
+    },
+    {
+      "id": "respondent_role",
+      "values": [
+        "owner",
+        "leader",
+        "manager",
+        "technical",
+        "other"
+      ]
+    },
+    {
+      "id": "current_ai_use",
+      "values": [
+        "none",
+        "personal",
+        "team_pilot",
+        "operational",
+        "unknown"
+      ]
+    },
+    {
+      "id": "data_category",
+      "values": [
+        "routine",
+        "personal",
+        "restricted",
+        "unknown"
+      ]
+    },
+    {
+      "id": "high_impact_ai_workflow",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "question": "Will AI be used to help make decisions about healthcare, credit, hiring, eligibility for important services, or a similarly high-impact matter?"
+    },
+    {
+      "id": "planned_ai_use",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ]
+    },
+    {
+      "id": "planned_use_real_data",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ]
+    },
+    {
+      "id": "timeline",
+      "values": [
+        "now",
+        "one_to_three_months",
+        "later",
+        "unknown"
+      ]
+    },
+    {
+      "id": "budget_ceiling",
+      "type": "optional_nonnegative_integer",
+      "currency": "KES"
+    },
+    {
+      "id": "budget_band",
+      "values": [
+        "none",
+        "limited",
+        "moderate",
+        "flexible",
+        "unknown"
+      ]
+    },
+    {
+      "id": "staff_capacity",
+      "values": [
+        "none",
+        "limited",
+        "available",
+        "unknown"
+      ]
+    },
+    {
+      "id": "source",
+      "type": "optional_opaque_slug"
+    },
+    {
+      "id": "partner",
+      "type": "optional_opaque_slug"
+    }
+  ],
+  "report_contact_fields": "Optional and separate, ask only at explicit share action. Never require for reading results.",
+  "safe_text_policy": "No names, customer records, secrets or confidential content in optional examples; cap text length; never place answers in URLs."
+}

@@ -1,0 +1,831 @@
+{
+  "version": "1.3.0",
+  "status": "PROPOSED_REQUIRES_S1_SIGNOFF",
+  "scope": "optional extended consultant diagnostic",
+  "scoring": "No score added to overall readiness; no penalty for skipped/unknown",
+  "module_conditions": {
+    "ALL": "extended_assessment == true",
+    "AI_INTENT": "extended_assessment == true AND (profile.current_ai_use in [personal, team_pilot, operational] OR profile.planned_ai_use == yes)",
+    "CURRENT_OR_PLANNED": "extended_assessment == true AND (profile.current_ai_use in [team_pilot, operational] OR profile.planned_ai_use == yes)"
+  },
+  "modules": [
+    {
+      "id": "RDY",
+      "name": "Organisational readiness",
+      "reference": "AWS: readiness",
+      "question_ids": [
+        "EX-RDY-01",
+        "EX-RDY-02"
+      ]
+    },
+    {
+      "id": "USE",
+      "name": "Use-case definition",
+      "reference": "AWS: use cases",
+      "question_ids": [
+        "EX-USE-01",
+        "EX-USE-02"
+      ]
+    },
+    {
+      "id": "ARC",
+      "name": "Architecture and model choice",
+      "reference": "AWS: architecture",
+      "question_ids": [
+        "EX-ARC-01",
+        "EX-ARC-02"
+      ]
+    },
+    {
+      "id": "STO",
+      "name": "Storage and information handling",
+      "reference": "AWS: storage",
+      "question_ids": [
+        "EX-STO-01",
+        "EX-STO-02"
+      ]
+    },
+    {
+      "id": "CMP",
+      "name": "Compliance and security",
+      "reference": "AWS: regulations and compliance",
+      "question_ids": [
+        "EX-CMP-01",
+        "EX-CMP-02"
+      ]
+    },
+    {
+      "id": "INT",
+      "name": "Systems integration",
+      "reference": "AWS: integration",
+      "question_ids": [
+        "EX-INT-01",
+        "EX-INT-02"
+      ]
+    },
+    {
+      "id": "TST",
+      "name": "Testing and evaluation",
+      "reference": "AWS: testing",
+      "question_ids": [
+        "EX-TST-01",
+        "EX-TST-02"
+      ]
+    },
+    {
+      "id": "DEP",
+      "name": "Deployment and operations",
+      "reference": "AWS: deployment and automation",
+      "question_ids": [
+        "EX-DEP-01",
+        "EX-DEP-02"
+      ]
+    },
+    {
+      "id": "DTS",
+      "name": "Data strategy",
+      "reference": "AWS: data strategy",
+      "question_ids": [
+        "EX-DTS-01",
+        "EX-DTS-02"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "EX-RDY-01",
+      "module": "RDY",
+      "prompt": "What concrete evidence shows who can approve or stop an AI trial?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "STR",
+      "flag": "ownership_review",
+      "choices": [
+        {
+          "id": "EX-RDY-01-owner",
+          "value": "owner",
+          "label": "A named person has approved or stopped a recent change"
+        },
+        {
+          "id": "EX-RDY-01-informal",
+          "value": "informal",
+          "label": "Decisions usually happen informally; there is no recorded example"
+        },
+        {
+          "id": "EX-RDY-01-none",
+          "value": "none",
+          "label": "No one has authority to make that decision"
+        },
+        {
+          "id": "EX-RDY-01-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-RDY-02",
+      "module": "RDY",
+      "prompt": "What resources can be committed to a safe AI experiment?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "MET",
+      "flag": "capacity_gap",
+      "choices": [
+        {
+          "id": "EX-RDY-02-funded",
+          "value": "funded",
+          "label": "Time and a small budget are authorized"
+        },
+        {
+          "id": "EX-RDY-02-time",
+          "value": "time",
+          "label": "Time is available but cash is limited"
+        },
+        {
+          "id": "EX-RDY-02-uncommitted",
+          "value": "uncommitted",
+          "label": "Neither time nor spending is committed"
+        },
+        {
+          "id": "EX-RDY-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-USE-01",
+      "module": "USE",
+      "prompt": "Which single activity would you most want to improve?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "PRO",
+      "flag": "goal_clarity",
+      "choices": [
+        {
+          "id": "EX-USE-01-customer",
+          "value": "customer",
+          "label": "Customer service or follow-up"
+        },
+        {
+          "id": "EX-USE-01-sales",
+          "value": "sales",
+          "label": "Sales or marketing"
+        },
+        {
+          "id": "EX-USE-01-operations",
+          "value": "operations",
+          "label": "Operations or administration"
+        },
+        {
+          "id": "EX-USE-01-analysis",
+          "value": "analysis",
+          "label": "Reporting or analysis"
+        },
+        {
+          "id": "EX-USE-01-other",
+          "value": "other",
+          "label": "Another activity"
+        },
+        {
+          "id": "EX-USE-01-unknown",
+          "value": "unknown",
+          "label": "I have not chosen"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-USE-02",
+      "module": "USE",
+      "prompt": "How would you know that this activity improved?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "MET",
+      "flag": "baseline_gap",
+      "choices": [
+        {
+          "id": "EX-USE-02-baseline",
+          "value": "baseline",
+          "label": "We have a baseline and target"
+        },
+        {
+          "id": "EX-USE-02-observable",
+          "value": "observable",
+          "label": "We can observe a change but have no baseline"
+        },
+        {
+          "id": "EX-USE-02-idea",
+          "value": "idea",
+          "label": "We have a benefit in mind but no measurement"
+        },
+        {
+          "id": "EX-USE-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-ARC-01",
+      "module": "ARC",
+      "prompt": "What kind of AI capability do you intend to use?",
+      "applies_when": "AI_INTENT",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "TEC",
+      "flag": "architecture_review",
+      "choices": [
+        {
+          "id": "EX-ARC-01-off_the_shelf",
+          "value": "off_the_shelf",
+          "label": "An existing AI tool"
+        },
+        {
+          "id": "EX-ARC-01-integrated",
+          "value": "integrated",
+          "label": "An AI feature connected to our systems"
+        },
+        {
+          "id": "EX-ARC-01-custom",
+          "value": "custom",
+          "label": "A custom model or application"
+        },
+        {
+          "id": "EX-ARC-01-none",
+          "value": "none",
+          "label": "No solution chosen yet"
+        },
+        {
+          "id": "EX-ARC-01-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-ARC-02",
+      "module": "ARC",
+      "prompt": "For incorrect or uncertain AI results, what would happen?",
+      "applies_when": "AI_INTENT",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "GOV",
+      "flag": "human_oversight_gap",
+      "choices": [
+        {
+          "id": "EX-ARC-02-human",
+          "value": "human",
+          "label": "A person can check, reject and correct results"
+        },
+        {
+          "id": "EX-ARC-02-fallback",
+          "value": "fallback",
+          "label": "There is a fallback but it is not tested"
+        },
+        {
+          "id": "EX-ARC-02-none",
+          "value": "none",
+          "label": "No reliable fallback exists"
+        },
+        {
+          "id": "EX-ARC-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-STO-01",
+      "module": "STO",
+      "prompt": "Where is information for the proposed AI activity stored?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "DAT",
+      "flag": "data_location_gap",
+      "choices": [
+        {
+          "id": "EX-STO-01-managed",
+          "value": "managed",
+          "label": "A managed system with access controls"
+        },
+        {
+          "id": "EX-STO-01-mixed",
+          "value": "mixed",
+          "label": "Across spreadsheets, devices and shared systems"
+        },
+        {
+          "id": "EX-STO-01-paper",
+          "value": "paper",
+          "label": "Mainly paper or messages"
+        },
+        {
+          "id": "EX-STO-01-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-STO-02",
+      "module": "STO",
+      "prompt": "Can your organisation correct or remove information when needed?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "DAT",
+      "flag": "retention_gap",
+      "choices": [
+        {
+          "id": "EX-STO-02-routine",
+          "value": "routine",
+          "label": "Yes, with a known owner and process"
+        },
+        {
+          "id": "EX-STO-02-manual",
+          "value": "manual",
+          "label": "Sometimes, through a manual request"
+        },
+        {
+          "id": "EX-STO-02-none",
+          "value": "none",
+          "label": "Not reliably"
+        },
+        {
+          "id": "EX-STO-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-CMP-01",
+      "module": "CMP",
+      "prompt": "Would the intended AI activity involve personal, financial, health, employee or confidential information?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "GOV",
+      "flag": "sensitive_data_review",
+      "choices": [
+        {
+          "id": "EX-CMP-01-none",
+          "value": "none",
+          "label": "Only public or synthetic information"
+        },
+        {
+          "id": "EX-CMP-01-personal",
+          "value": "personal",
+          "label": "Some personal or business-confidential information"
+        },
+        {
+          "id": "EX-CMP-01-high",
+          "value": "high",
+          "label": "High-impact decisions or specially protected information"
+        },
+        {
+          "id": "EX-CMP-01-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-CMP-02",
+      "module": "CMP",
+      "prompt": "What prevents unapproved information from being entered into AI services?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "GOV",
+      "flag": "uncontrolled_sharing_risk",
+      "choices": [
+        {
+          "id": "EX-CMP-02-controlled",
+          "value": "controlled",
+          "label": "An approved-tool policy and practical access controls"
+        },
+        {
+          "id": "EX-CMP-02-guidance",
+          "value": "guidance",
+          "label": "Informal guidance only"
+        },
+        {
+          "id": "EX-CMP-02-none",
+          "value": "none",
+          "label": "No clear restriction"
+        },
+        {
+          "id": "EX-CMP-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-INT-01",
+      "module": "INT",
+      "prompt": "How would an AI tool obtain the information it needs?",
+      "applies_when": "AI_INTENT",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "TEC",
+      "flag": "integration_gap",
+      "choices": [
+        {
+          "id": "EX-INT-01-api",
+          "value": "api",
+          "label": "Through an approved integration"
+        },
+        {
+          "id": "EX-INT-01-upload",
+          "value": "upload",
+          "label": "Through controlled manual file exports"
+        },
+        {
+          "id": "EX-INT-01-copy",
+          "value": "copy",
+          "label": "By copy/paste or unreviewed uploads"
+        },
+        {
+          "id": "EX-INT-01-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-INT-02",
+      "module": "INT",
+      "prompt": "Which application is the authoritative record for changes made by the workflow?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "TEC",
+      "flag": "system_of_record_gap",
+      "choices": [
+        {
+          "id": "EX-INT-02-known",
+          "value": "known",
+          "label": "A clearly named system of record"
+        },
+        {
+          "id": "EX-INT-02-multiple",
+          "value": "multiple",
+          "label": "Several conflicting systems"
+        },
+        {
+          "id": "EX-INT-02-none",
+          "value": "none",
+          "label": "No dependable record"
+        },
+        {
+          "id": "EX-INT-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-TST-01",
+      "module": "TST",
+      "prompt": "How would you check whether an AI result is good enough?",
+      "applies_when": "AI_INTENT",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "MET",
+      "flag": "evaluation_gap",
+      "choices": [
+        {
+          "id": "EX-TST-01-dataset",
+          "value": "dataset",
+          "label": "A representative test set and pass/fail criteria"
+        },
+        {
+          "id": "EX-TST-01-review",
+          "value": "review",
+          "label": "A person would review examples"
+        },
+        {
+          "id": "EX-TST-01-informal",
+          "value": "informal",
+          "label": "We would try it and see"
+        },
+        {
+          "id": "EX-TST-01-none",
+          "value": "none",
+          "label": "No evaluation approach"
+        },
+        {
+          "id": "EX-TST-01-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-TST-02",
+      "module": "TST",
+      "prompt": "How would you test unsafe, incorrect or unusual responses?",
+      "applies_when": "AI_INTENT",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "GOV",
+      "flag": "test_safety_gap",
+      "choices": [
+        {
+          "id": "EX-TST-02-redteam",
+          "value": "redteam",
+          "label": "Planned negative cases and failure handling"
+        },
+        {
+          "id": "EX-TST-02-samples",
+          "value": "samples",
+          "label": "Some unusual examples"
+        },
+        {
+          "id": "EX-TST-02-none",
+          "value": "none",
+          "label": "We have no such tests"
+        },
+        {
+          "id": "EX-TST-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-DEP-01",
+      "module": "DEP",
+      "prompt": "If an AI feature failed, how could staff continue working?",
+      "applies_when": "CURRENT_OR_PLANNED",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "TEC",
+      "flag": "continuity_gap",
+      "choices": [
+        {
+          "id": "EX-DEP-01-fallback",
+          "value": "fallback",
+          "label": "Tested manual fallback or rollback"
+        },
+        {
+          "id": "EX-DEP-01-manual",
+          "value": "manual",
+          "label": "A possible manual workaround"
+        },
+        {
+          "id": "EX-DEP-01-none",
+          "value": "none",
+          "label": "The work would stop"
+        },
+        {
+          "id": "EX-DEP-01-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-DEP-02",
+      "module": "DEP",
+      "prompt": "Who would monitor quality, usage, problems and ongoing cost?",
+      "applies_when": "CURRENT_OR_PLANNED",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "MET",
+      "flag": "model_operations_gap",
+      "choices": [
+        {
+          "id": "EX-DEP-02-owner",
+          "value": "owner",
+          "label": "A named owner reviews agreed measures"
+        },
+        {
+          "id": "EX-DEP-02-reactive",
+          "value": "reactive",
+          "label": "Someone responds when issues arise"
+        },
+        {
+          "id": "EX-DEP-02-none",
+          "value": "none",
+          "label": "No person or process"
+        },
+        {
+          "id": "EX-DEP-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-DTS-01",
+      "module": "DTS",
+      "prompt": "How is the accuracy and completeness of important records checked?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "DAT",
+      "flag": "data_quality_gap",
+      "choices": [
+        {
+          "id": "EX-DTS-01-routine",
+          "value": "routine",
+          "label": "Repeatable checks with accountable corrections"
+        },
+        {
+          "id": "EX-DTS-01-spot",
+          "value": "spot",
+          "label": "Occasional manual checks"
+        },
+        {
+          "id": "EX-DTS-01-none",
+          "value": "none",
+          "label": "No checks"
+        },
+        {
+          "id": "EX-DTS-01-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-DTS-02",
+      "module": "DTS",
+      "prompt": "Who decides which business data may be reused for new purposes?",
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "GOV",
+      "flag": "data_stewardship_gap",
+      "choices": [
+        {
+          "id": "EX-DTS-02-owner",
+          "value": "owner",
+          "label": "A known authorized decision maker"
+        },
+        {
+          "id": "EX-DTS-02-informal",
+          "value": "informal",
+          "label": "Decision is informal"
+        },
+        {
+          "id": "EX-DTS-02-none",
+          "value": "none",
+          "label": "No explicit owner"
+        },
+        {
+          "id": "EX-DTS-02-unknown",
+          "value": "unknown",
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_value": "unknown"
+    }
+  ],
+  "flag_generation": {
+    "ownership_review": {
+      "none": "flag.owner_not_identified",
+      "unknown": "flag.owner_unverified"
+    },
+    "capacity_gap": {
+      "uncommitted": "flag.no_execution_capacity"
+    },
+    "goal_clarity": {
+      "unknown": "flag.no_use_case"
+    },
+    "baseline_gap": {
+      "idea": "flag.baseline_missing",
+      "unknown": "flag.baseline_unverified"
+    },
+    "architecture_review": {
+      "custom": "flag.custom_architecture_review"
+    },
+    "human_oversight_gap": {
+      "none": "flag.no_human_fallback",
+      "unknown": "flag.human_review_unverified"
+    },
+    "data_location_gap": {
+      "paper": "flag.data_retrieval_manual",
+      "unknown": "flag.data_location_unverified"
+    },
+    "retention_gap": {
+      "none": "flag.no_correction_process"
+    },
+    "sensitive_data_review": {
+      "personal": "flag.sensitive_data_review",
+      "high": "flag.high_impact_review",
+      "unknown": "flag.data_classification_unknown"
+    },
+    "uncontrolled_sharing_risk": {
+      "none": "flag.no_ai_use_controls",
+      "unknown": "flag.ai_use_controls_unverified"
+    },
+    "integration_gap": {
+      "copy": "flag.unreviewed_data_transfer"
+    },
+    "system_of_record_gap": {
+      "multiple": "flag.no_authoritative_system",
+      "none": "flag.no_authoritative_system"
+    },
+    "evaluation_gap": {
+      "none": "flag.no_evaluation_plan",
+      "informal": "flag.informal_evaluation"
+    },
+    "test_safety_gap": {
+      "none": "flag.no_safety_tests"
+    },
+    "continuity_gap": {
+      "none": "flag.no_continuity_plan"
+    },
+    "model_operations_gap": {
+      "none": "flag.no_ops_owner"
+    },
+    "data_quality_gap": {
+      "none": "flag.no_quality_checks"
+    },
+    "data_stewardship_gap": {
+      "none": "flag.no_data_authority"
+    }
+  },
+  "flag_to_existing_action_ids": {
+    "owner_not_identified": [
+      "A00",
+      "A12"
+    ],
+    "no_execution_capacity": [
+      "A02",
+      "A12"
+    ],
+    "no_use_case": [
+      "A02"
+    ],
+    "baseline_missing": [
+      "A06"
+    ],
+    "custom_architecture_review": [
+      "A20"
+    ],
+    "no_human_fallback": [
+      "A10",
+      "A21"
+    ],
+    "data_retrieval_manual": [
+      "A04",
+      "A14"
+    ],
+    "no_correction_process": [
+      "A01",
+      "A08"
+    ],
+    "sensitive_data_review": [
+      "A23",
+      "A07"
+    ],
+    "high_impact_review": [
+      "A20",
+      "A21"
+    ],
+    "no_ai_use_controls": [
+      "A07",
+      "A08"
+    ],
+    "unreviewed_data_transfer": [
+      "A08",
+      "A16"
+    ],
+    "no_authoritative_system": [
+      "A04",
+      "A15"
+    ],
+    "no_evaluation_plan": [
+      "A18"
+    ],
+    "informal_evaluation": [
+      "A18"
+    ],
+    "no_safety_tests": [
+      "A18",
+      "A10"
+    ],
+    "no_continuity_plan": [
+      "A19"
+    ],
+    "no_ops_owner": [
+      "A19"
+    ],
+    "no_quality_checks": [
+      "A05"
+    ],
+    "no_data_authority": [
+      "A04"
+    ]
+  },
+  "gate_merge_policy": "High impact or missing controls from extension yield advisory human-review flags. They DO NOT silently redefine the existing seven formal gates; an S1-approved contract change must modify decision_predicates.json, rules.json and golden cases together. A deep question cannot authorize a pilot."
+}

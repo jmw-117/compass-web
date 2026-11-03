@@ -1,0 +1,10 @@
+Stage S0: Concierge research. STOP until humans supply genuine participant evidence and sign off.
+Stage S1: Contract, rubric, fixtures. STOP until independent reviewer signs expectations.
+Stage S2: Scaffolding and GitHub Pages pipeline, test scripts.
+Stage S3: Assessment wizard and local draft.
+Stage S4: Deterministic evaluator and tests.
+Stage S5: Results report and voluntary share.
+Stage S6: Independent QA, accessibility, hardening.
+Stage S7: Github Pages deployment + smoke + rollback evidence.
+Stage S8: Calibrate, support, version upgrades.
+See docs/stages/INDEX.md and docs/handoffs/ledger.json for authority.

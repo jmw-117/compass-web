@@ -1,0 +1,98 @@
+{
+  "version": "1.3.0",
+  "journeys": [
+    {
+      "id": "J1",
+      "persona": "owner_operator",
+      "description": "Sole proprietor using WhatsApp and spreadsheets",
+      "states": [
+        "landing",
+        "start_3",
+        "quick_5",
+        "preview",
+        "core_remaining_9",
+        "context_optional",
+        "constraints_optional",
+        "results",
+        "download_or_share"
+      ],
+      "expected": "practical low-cash steps; no enterprise governance penalty merely for lacking a department"
+    },
+    {
+      "id": "J2",
+      "persona": "sme_manager",
+      "description": "SME with scattered tools and basic accounting",
+      "states": [
+        "landing",
+        "start_3",
+        "quick_5",
+        "preview",
+        "core_remaining_9",
+        "evidence_probe",
+        "value_stream",
+        "budget",
+        "results",
+        "report",
+        "consented_handoff"
+      ],
+      "expected": "identifies reconciliation friction and readiness gaps; precise action owner"
+    },
+    {
+      "id": "J3",
+      "persona": "enterprise_it_lead",
+      "description": "Team already piloting or deploying AI",
+      "states": [
+        "landing",
+        "start_3",
+        "core_14",
+        "expanded_opt_in",
+        "technical_modules_conditioned",
+        "risk_checks",
+        "results",
+        "technical_annex",
+        "report"
+      ],
+      "expected": "AWS-style tech diligence with model evaluation and monitoring gaps without duplicate core-scoring"
+    },
+    {
+      "id": "J4",
+      "persona": "unsure_respondent",
+      "description": "Unknown answers and scarce information",
+      "states": [
+        "start_3",
+        "core_14_with_unknowns",
+        "results_interval",
+        "verify_actions"
+      ],
+      "expected": "0-100 possible if all unknown, no false zero or blocked output"
+    },
+    {
+      "id": "J5",
+      "persona": "regulated_workflow",
+      "description": "High impact decision + intended AI use",
+      "states": [
+        "core",
+        "high_impact_profile",
+        "safety_gate",
+        "specialist_review_path",
+        "report"
+      ],
+      "expected": "specialist review first despite a strong maturity score"
+    },
+    {
+      "id": "J6",
+      "persona": "consultant",
+      "description": "Silverspark receives client-approved summary and separately provided report",
+      "states": [
+        "receive_explicit_handoff",
+        "record_source",
+        "confirm_answers_with_client",
+        "recompute_if_structured_answers_available",
+        "review_gaps",
+        "agree_next_meeting",
+        "document_consultant_decision"
+      ],
+      "expected": "manual review clearly separates client-reported facts from verified facts"
+    }
+  ]
+}

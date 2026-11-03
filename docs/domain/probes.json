@@ -1,0 +1,195 @@
+{
+  "version": "1.1.0",
+  "rules": [
+    {
+      "id": "PR-TEC-XFER",
+      "when": {
+        "all": [
+          {
+            "q": "TEC-01",
+            "max_score": 2
+          },
+          {
+            "q": "TEC-02",
+            "max_score": 2
+          }
+        ]
+      },
+      "prompt": "In the past seven days, how often did you copy the same information into two places?",
+      "choices": [
+        "Never",
+        "Once or twice",
+        "Three or more times",
+        "Not sure"
+      ],
+      "changes": [
+        "friction_flag"
+      ],
+      "does_not_score": true
+    },
+    {
+      "id": "PR-DAT-ERROR",
+      "when": {
+        "any": [
+          {
+            "q": "DAT-01",
+            "max_score": 2
+          },
+          {
+            "q": "DAT-01",
+            "unknown": true
+          }
+        ]
+      },
+      "prompt": "Can you recall an incorrect, missing, or outdated record that disrupted work recently?",
+      "choices": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "changes": [
+        "data_validation_need"
+      ],
+      "does_not_score": true
+    },
+    {
+      "id": "PR-GOV-SHARE",
+      "when": {
+        "all": [
+          {
+            "profile": "data_category",
+            "in": [
+              "personal",
+              "restricted",
+              "unknown"
+            ]
+          },
+          {
+            "q": "GOV-01",
+            "max_score": 1
+          }
+        ]
+      },
+      "prompt": "Have real customer or staff details been entered into AI tools without approval or clear safeguards?",
+      "choices": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "changes": [
+        "unsafe_ai_sharing_gate"
+      ],
+      "does_not_score": true
+    },
+    {
+      "id": "PR-PEO-CHECK",
+      "when": {
+        "all": [
+          {
+            "profile": "current_ai_use",
+            "in": [
+              "team_pilot",
+              "operational"
+            ]
+          },
+          {
+            "q": "PEO-01",
+            "max_score": 2
+          }
+        ]
+      },
+      "prompt": "Think of the last important AI answer. Was a person responsible for checking it?",
+      "choices": [
+        "Yes",
+        "No",
+        "Cannot recall"
+      ],
+      "changes": [
+        "adoption_validation_need"
+      ],
+      "does_not_score": true
+    },
+    {
+      "id": "PR-MET-START",
+      "when": {
+        "all": [
+          {
+            "q": "MET-01",
+            "max_score": 1
+          },
+          {
+            "profile": "primary_goal",
+            "in": [
+              "efficiency",
+              "growth",
+              "service",
+              "risk"
+            ]
+          }
+        ]
+      },
+      "prompt": "Do you have even one current number for the outcome you want to improve?",
+      "choices": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "changes": [
+        "baseline_missing_gate"
+      ],
+      "does_not_score": true
+    },
+    {
+      "id": "PR-STR-OWNER",
+      "when": {
+        "all": [
+          {
+            "q": "STR-02",
+            "max_score": 1
+          },
+          {
+            "profile": "timeline",
+            "in": [
+              "now",
+              "one_to_three_months"
+            ]
+          }
+        ]
+      },
+      "prompt": "Who could approve a small change during the next 90 days?",
+      "choices": [
+        "Owner or founder",
+        "A named manager",
+        "No one yet",
+        "Not sure"
+      ],
+      "changes": [
+        "ownership_gate"
+      ],
+      "does_not_score": true
+    },
+    {
+      "id": "PR-PRO-STEPS",
+      "when": {
+        "all": [
+          {
+            "q": "PRO-01",
+            "max_score": 1
+          },
+          {
+            "profile": "primary_goal",
+            "eq": "efficiency"
+          }
+        ]
+      },
+      "prompt": "Which recurring task causes the most rework? You may give a short example without names.",
+      "type": "text_optional_140",
+      "changes": [
+        "workflow_example"
+      ],
+      "does_not_score": true
+    }
+  ],
+  "cap": 7,
+  "edit_policy": "The engine recomputes all active probes from the complete current answers. Inactive answers are retained only locally, excluded from results, report and submission; changing an anchor back reactivates previous probe answer only if the same rule version and exact options still apply. Conflicts are shown as evidence needs, not silently rescored."
+}

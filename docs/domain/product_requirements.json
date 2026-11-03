@@ -1,0 +1,189 @@
+{
+  "version": "1.3.0",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "area": "Start",
+      "requirement": "Three-field start: organization type, sector, primary goal.",
+      "acceptance": "Start without login; no other profile field is required before first question.",
+      "stage": "S3",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-002",
+      "area": "Progress",
+      "requirement": "Offer five-question preliminary preview.",
+      "acceptance": "Preview says provisional; no definitive overall band.",
+      "stage": "S3",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-003",
+      "area": "Core",
+      "requirement": "Ask all 14 universally applicable scored indicators.",
+      "acceptance": "Question order and options exactly match signed question_bank.json.",
+      "stage": "S3",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-004",
+      "area": "Adaptive",
+      "requirement": "Present conditional evidence probes once and only when triggered.",
+      "acceptance": "Close probes made inert after edits; no score changes from probes.",
+      "stage": "S3",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-005",
+      "area": "Technical",
+      "requirement": "Offer optional extended 18-question AWS-inspired technical diagnostic.",
+      "acceptance": "Apply conditions; show why skipped; deep questions never directly change overall score.",
+      "stage": "S3",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-006",
+      "area": "Business discovery",
+      "requirement": "Capture a selected value stream and one operational pain point.",
+      "acceptance": "Optional fields; no contact information or confidential data required.",
+      "stage": "S3",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-007",
+      "area": "Constraints",
+      "requirement": "Capture one-off or recurring budget ceiling separately and staff capacity.",
+      "acceptance": "Neither budget field changes score, gates or confidence.",
+      "stage": "S3",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-008",
+      "area": "Scoring",
+      "requirement": "Produce deterministic score intervals with unknown handling.",
+      "acceptance": "Property and golden-fixture tests pass; exact integer semantics.",
+      "stage": "S4",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-009",
+      "area": "Gates",
+      "requirement": "Evaluate governance, safety and data blocker rules.",
+      "acceptance": "Every gate has traceable input IDs and exact precedence.",
+      "stage": "S4",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-010",
+      "area": "Recommendations",
+      "requirement": "Choose primary and up to two secondary paths and ranked next actions.",
+      "acceptance": "3 actions max; no unfounded vendor or cash claims; output stable.",
+      "stage": "S4",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-011",
+      "area": "Report",
+      "requirement": "Generate complete accessible HTML report.",
+      "acceptance": "All mandatory report contract sections render on mobile.",
+      "stage": "S5",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-012",
+      "area": "Export",
+      "requirement": "Support browser print/save-as-PDF plus copy summary.",
+      "acceptance": "All content prints in supported browsers; no promise of PDF file object.",
+      "stage": "S5",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-013",
+      "area": "Handoff",
+      "requirement": "Allow a user-controlled WhatsApp enquiry.",
+      "acceptance": "User sees exact payload before external messaging app; no automatic transfer.",
+      "stage": "S5",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-014",
+      "area": "Consultant",
+      "requirement": "Provide an offline/manual consultant review protocol.",
+      "acceptance": "Review template captures evidence, acceptance, next action, follow-up.",
+      "stage": "S5",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-015",
+      "area": "Drafts",
+      "requirement": "Autosave disclosed tab draft; opt-in longer local save.",
+      "acceptance": "Crash/resume and multi-tab conflict tests pass.",
+      "stage": "S3",
+      "priority": "MUST"
+    },
+    {
+      "id": "FR-016",
+      "area": "Privacy",
+      "requirement": "Default to no network transmission of answers.",
+      "acceptance": "Network test confirms zero app-origin assessment transfers.",
+      "stage": "S6",
+      "priority": "MUST"
+    },
+    {
+      "id": "NFR-001",
+      "area": "Hosting",
+      "requirement": "Publish pure static artifacts to GitHub Pages subpath.",
+      "acceptance": "Full assessment completes from /silverspark-compass/ including refresh/hash routes.",
+      "stage": "S7",
+      "priority": "MUST"
+    },
+    {
+      "id": "NFR-002",
+      "area": "Accessibility",
+      "requirement": "Meet WCAG 2.2 AA target, keyboard and screen reader.",
+      "acceptance": "Axe + manual keyboard + target-device tests; no critical defects.",
+      "stage": "S6",
+      "priority": "MUST"
+    },
+    {
+      "id": "NFR-003",
+      "area": "Performance",
+      "requirement": "Stay functional on low-end Android and narrow mobile.",
+      "acceptance": "Pre-rendered landing, limited JS, report lazy-loaded; lab performance reviewed.",
+      "stage": "S6",
+      "priority": "MUST"
+    },
+    {
+      "id": "NFR-004",
+      "area": "Reproducibility",
+      "requirement": "Freeze rule, question, and report versions.",
+      "acceptance": "Exact report input & version produce stable output with stored fixtures.",
+      "stage": "S4",
+      "priority": "MUST"
+    },
+    {
+      "id": "NFR-005",
+      "area": "Deployment",
+      "requirement": "Deploy only from approved gated Actions job.",
+      "acceptance": "Required checks lint/type/unit/e2e/axe/build and protected main.",
+      "stage": "S7",
+      "priority": "MUST"
+    },
+    {
+      "id": "NFR-006",
+      "area": "Safety",
+      "requirement": "Do not store tokens, provider secrets, contact details by default.",
+      "acceptance": "Static artifacts contain no secrets; CSP limitations documented.",
+      "stage": "S6",
+      "priority": "MUST"
+    },
+    {
+      "id": "NFR-007",
+      "area": "Agent delivery",
+      "requirement": "S0–S8 with signed handoff.",
+      "acceptance": "Each stage outputs tests, artifact hashes, reviewer sign-off and next scope.",
+      "stage": "S0",
+      "priority": "MUST"
+    }
+  ]
+}

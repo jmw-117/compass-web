@@ -1,0 +1,165 @@
+{
+  "version": "1.1.0",
+  "scoring": {
+    "weights_pct": {
+      "STR": 15,
+      "PRO": 15,
+      "DAT": 15,
+      "TEC": 15,
+      "PEO": 15,
+      "GOV": 15,
+      "MET": 10
+    },
+    "core_indicators_per_dimension": 2,
+    "answer_score_range": [
+      0,
+      4
+    ],
+    "score_units": "eighth-points",
+    "lower_eighths": "sum(dimension_weight_pct * score for every known answer; unknown contributes 0)",
+    "upper_eighths": "sum(dimension_weight_pct * score for known answers; unknown contributes 4*dimension_weight_pct)",
+    "coverage_units": "sum(dimension_weight_pct for each known core answer), out of 200",
+    "band_thresholds_eighths": [
+      0,
+      200,
+      400,
+      600,
+      800
+    ],
+    "band_names": [
+      "Foundational",
+      "Emerging",
+      "Developing",
+      "Established"
+    ],
+    "rounding": "Store exact integer eighths; display lower as floor(lower_eighths/8), upper as ceil(upper_eighths/8); determine maturity band using raw integer endpoints, never the displayed rounded values.",
+    "unknown_policy": "Unknown is a set of possible scores 0..4, never imputed. Every unknown produces a verification action or open question; no complete-score suppression.",
+    "band_policy": "Show one band only when lower and upper raw integer eighths are inside the same band; otherwise show all intersected bands without asserting one label.",
+    "high_score_warning": "A high self-reported score never bypasses governance gates or proves suitability for a specific AI use case."
+  },
+  "gates": [
+    {
+      "id": "URGENT-REGULATED",
+      "predicate": "See decision_predicates.json",
+      "severity": "BLOCK_PILOT",
+      "primary_path": "P6",
+      "reason": "High-impact AI-assisted decisions require domain-specific review.",
+      "predicate_ast_id": "G-URGENT-REGULATED"
+    },
+    {
+      "id": "GOV-DATA",
+      "predicate": "See decision_predicates.json",
+      "severity": "BLOCK_UNCONTROLLED_AI",
+      "primary_path": "P2",
+      "reason": "Unsafe sensitive-data exposure or absent safeguards for restricted-data use.",
+      "predicate_ast_id": "G-GOV-DATA"
+    },
+    {
+      "id": "OWN-NONE",
+      "predicate": "See decision_predicates.json",
+      "severity": "BLOCK_PILOT",
+      "primary_path": null,
+      "reason": "No accountable decision owner has been identified.",
+      "predicate_ast_id": "G-OWN-NONE"
+    },
+    {
+      "id": "DATA-UNKNOWN",
+      "predicate": "See decision_predicates.json",
+      "severity": "VERIFY",
+      "primary_path": "P0",
+      "reason": "Essential data availability or quality has not been established.",
+      "predicate_ast_id": "G-DATA-UNKNOWN"
+    },
+    {
+      "id": "BASELINE-MISSING",
+      "predicate": "See decision_predicates.json",
+      "severity": "BLOCK_FINANCIAL_CLAIMS",
+      "primary_path": null,
+      "reason": "No reliable business baseline is available.",
+      "predicate_ast_id": "G-BASELINE-MISSING"
+    },
+    {
+      "id": "BUDGET-UNKNOWN",
+      "predicate": "See decision_predicates.json",
+      "severity": "LABEL_COST_UNVERIFIED",
+      "primary_path": null,
+      "reason": "Budget fit cannot be validated.",
+      "predicate_ast_id": "G-BUDGET-UNKNOWN"
+    }
+  ],
+  "gate_precedence": [
+    "URGENT-REGULATED",
+    "GOV-DATA",
+    "DATA-UNKNOWN",
+    "OWN-NONE",
+    "BASELINE-MISSING",
+    "BUDGET-UNKNOWN"
+  ],
+  "path_priority": [
+    "P6",
+    "P2",
+    "P0",
+    "P1",
+    "P4",
+    "P3",
+    "P5"
+  ],
+  "path_selection": "If hard gate URGENT fires choose P6. Else if hard gate GOV-DATA fires choose P2. Else if P0 predicate true choose P0. Else choose first triggered of P1,P4,P3,P5. If none triggered, use P0 with verify remaining differences. Secondary paths at most two; report all gate reasons regardless of path.",
+  "path_dimension_unknown_handling": "For maturity comparisons use max-possible dimension value to trigger deficiency only if it still meets the low threshold; do not trigger P1/P3 from a single unknown. Pilot eligibility requires known scores at every listed mandatory indicator.",
+  "action_ranking": {
+    "severity": 35,
+    "dependency_unlock": 25,
+    "goal_alignment": 20,
+    "feasibility": 20,
+    "severity_formula": "(4-dimension_upper_bound)/4; normalized to 0..1 (unknowns are handled by P0)",
+    "dependency_formula": "dependency_unlock/3",
+    "goal_formula": "1 if action.goal_tags contains primary_goal or all; else 0",
+    "feasibility_formula": "1 for C0 when staff_capacity != none; 0.5 for C1 when budget_band IN [limited,moderate,flexible] and staff capacity exists; 0 for C3 unless specialist review mandatory; otherwise 0",
+    "score_formula": "35*severity + 25*dependency + 20*alignment + 20*feasibility",
+    "tie_break": "path priority, then action id ascending",
+    "gating": "Hard safety path precedence overrides numeric action rank."
+  },
+  "budget": {
+    "question": "Maximum external cash spend you could authorize over the next 90 days (optional; excludes your own staff time)",
+    "currency_default": "KES",
+    "accept_amount_as_ceiling": true,
+    "min_amount": 0,
+    "budget_bands": [
+      "none",
+      "limited",
+      "moderate",
+      "flexible",
+      "unknown"
+    ],
+    "qualitative_candidate_classes": {
+      "none": [
+        "C0"
+      ],
+      "limited": [
+        "C0",
+        "C1"
+      ],
+      "moderate": [
+        "C0",
+        "C1",
+        "C2"
+      ],
+      "flexible": [
+        "C0",
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "unknown": [
+        "C0"
+      ]
+    },
+    "allow_true_affordable_label_only_if": "dated catalog cost upper bound <= provided numeric ceiling, matching currency, all relevant cost components included, estimate reviewed within 90 days",
+    "unknown_default": "Possible only (not fit) for qualitative categories; show staff time and implementation cost exclusions."
+  },
+  "applicability": {
+    "core": "ALWAYS",
+    "conditional_probes": "as listed in probes.json",
+    "business_size": "may affect examples, recommended owner roles and language only; must never exclude universal controls."
+  }
+}

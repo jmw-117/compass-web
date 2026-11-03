@@ -1,0 +1,502 @@
+{
+  "version": "1.1.0",
+  "status": "PROPOSED HUMAN REVIEW REQUIRED; expected outcomes are handwritten, NOT validated execution results",
+  "cases": [
+    {
+      "id": "F01",
+      "title": "Sole proprietor with WhatsApp records",
+      "profile": {
+        "org_type": "sole_proprietor",
+        "industry": "retail",
+        "primary_goal": "efficiency",
+        "budget_band": "none",
+        "staff_capacity": "limited",
+        "data_category": "personal",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "no",
+        "planned_use_real_data": "no",
+        "current_ai_use": "none"
+      },
+      "answers": {
+        "STR-01": "STR-01-L1",
+        "STR-02": "STR-02-L2",
+        "PRO-01": "PRO-01-L1",
+        "PRO-02": "PRO-02-L1",
+        "DAT-01": "DAT-01-L1",
+        "DAT-02": "DAT-02-L1",
+        "TEC-01": "TEC-01-L1",
+        "TEC-02": "TEC-02-L1",
+        "PEO-01": "PEO-01-L0",
+        "PEO-02": "PEO-02-L1",
+        "GOV-01": "GOV-01-L1",
+        "GOV-02": "GOV-02-L1",
+        "MET-01": "MET-01-L0",
+        "MET-02": "MET-02-L1"
+      },
+      "expected": {
+        "primary_path": "P1",
+        "forbidden_primary": [
+          "P2",
+          "P5"
+        ],
+        "coverage_units": 200,
+        "budget_must_not_change_score": true
+      }
+    },
+    {
+      "id": "F02",
+      "title": "Separated data and manual copying",
+      "profile": {
+        "org_type": "small_sme",
+        "industry": "logistics",
+        "primary_goal": "efficiency",
+        "budget_band": "limited",
+        "staff_capacity": "available",
+        "data_category": "routine",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "yes",
+        "planned_use_real_data": "no",
+        "current_ai_use": "personal"
+      },
+      "answers": {
+        "STR-01": "STR-01-L3",
+        "STR-02": "STR-02-L3",
+        "PRO-01": "PRO-01-L3",
+        "PRO-02": "PRO-02-L3",
+        "DAT-01": "DAT-01-L3",
+        "DAT-02": "DAT-02-L3",
+        "TEC-01": "TEC-01-L1",
+        "TEC-02": "TEC-02-L1",
+        "PEO-01": "PEO-01-L3",
+        "PEO-02": "PEO-02-L3",
+        "GOV-01": "GOV-01-L3",
+        "GOV-02": "GOV-02-L3",
+        "MET-01": "MET-01-L3",
+        "MET-02": "MET-02-L3"
+      },
+      "expected": {
+        "primary_path": "P4",
+        "coverage_units": 200
+      }
+    },
+    {
+      "id": "F03",
+      "title": "High maturity ordinary data pilot",
+      "profile": {
+        "org_type": "established_sme",
+        "industry": "professional_services",
+        "primary_goal": "service",
+        "budget_band": "moderate",
+        "staff_capacity": "available",
+        "data_category": "routine",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "yes",
+        "planned_use_real_data": "no",
+        "current_ai_use": "team_pilot"
+      },
+      "answers": {
+        "STR-01": "STR-01-L3",
+        "STR-02": "STR-02-L3",
+        "PRO-01": "PRO-01-L3",
+        "PRO-02": "PRO-02-L3",
+        "DAT-01": "DAT-01-L3",
+        "DAT-02": "DAT-02-L3",
+        "TEC-01": "TEC-01-L3",
+        "TEC-02": "TEC-02-L3",
+        "PEO-01": "PEO-01-L3",
+        "PEO-02": "PEO-02-L3",
+        "GOV-01": "GOV-01-L3",
+        "GOV-02": "GOV-02-L3",
+        "MET-01": "MET-01-L3",
+        "MET-02": "MET-02-L3"
+      },
+      "expected": {
+        "primary_path": "P5",
+        "lower_eighths": 600,
+        "upper_eighths": 600,
+        "coverage_units": 200
+      }
+    },
+    {
+      "id": "F04",
+      "title": "High impact decision and no review",
+      "profile": {
+        "org_type": "enterprise",
+        "industry": "financial_services",
+        "primary_goal": "growth",
+        "budget_band": "flexible",
+        "staff_capacity": "available",
+        "data_category": "restricted",
+        "high_impact_ai_workflow": "yes",
+        "planned_ai_use": "yes",
+        "planned_use_real_data": "yes",
+        "current_ai_use": "operational"
+      },
+      "answers": {
+        "STR-01": "STR-01-L4",
+        "STR-02": "STR-02-L4",
+        "PRO-01": "PRO-01-L4",
+        "PRO-02": "PRO-02-L4",
+        "DAT-01": "DAT-01-L4",
+        "DAT-02": "DAT-02-L4",
+        "TEC-01": "TEC-01-L4",
+        "TEC-02": "TEC-02-L4",
+        "PEO-01": "PEO-01-L4",
+        "PEO-02": "PEO-02-L4",
+        "GOV-01": "GOV-01-L4",
+        "GOV-02": "GOV-02-L4",
+        "MET-01": "MET-01-L4",
+        "MET-02": "MET-02-L4"
+      },
+      "expected": {
+        "primary_path": "P6",
+        "lower_eighths": 800,
+        "coverage_units": 200
+      }
+    },
+    {
+      "id": "F05",
+      "title": "Many unknown answers",
+      "profile": {
+        "org_type": "small_sme",
+        "industry": "retail",
+        "primary_goal": "explore",
+        "budget_band": "unknown",
+        "staff_capacity": "unknown",
+        "data_category": "unknown",
+        "high_impact_ai_workflow": "unknown",
+        "planned_ai_use": "unknown",
+        "planned_use_real_data": "unknown",
+        "current_ai_use": "unknown"
+      },
+      "answers": {
+        "STR-01": "STR-01-UNK",
+        "STR-02": "STR-02-UNK",
+        "PRO-01": "PRO-01-UNK",
+        "PRO-02": "PRO-02-UNK",
+        "DAT-01": "DAT-01-UNK",
+        "DAT-02": "DAT-02-UNK",
+        "TEC-01": "TEC-01-UNK",
+        "TEC-02": "TEC-02-UNK",
+        "PEO-01": "PEO-01-UNK",
+        "PEO-02": "PEO-02-UNK",
+        "GOV-01": "GOV-01-UNK",
+        "GOV-02": "GOV-02-UNK",
+        "MET-01": "MET-01-UNK",
+        "MET-02": "MET-02-UNK"
+      },
+      "expected": {
+        "primary_path": "P0",
+        "lower_eighths": 0,
+        "upper_eighths": 800,
+        "coverage_units": 0,
+        "band": "multiple",
+        "budget_fit": "unverified"
+      }
+    },
+    {
+      "id": "F06",
+      "title": "Two unknown data indicators",
+      "profile": {
+        "org_type": "small_sme",
+        "industry": "retail",
+        "primary_goal": "growth",
+        "budget_band": "limited",
+        "staff_capacity": "limited",
+        "data_category": "routine",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "no",
+        "planned_use_real_data": "no",
+        "current_ai_use": "personal"
+      },
+      "answers": {
+        "STR-01": "STR-01-L2",
+        "STR-02": "STR-02-L2",
+        "PRO-01": "PRO-01-L2",
+        "PRO-02": "PRO-02-L2",
+        "DAT-01": "DAT-01-UNK",
+        "DAT-02": "DAT-02-UNK",
+        "TEC-01": "TEC-01-L2",
+        "TEC-02": "TEC-02-L2",
+        "PEO-01": "PEO-01-L2",
+        "PEO-02": "PEO-02-L2",
+        "GOV-01": "GOV-01-L2",
+        "GOV-02": "GOV-02-L2",
+        "MET-01": "MET-01-L2",
+        "MET-02": "MET-02-L2"
+      },
+      "expected": {
+        "primary_path": "P0",
+        "coverage_units": 170,
+        "score_type": "interval"
+      }
+    },
+    {
+      "id": "F07",
+      "title": "Personal data alone is not urgent gate",
+      "profile": {
+        "org_type": "sole_proprietor",
+        "industry": "retail",
+        "primary_goal": "efficiency",
+        "budget_band": "limited",
+        "staff_capacity": "limited",
+        "data_category": "personal",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "no",
+        "planned_use_real_data": "no",
+        "current_ai_use": "none"
+      },
+      "answers": {
+        "STR-01": "STR-01-L3",
+        "STR-02": "STR-02-L3",
+        "PRO-01": "PRO-01-L3",
+        "PRO-02": "PRO-02-L3",
+        "DAT-01": "DAT-01-L3",
+        "DAT-02": "DAT-02-L3",
+        "TEC-01": "TEC-01-L1",
+        "TEC-02": "TEC-02-L1",
+        "PEO-01": "PEO-01-L3",
+        "PEO-02": "PEO-02-L3",
+        "GOV-01": "GOV-01-L1",
+        "GOV-02": "GOV-02-L3",
+        "MET-01": "MET-01-L3",
+        "MET-02": "MET-02-L3"
+      },
+      "expected": {
+        "primary_path": "P4",
+        "gates_not_present": [
+          "GOV-DATA"
+        ]
+      }
+    },
+    {
+      "id": "F08",
+      "title": "Unsafe sharing of personal information",
+      "profile": {
+        "org_type": "small_sme",
+        "industry": "professional_services",
+        "primary_goal": "service",
+        "budget_band": "limited",
+        "staff_capacity": "available",
+        "data_category": "personal",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "yes",
+        "planned_use_real_data": "yes",
+        "current_ai_use": "operational"
+      },
+      "answers": {
+        "STR-01": "STR-01-L2",
+        "STR-02": "STR-02-L2",
+        "PRO-01": "PRO-01-L2",
+        "PRO-02": "PRO-02-L2",
+        "DAT-01": "DAT-01-L2",
+        "DAT-02": "DAT-02-L2",
+        "TEC-01": "TEC-01-L2",
+        "TEC-02": "TEC-02-L2",
+        "PEO-01": "PEO-01-L2",
+        "PEO-02": "PEO-02-L2",
+        "GOV-01": "GOV-01-L1",
+        "GOV-02": "GOV-02-L2",
+        "MET-01": "MET-01-L2",
+        "MET-02": "MET-02-L2"
+      },
+      "probes": {
+        "PR-GOV-SHARE": "Yes"
+      },
+      "expected": {
+        "primary_path": "P2",
+        "gates_present": [
+          "GOV-DATA"
+        ]
+      }
+    },
+    {
+      "id": "F09",
+      "title": "No accountable owner",
+      "profile": {
+        "org_type": "small_sme",
+        "industry": "technology",
+        "primary_goal": "efficiency",
+        "budget_band": "flexible",
+        "staff_capacity": "available",
+        "data_category": "routine",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "yes",
+        "planned_use_real_data": "no",
+        "current_ai_use": "team_pilot"
+      },
+      "answers": {
+        "STR-01": "STR-01-L2",
+        "STR-02": "STR-02-L0",
+        "PRO-01": "PRO-01-L2",
+        "PRO-02": "PRO-02-L2",
+        "DAT-01": "DAT-01-L2",
+        "DAT-02": "DAT-02-L2",
+        "TEC-01": "TEC-01-L2",
+        "TEC-02": "TEC-02-L2",
+        "PEO-01": "PEO-01-L2",
+        "PEO-02": "PEO-02-L2",
+        "GOV-01": "GOV-01-L2",
+        "GOV-02": "GOV-02-L2",
+        "MET-01": "MET-01-L2",
+        "MET-02": "MET-02-L2"
+      },
+      "expected": {
+        "gates_present": [
+          "OWN-NONE"
+        ],
+        "primary_path_not": "P5"
+      }
+    },
+    {
+      "id": "F10",
+      "title": "Baseline missing despite available staff",
+      "profile": {
+        "org_type": "established_sme",
+        "industry": "logistics",
+        "primary_goal": "efficiency",
+        "budget_band": "moderate",
+        "staff_capacity": "available",
+        "data_category": "routine",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "yes",
+        "planned_use_real_data": "no",
+        "current_ai_use": "personal"
+      },
+      "answers": {
+        "STR-01": "STR-01-L2",
+        "STR-02": "STR-02-L2",
+        "PRO-01": "PRO-01-L2",
+        "PRO-02": "PRO-02-L2",
+        "DAT-01": "DAT-01-L2",
+        "DAT-02": "DAT-02-L2",
+        "TEC-01": "TEC-01-L2",
+        "TEC-02": "TEC-02-L2",
+        "PEO-01": "PEO-01-L2",
+        "PEO-02": "PEO-02-L2",
+        "GOV-01": "GOV-01-L2",
+        "GOV-02": "GOV-02-L2",
+        "MET-01": "MET-01-L0",
+        "MET-02": "MET-02-L2"
+      },
+      "probes": {
+        "PR-MET-START": "No"
+      },
+      "expected": {
+        "gates_present": [
+          "BASELINE-MISSING"
+        ],
+        "primary_path_not": "P5"
+      }
+    },
+    {
+      "id": "F11",
+      "title": "Budget change must not change readiness",
+      "profile": {
+        "org_type": "small_sme",
+        "industry": "retail",
+        "primary_goal": "explore",
+        "budget_band": "none",
+        "staff_capacity": "limited",
+        "data_category": "routine",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "no",
+        "planned_use_real_data": "no",
+        "current_ai_use": "none"
+      },
+      "answers": {
+        "STR-01": "STR-01-L2",
+        "STR-02": "STR-02-L2",
+        "PRO-01": "PRO-01-L2",
+        "PRO-02": "PRO-02-L2",
+        "DAT-01": "DAT-01-L2",
+        "DAT-02": "DAT-02-L2",
+        "TEC-01": "TEC-01-L2",
+        "TEC-02": "TEC-02-L2",
+        "PEO-01": "PEO-01-L2",
+        "PEO-02": "PEO-02-L2",
+        "GOV-01": "GOV-01-L2",
+        "GOV-02": "GOV-02-L2",
+        "MET-01": "MET-01-L2",
+        "MET-02": "MET-02-L2"
+      },
+      "metamorphic": {
+        "change_budget_band_to": "flexible",
+        "expect_same_readiness": true
+      }
+    },
+    {
+      "id": "F12",
+      "title": "Edit-revert must have identical output",
+      "profile": {
+        "org_type": "small_sme",
+        "industry": "retail",
+        "primary_goal": "explore",
+        "budget_band": "unknown",
+        "staff_capacity": "limited",
+        "data_category": "routine",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "no",
+        "planned_use_real_data": "no",
+        "current_ai_use": "none"
+      },
+      "answers": {
+        "STR-01": "STR-01-L2",
+        "STR-02": "STR-02-L2",
+        "PRO-01": "PRO-01-L2",
+        "PRO-02": "PRO-02-L2",
+        "DAT-01": "DAT-01-L2",
+        "DAT-02": "DAT-02-L2",
+        "TEC-01": "TEC-01-L2",
+        "TEC-02": "TEC-02-L2",
+        "PEO-01": "PEO-01-L2",
+        "PEO-02": "PEO-02-L2",
+        "GOV-01": "GOV-01-L2",
+        "GOV-02": "GOV-02-L2",
+        "MET-01": "MET-01-L2",
+        "MET-02": "MET-02-L2"
+      },
+      "metamorphic": {
+        "edit": "TEC-01-L1",
+        "then_revert": "TEC-01-L2",
+        "expect_same_json": true
+      }
+    },
+    {
+      "id": "F13",
+      "title": "Adoption and skills gap with otherwise capable business",
+      "profile": {
+        "org_type": "established_sme",
+        "industry": "technology",
+        "primary_goal": "service",
+        "budget_band": "moderate",
+        "staff_capacity": "available",
+        "data_category": "routine",
+        "high_impact_ai_workflow": "no",
+        "planned_ai_use": "no",
+        "planned_use_real_data": "no",
+        "current_ai_use": "personal"
+      },
+      "answers": {
+        "STR-01": "STR-01-L3",
+        "STR-02": "STR-02-L3",
+        "PRO-01": "PRO-01-L3",
+        "PRO-02": "PRO-02-L3",
+        "DAT-01": "DAT-01-L3",
+        "DAT-02": "DAT-02-L3",
+        "TEC-01": "TEC-01-L3",
+        "TEC-02": "TEC-02-L3",
+        "PEO-01": "PEO-01-L1",
+        "PEO-02": "PEO-02-L1",
+        "GOV-01": "GOV-01-L3",
+        "GOV-02": "GOV-02-L3",
+        "MET-01": "MET-01-L3",
+        "MET-02": "MET-02-L3"
+      },
+      "expected": {
+        "primary_path": "P3",
+        "coverage_units": 200
+      }
+    }
+  ]
+}

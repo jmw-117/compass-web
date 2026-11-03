@@ -1,0 +1,592 @@
+{
+  "version": "1.1.0",
+  "locale": "en-KE",
+  "all_core_applicable": true,
+  "dimensions": [
+    {
+      "id": "STR",
+      "weight_pct": 15,
+      "description": "Business & Strategy"
+    },
+    {
+      "id": "PRO",
+      "weight_pct": 15,
+      "description": "Processes & Workflows"
+    },
+    {
+      "id": "DAT",
+      "weight_pct": 15,
+      "description": "Data Readiness"
+    },
+    {
+      "id": "TEC",
+      "weight_pct": 15,
+      "description": "Technology & Systems"
+    },
+    {
+      "id": "PEO",
+      "weight_pct": 15,
+      "description": "People & Adoption"
+    },
+    {
+      "id": "GOV",
+      "weight_pct": 15,
+      "description": "Governance & Security"
+    },
+    {
+      "id": "MET",
+      "weight_pct": 10,
+      "description": "Measurement & Execution"
+    }
+  ],
+  "questions": [
+    {
+      "id": "STR-01",
+      "dimension": "STR",
+      "applicability": "ALWAYS",
+      "prompt": "How clearly do your plans for using AI or automation connect to a business goal?",
+      "options": [
+        {
+          "id": "STR-01-L0",
+          "score": 0,
+          "label": "We have not identified a specific business goal."
+        },
+        {
+          "id": "STR-01-L1",
+          "score": 1,
+          "label": "We have some ideas but no agreed outcome."
+        },
+        {
+          "id": "STR-01-L2",
+          "score": 2,
+          "label": "We have chosen a goal but no way to measure it."
+        },
+        {
+          "id": "STR-01-L3",
+          "score": 3,
+          "label": "We have a clear goal and know what improvement would look like."
+        },
+        {
+          "id": "STR-01-L4",
+          "score": 4,
+          "label": "We review results against goals and adjust our plans."
+        },
+        {
+          "id": "STR-01-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "STR-01-UNK"
+    },
+    {
+      "id": "STR-02",
+      "dimension": "STR",
+      "applicability": "ALWAYS",
+      "prompt": "Who can decide whether to introduce a new tool or change the way work is done?",
+      "options": [
+        {
+          "id": "STR-02-L0",
+          "score": 0,
+          "label": "No one has a clear responsibility for that decision."
+        },
+        {
+          "id": "STR-02-L1",
+          "score": 1,
+          "label": "Decisions happen informally when a problem comes up."
+        },
+        {
+          "id": "STR-02-L2",
+          "score": 2,
+          "label": "A person usually decides, but responsibilities are not always clear."
+        },
+        {
+          "id": "STR-02-L3",
+          "score": 3,
+          "label": "There is a clear decision owner and a simple approval process."
+        },
+        {
+          "id": "STR-02-L4",
+          "score": 4,
+          "label": "Decisions have clear owners and are reviewed for business impact."
+        },
+        {
+          "id": "STR-02-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "STR-02-UNK"
+    },
+    {
+      "id": "PRO-01",
+      "dimension": "PRO",
+      "applicability": "ALWAYS",
+      "prompt": "How consistently is your most important repeatable work carried out?",
+      "options": [
+        {
+          "id": "PRO-01-L0",
+          "score": 0,
+          "label": "We work differently each time; the steps are not clear."
+        },
+        {
+          "id": "PRO-01-L1",
+          "score": 1,
+          "label": "We mostly rely on habit or what individuals remember."
+        },
+        {
+          "id": "PRO-01-L2",
+          "score": 2,
+          "label": "We use common steps but they are not always followed."
+        },
+        {
+          "id": "PRO-01-L3",
+          "score": 3,
+          "label": "We have repeatable steps that people normally follow."
+        },
+        {
+          "id": "PRO-01-L4",
+          "score": 4,
+          "label": "We review the steps, measure delays, and improve them."
+        },
+        {
+          "id": "PRO-01-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "PRO-01-UNK"
+    },
+    {
+      "id": "PRO-02",
+      "dimension": "PRO",
+      "applicability": "ALWAYS",
+      "prompt": "How do you find out where work gets delayed, repeated, or done incorrectly?",
+      "options": [
+        {
+          "id": "PRO-02-L0",
+          "score": 0,
+          "label": "We rarely identify recurring problems."
+        },
+        {
+          "id": "PRO-02-L1",
+          "score": 1,
+          "label": "We notice problems when a customer or colleague complains."
+        },
+        {
+          "id": "PRO-02-L2",
+          "score": 2,
+          "label": "We discuss recurring problems but do not track them."
+        },
+        {
+          "id": "PRO-02-L3",
+          "score": 3,
+          "label": "We record the main recurring problems and act on them."
+        },
+        {
+          "id": "PRO-02-L4",
+          "score": 4,
+          "label": "We track patterns, investigate causes, and verify improvement."
+        },
+        {
+          "id": "PRO-02-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "PRO-02-UNK"
+    },
+    {
+      "id": "DAT-01",
+      "dimension": "DAT",
+      "applicability": "ALWAYS",
+      "prompt": "How reliable are the records you use to make everyday business decisions?",
+      "options": [
+        {
+          "id": "DAT-01-L0",
+          "score": 0,
+          "label": "Important records are often missing or unusable."
+        },
+        {
+          "id": "DAT-01-L1",
+          "score": 1,
+          "label": "Records exist but are frequently incomplete or out of date."
+        },
+        {
+          "id": "DAT-01-L2",
+          "score": 2,
+          "label": "Most records are usable but require occasional correction."
+        },
+        {
+          "id": "DAT-01-L3",
+          "score": 3,
+          "label": "Important records are usually accurate and easy to find."
+        },
+        {
+          "id": "DAT-01-L4",
+          "score": 4,
+          "label": "We regularly check record quality and fix recurring errors."
+        },
+        {
+          "id": "DAT-01-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "DAT-01-UNK"
+    },
+    {
+      "id": "DAT-02",
+      "dimension": "DAT",
+      "applicability": "ALWAYS",
+      "prompt": "Who makes sure important business records stay up to date and accessible?",
+      "options": [
+        {
+          "id": "DAT-02-L0",
+          "score": 0,
+          "label": "Nobody takes responsibility for maintaining our records."
+        },
+        {
+          "id": "DAT-02-L1",
+          "score": 1,
+          "label": "People update records when they remember or have time."
+        },
+        {
+          "id": "DAT-02-L2",
+          "score": 2,
+          "label": "Someone usually maintains records, but checks are informal."
+        },
+        {
+          "id": "DAT-02-L3",
+          "score": 3,
+          "label": "Responsibilities and access rules are clear for key records."
+        },
+        {
+          "id": "DAT-02-L4",
+          "score": 4,
+          "label": "We review responsibilities, access, and record quality regularly."
+        },
+        {
+          "id": "DAT-02-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "DAT-02-UNK"
+    },
+    {
+      "id": "TEC-01",
+      "dimension": "TEC",
+      "applicability": "ALWAYS",
+      "prompt": "Where do you keep the records used to run your business?",
+      "options": [
+        {
+          "id": "TEC-01-L0",
+          "score": 0,
+          "label": "Most important records are on paper or in personal messages."
+        },
+        {
+          "id": "TEC-01-L1",
+          "score": 1,
+          "label": "Digital records exist but are scattered across separate files and tools."
+        },
+        {
+          "id": "TEC-01-L2",
+          "score": 2,
+          "label": "We use digital tools with a reasonably consistent record-keeping method."
+        },
+        {
+          "id": "TEC-01-L3",
+          "score": 3,
+          "label": "Our key digital systems are dependable and have clear owners."
+        },
+        {
+          "id": "TEC-01-L4",
+          "score": 4,
+          "label": "We monitor systems and regularly improve how information is managed."
+        },
+        {
+          "id": "TEC-01-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "TEC-01-UNK"
+    },
+    {
+      "id": "TEC-02",
+      "dimension": "TEC",
+      "applicability": "ALWAYS",
+      "prompt": "When information is needed from different systems, how is it combined?",
+      "options": [
+        {
+          "id": "TEC-02-L0",
+          "score": 0,
+          "label": "We often cannot combine the information when needed."
+        },
+        {
+          "id": "TEC-02-L1",
+          "score": 1,
+          "label": "We usually copy or type the same details again."
+        },
+        {
+          "id": "TEC-02-L2",
+          "score": 2,
+          "label": "We regularly use exports or some basic system connections."
+        },
+        {
+          "id": "TEC-02-L3",
+          "score": 3,
+          "label": "Key systems exchange information reliably, with checks."
+        },
+        {
+          "id": "TEC-02-L4",
+          "score": 4,
+          "label": "We monitor connected systems and routinely resolve data-transfer problems."
+        },
+        {
+          "id": "TEC-02-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "TEC-02-UNK"
+    },
+    {
+      "id": "PEO-01",
+      "dimension": "PEO",
+      "applicability": "ALWAYS",
+      "prompt": "How confident are you and the people helping you in using AI safely and checking its work?",
+      "options": [
+        {
+          "id": "PEO-01-L0",
+          "score": 0,
+          "label": "We have little or no experience with AI tools."
+        },
+        {
+          "id": "PEO-01-L1",
+          "score": 1,
+          "label": "Some people experiment but rarely check the outputs."
+        },
+        {
+          "id": "PEO-01-L2",
+          "score": 2,
+          "label": "We know common uses and usually check important outputs."
+        },
+        {
+          "id": "PEO-01-L3",
+          "score": 3,
+          "label": "People have guidance and can spot common AI mistakes."
+        },
+        {
+          "id": "PEO-01-L4",
+          "score": 4,
+          "label": "We routinely evaluate AI use and improve skills from findings."
+        },
+        {
+          "id": "PEO-01-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "PEO-01-UNK"
+    },
+    {
+      "id": "PEO-02",
+      "dimension": "PEO",
+      "applicability": "ALWAYS",
+      "prompt": "When you introduce a new way of working, how do people learn and adapt?",
+      "options": [
+        {
+          "id": "PEO-02-L0",
+          "score": 0,
+          "label": "We rarely explain or support changes."
+        },
+        {
+          "id": "PEO-02-L1",
+          "score": 1,
+          "label": "People usually work things out themselves."
+        },
+        {
+          "id": "PEO-02-L2",
+          "score": 2,
+          "label": "We offer occasional help when someone asks."
+        },
+        {
+          "id": "PEO-02-L3",
+          "score": 3,
+          "label": "We plan basic guidance and nominate someone to help."
+        },
+        {
+          "id": "PEO-02-L4",
+          "score": 4,
+          "label": "We review uptake and change training based on feedback."
+        },
+        {
+          "id": "PEO-02-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "PEO-02-UNK"
+    },
+    {
+      "id": "GOV-01",
+      "dimension": "GOV",
+      "applicability": "ALWAYS",
+      "prompt": "What rules protect customer, employee, and confidential information when using digital or AI tools?",
+      "options": [
+        {
+          "id": "GOV-01-L0",
+          "score": 0,
+          "label": "We have not considered rules for this information."
+        },
+        {
+          "id": "GOV-01-L1",
+          "score": 1,
+          "label": "We rely on individual judgment; safeguards are unclear."
+        },
+        {
+          "id": "GOV-01-L2",
+          "score": 2,
+          "label": "Some basic precautions exist but are not consistently applied."
+        },
+        {
+          "id": "GOV-01-L3",
+          "score": 3,
+          "label": "Clear rules cover what may be shared, access, and checking."
+        },
+        {
+          "id": "GOV-01-L4",
+          "score": 4,
+          "label": "We review safeguards and act when mistakes or risks are found."
+        },
+        {
+          "id": "GOV-01-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "GOV-01-UNK"
+    },
+    {
+      "id": "GOV-02",
+      "dimension": "GOV",
+      "applicability": "ALWAYS",
+      "prompt": "How are important AI-assisted decisions checked before anyone acts on them?",
+      "options": [
+        {
+          "id": "GOV-02-L0",
+          "score": 0,
+          "label": "There is no clear checking or escalation practice."
+        },
+        {
+          "id": "GOV-02-L1",
+          "score": 1,
+          "label": "People may check results, but it is not expected."
+        },
+        {
+          "id": "GOV-02-L2",
+          "score": 2,
+          "label": "Important outputs are usually checked by a person."
+        },
+        {
+          "id": "GOV-02-L3",
+          "score": 3,
+          "label": "People know when to review, approve, or stop AI-assisted work."
+        },
+        {
+          "id": "GOV-02-L4",
+          "score": 4,
+          "label": "We monitor errors and improve review and escalation rules."
+        },
+        {
+          "id": "GOV-02-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "GOV-02-UNK"
+    },
+    {
+      "id": "MET-01",
+      "dimension": "MET",
+      "applicability": "ALWAYS",
+      "prompt": "Can you measure whether your most important business process is improving?",
+      "options": [
+        {
+          "id": "MET-01-L0",
+          "score": 0,
+          "label": "We have no usable measure of performance."
+        },
+        {
+          "id": "MET-01-L1",
+          "score": 1,
+          "label": "We rely mainly on impressions or informal feedback."
+        },
+        {
+          "id": "MET-01-L2",
+          "score": 2,
+          "label": "We measure one or two things but not consistently."
+        },
+        {
+          "id": "MET-01-L3",
+          "score": 3,
+          "label": "We have a starting measure and check progress regularly."
+        },
+        {
+          "id": "MET-01-L4",
+          "score": 4,
+          "label": "We verify outcomes against the baseline and refine our measures."
+        },
+        {
+          "id": "MET-01-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "MET-01-UNK"
+    },
+    {
+      "id": "MET-02",
+      "dimension": "MET",
+      "applicability": "ALWAYS",
+      "prompt": "After making a business change, how do you make sure it works?",
+      "options": [
+        {
+          "id": "MET-02-L0",
+          "score": 0,
+          "label": "We do not follow up on changes."
+        },
+        {
+          "id": "MET-02-L1",
+          "score": 1,
+          "label": "We check only if someone reports a problem."
+        },
+        {
+          "id": "MET-02-L2",
+          "score": 2,
+          "label": "Someone follows up informally when there is time."
+        },
+        {
+          "id": "MET-02-L3",
+          "score": 3,
+          "label": "An owner checks results at an agreed point."
+        },
+        {
+          "id": "MET-02-L4",
+          "score": 4,
+          "label": "We monitor results, document lessons, and improve our approach."
+        },
+        {
+          "id": "MET-02-UNK",
+          "score": null,
+          "label": "I am not sure"
+        }
+      ],
+      "unknown_option_id": "MET-02-UNK"
+    }
+  ],
+  "universal_persona_copy": "Use you and anyone who helps you; do not presume a formal team, IT department, or governance committee.",
+  "not_applicable_policy": "All 14 universal indicators apply to every audience; no N/A answer is supported in V1. Applicability belongs to conditional evidence probes only."
+}

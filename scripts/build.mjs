@@ -1,0 +1,13 @@
+import {cp, mkdir, readFile, writeFile, rm} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const dist=path.join(root,'dist');
+await rm(dist,{recursive:true,force:true});
+await mkdir(dist,{recursive:true});
+await cp(path.join(root,'public'),dist,{recursive:true});
+await mkdir(path.join(dist,'data'),{recursive:true});
+await cp(path.join(root,'docs/domain/question_bank.json'),path.join(dist,'data/question_bank.json'));
+const html=await readFile(path.join(dist,'index.html'),'utf8');
+if(!html.includes('./assets/app.js'))throw Error('Invalid entry point');
+console.log('PASS: Static S0 preview built at dist/ (GitHub Pages subpath-safe).');

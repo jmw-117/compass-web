@@ -1,0 +1,339 @@
+{
+  "version": "1.1.0",
+  "status": "Proposed, needs human validation",
+  "grammar": {
+    "all": "all of the expressions",
+    "any": "one or more expressions",
+    "not": "negates expression",
+    "eq": "[path,value] exact value equality",
+    "lte/gte/lt": "[path,number] unknown numeric comparisons evaluate false",
+    "in": "[path,allowed_array] membership",
+    "unknown": "path where value is null or missing"
+  },
+  "evaluation_order": "core scores, active probes, gates, pilotBlockingGateCount, paths, action ranking",
+  "paths": [
+    "answer.*",
+    "profile.*",
+    "probe.*",
+    "dimension.<id>.lower/upper",
+    "metrics.*",
+    "gate.*"
+  ],
+  "fallback": "P0 if no path matches",
+  "predicates": {
+    "G-URGENT-REGULATED": {
+      "all": [
+        {
+          "eq": [
+            "profile.high_impact_ai_workflow",
+            "yes"
+          ]
+        },
+        {
+          "any": [
+            {
+              "in": [
+                "profile.current_ai_use",
+                [
+                  "team_pilot",
+                  "operational"
+                ]
+              ]
+            },
+            {
+              "eq": [
+                "profile.planned_ai_use",
+                "yes"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "G-GOV-DATA": {
+      "any": [
+        {
+          "all": [
+            {
+              "eq": [
+                "probe.PR-GOV-SHARE",
+                "Yes"
+              ]
+            },
+            {
+              "in": [
+                "profile.data_category",
+                [
+                  "personal",
+                  "restricted"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "all": [
+            {
+              "lte": [
+                "answer.GOV-01",
+                1
+              ]
+            },
+            {
+              "eq": [
+                "profile.data_category",
+                "restricted"
+              ]
+            },
+            {
+              "eq": [
+                "profile.planned_use_real_data",
+                "yes"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "G-DATA-UNKNOWN": {
+      "any": [
+        {
+          "all": [
+            {
+              "unknown": "answer.DAT-01"
+            },
+            {
+              "unknown": "answer.DAT-02"
+            }
+          ]
+        },
+        {
+          "eq": [
+            "answer.DAT-01",
+            0
+          ]
+        }
+      ]
+    },
+    "G-OWN-NONE": {
+      "any": [
+        {
+          "eq": [
+            "answer.STR-02",
+            0
+          ]
+        },
+        {
+          "all": [
+            {
+              "in": [
+                "probe.PR-STR-OWNER",
+                [
+                  "No one yet",
+                  "Not sure"
+                ]
+              ]
+            },
+            {
+              "lte": [
+                "answer.STR-02",
+                1
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "G-BASELINE-MISSING": {
+      "all": [
+        {
+          "lte": [
+            "answer.MET-01",
+            1
+          ]
+        },
+        {
+          "in": [
+            "profile.primary_goal",
+            [
+              "efficiency",
+              "growth",
+              "service",
+              "risk"
+            ]
+          ]
+        },
+        {
+          "not": {
+            "eq": [
+              "probe.PR-MET-START",
+              "Yes"
+            ]
+          }
+        }
+      ]
+    },
+    "G-BUDGET-UNKNOWN": {
+      "all": [
+        {
+          "unknown": "profile.budget_ceiling"
+        },
+        {
+          "eq": [
+            "profile.budget_band",
+            "unknown"
+          ]
+        }
+      ]
+    },
+    "P-P6": {
+      "eq": [
+        "gate.URGENT-REGULATED",
+        true
+      ]
+    },
+    "P-P2": {
+      "eq": [
+        "gate.GOV-DATA",
+        true
+      ]
+    },
+    "P-P0": {
+      "any": [
+        {
+          "gte": [
+            "metrics.unknownCount",
+            3
+          ]
+        },
+        {
+          "lt": [
+            "metrics.coverageUnits",
+            150
+          ]
+        },
+        {
+          "all": [
+            {
+              "unknown": "answer.DAT-01"
+            },
+            {
+              "unknown": "answer.DAT-02"
+            }
+          ]
+        }
+      ]
+    },
+    "P-P1": {
+      "any": [
+        {
+          "lte": [
+            "dimension.PRO.upper",
+            1.5
+          ]
+        },
+        {
+          "lte": [
+            "dimension.DAT.upper",
+            1.5
+          ]
+        }
+      ]
+    },
+    "P-P4": {
+      "all": [
+        {
+          "lte": [
+            "answer.TEC-01",
+            2
+          ]
+        },
+        {
+          "lte": [
+            "answer.TEC-02",
+            2
+          ]
+        }
+      ]
+    },
+    "P-P3": {
+      "lte": [
+        "dimension.PEO.upper",
+        1.5
+      ]
+    },
+    "P-P5": {
+      "all": [
+        {
+          "gte": [
+            "metrics.coverageUnits",
+            180
+          ]
+        },
+        {
+          "gte": [
+            "dimension.DAT.lower",
+            2
+          ]
+        },
+        {
+          "gte": [
+            "answer.GOV-01",
+            2
+          ]
+        },
+        {
+          "gte": [
+            "answer.GOV-02",
+            2
+          ]
+        },
+        {
+          "gte": [
+            "answer.STR-02",
+            2
+          ]
+        },
+        {
+          "gte": [
+            "answer.MET-01",
+            2
+          ]
+        },
+        {
+          "gte": [
+            "answer.PEO-01",
+            2
+          ]
+        },
+        {
+          "gte": [
+            "answer.PRO-01",
+            2
+          ]
+        },
+        {
+          "gte": [
+            "answer.TEC-01",
+            2
+          ]
+        },
+        {
+          "in": [
+            "profile.staff_capacity",
+            [
+              "limited",
+              "available"
+            ]
+          ]
+        },
+        {
+          "eq": [
+            "metrics.pilotBlockingGateCount",
+            0
+          ]
+        }
+      ]
+    }
+  }
+}

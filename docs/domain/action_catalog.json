@@ -1,0 +1,640 @@
+{
+  "version": "1.1.0",
+  "purpose": "Provisional readiness improvement catalog for local pilot; content must be independently reviewed before public launch",
+  "actions": [
+    {
+      "id": "A00",
+      "path": "P0",
+      "title": "Identify someone to verify missing answers",
+      "dimension": "STR",
+      "dependency_unlock": 1,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "owner",
+      "validation": "Obtain answers for the three highest-uncertainty indicators",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "STR-01",
+        "STR-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A01",
+      "path": "P0",
+      "title": "Check how an important record is created and corrected",
+      "dimension": "DAT",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "records owner",
+      "validation": "Walk through one recent record and identify its source and corrections",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "efficiency",
+        "service",
+        "risk"
+      ],
+      "evidence_question_ids": [
+        "DAT-01",
+        "DAT-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A02",
+      "path": "P0",
+      "title": "Clarify which business decision needs improvement",
+      "dimension": "STR",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "owner",
+      "validation": "Write a one-sentence goal and an observable result",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "STR-01",
+        "STR-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A03",
+      "path": "P1",
+      "title": "Write the steps of one repeated business task",
+      "dimension": "PRO",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "workflow owner",
+      "validation": "Observe one task from start to finish and note handoffs",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "efficiency",
+        "service"
+      ],
+      "evidence_question_ids": [
+        "PRO-01",
+        "PRO-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A04",
+      "path": "P1",
+      "title": "Identify one authoritative source for essential records",
+      "dimension": "DAT",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "records owner",
+      "validation": "List where the same information appears and designate its authoritative source",
+      "prerequisite_ids": [
+        "A03"
+      ],
+      "goal_tags": [
+        "efficiency",
+        "service",
+        "risk"
+      ],
+      "evidence_question_ids": [
+        "DAT-01",
+        "DAT-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A05",
+      "path": "P1",
+      "title": "Clean a small representative set of key records",
+      "dimension": "DAT",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "records owner",
+      "validation": "Check 20 records for missing, outdated, or duplicate fields",
+      "prerequisite_ids": [
+        "A04"
+      ],
+      "goal_tags": [
+        "efficiency",
+        "service"
+      ],
+      "evidence_question_ids": [
+        "DAT-01",
+        "DAT-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A06",
+      "path": "P1",
+      "title": "Measure a workflow before changing it",
+      "dimension": "MET",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "workflow owner",
+      "validation": "Record time, errors or volume for five recent instances",
+      "prerequisite_ids": [
+        "A03"
+      ],
+      "goal_tags": [
+        "efficiency",
+        "growth",
+        "service"
+      ],
+      "evidence_question_ids": [
+        "MET-01",
+        "MET-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A07",
+      "path": "P2",
+      "title": "Set simple AI and data-handling rules",
+      "dimension": "GOV",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "business owner",
+      "validation": "Define prohibited data sharing and a clear escalation contact",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "GOV-01",
+        "GOV-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A08",
+      "path": "P2",
+      "title": "Review access to customer and staff information",
+      "dimension": "GOV",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "data owner",
+      "validation": "Review who can see and export critical records",
+      "prerequisite_ids": [
+        "A07"
+      ],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "GOV-01",
+        "GOV-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A09",
+      "path": "P2",
+      "title": "Stop unsafe sharing and review affected workflows",
+      "dimension": "GOV",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "business owner",
+      "validation": "Stop unmanaged sharing; document and escalate suspected exposure",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "GOV-01",
+        "GOV-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A10",
+      "path": "P2",
+      "title": "Agree when a human must approve AI outputs",
+      "dimension": "GOV",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "business owner",
+      "validation": "Define decisions that cannot be automated without review",
+      "prerequisite_ids": [
+        "A07"
+      ],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "GOV-01",
+        "GOV-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A11",
+      "path": "P3",
+      "title": "Run a practical AI-literacy walkthrough",
+      "dimension": "PEO",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "team lead",
+      "validation": "Demonstrate one safe use and one failure case; verify understanding",
+      "prerequisite_ids": [
+        "A07"
+      ],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "PEO-01",
+        "PEO-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A12",
+      "path": "P3",
+      "title": "Nominate a person to support adoption",
+      "dimension": "PEO",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "business owner",
+      "validation": "Assign a named person and an initial review date",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "PEO-01",
+        "PEO-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A13",
+      "path": "P3",
+      "title": "Introduce a simple output-checking checklist",
+      "dimension": "PEO",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "team lead",
+      "validation": "Require a human check for accuracy and confidentiality",
+      "prerequisite_ids": [
+        "A11"
+      ],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "PEO-01",
+        "PEO-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A14",
+      "path": "P4",
+      "title": "Map where information is copied between systems",
+      "dimension": "TEC",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "workflow owner",
+      "validation": "Record one end-to-end handoff and the systems involved",
+      "prerequisite_ids": [
+        "A03"
+      ],
+      "goal_tags": [
+        "efficiency",
+        "service"
+      ],
+      "evidence_question_ids": [
+        "TEC-01",
+        "TEC-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A15",
+      "path": "P4",
+      "title": "Standardize key spreadsheet or system fields",
+      "dimension": "TEC",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "records owner",
+      "validation": "Agree field names and required values for a recurring record",
+      "prerequisite_ids": [
+        "A04"
+      ],
+      "goal_tags": [
+        "efficiency",
+        "service"
+      ],
+      "evidence_question_ids": [
+        "TEC-01",
+        "TEC-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A16",
+      "path": "P4",
+      "title": "Evaluate a basic integration option",
+      "dimension": "TEC",
+      "dependency_unlock": 1,
+      "cost_class": "C1",
+      "effort": "REVIEW",
+      "owner_role": "technical owner",
+      "validation": "Compare an existing feature with current manual cost, without purchasing yet",
+      "prerequisite_ids": [
+        "A14",
+        "A15"
+      ],
+      "goal_tags": [
+        "efficiency",
+        "service"
+      ],
+      "evidence_question_ids": [
+        "TEC-01",
+        "TEC-02"
+      ],
+      "cash_note": "Potential external cost; only proceed when a dated quote is available.",
+      "provisional": true
+    },
+    {
+      "id": "A17",
+      "path": "P5",
+      "title": "Define a low-risk AI pilot hypothesis",
+      "dimension": "STR",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "business owner",
+      "validation": "Specify one task, success measure, and stop condition",
+      "prerequisite_ids": [
+        "A06",
+        "A10"
+      ],
+      "goal_tags": [
+        "efficiency",
+        "growth",
+        "service",
+        "risk"
+      ],
+      "evidence_question_ids": [
+        "STR-01",
+        "STR-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A18",
+      "path": "P5",
+      "title": "Create a small human-reviewed evaluation set",
+      "dimension": "MET",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "workflow owner",
+      "validation": "Collect non-sensitive examples and expected human judgments",
+      "prerequisite_ids": [
+        "A17"
+      ],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "MET-01",
+        "MET-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A19",
+      "path": "P5",
+      "title": "Review the pilot with an accountable owner",
+      "dimension": "MET",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "business owner",
+      "validation": "Review quality, use, incident notes and actual effort",
+      "prerequisite_ids": [
+        "A18"
+      ],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "MET-01",
+        "MET-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A20",
+      "path": "P6",
+      "title": "Obtain domain-specific expert review before piloting",
+      "dimension": "GOV",
+      "dependency_unlock": 3,
+      "cost_class": "C3",
+      "effort": "REVIEW",
+      "owner_role": "business owner",
+      "validation": "Document proposed decision, affected people, and professional review needed",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "GOV-01",
+        "GOV-02"
+      ],
+      "cash_note": "Specialist quote needed before a cash recommendation.",
+      "provisional": true
+    },
+    {
+      "id": "A21",
+      "path": "P6",
+      "title": "Define high-impact decision authority and escalation",
+      "dimension": "GOV",
+      "dependency_unlock": 2,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "accountable owner",
+      "validation": "Name approver and person responsible for challenging automated recommendations",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "GOV-01",
+        "GOV-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A22",
+      "path": "P0",
+      "title": "Check current access to the information needed",
+      "dimension": "DAT",
+      "dependency_unlock": 3,
+      "cost_class": "C0",
+      "effort": "SMALL",
+      "owner_role": "records owner",
+      "validation": "Identify which records are available and whom to ask for missing information",
+      "prerequisite_ids": [],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "DAT-01",
+        "DAT-02"
+      ],
+      "cash_note": "External cash not required by the template action; staff time is required.",
+      "provisional": true
+    },
+    {
+      "id": "A23",
+      "path": "P2",
+      "title": "Confirm whether the organization needs a specialist privacy review",
+      "dimension": "GOV",
+      "dependency_unlock": 2,
+      "cost_class": "C3",
+      "effort": "REVIEW",
+      "owner_role": "business owner",
+      "validation": "List relevant data types and planned use; request jurisdiction-specific advice",
+      "prerequisite_ids": [
+        "A07"
+      ],
+      "goal_tags": [
+        "all"
+      ],
+      "evidence_question_ids": [
+        "GOV-01",
+        "GOV-02"
+      ],
+      "cash_note": "Specialist quote needed before a cash recommendation.",
+      "provisional": true
+    }
+  ],
+  "paths": {
+    "P6": {
+      "name": "Specialist review",
+      "first_actions": [
+        "A20",
+        "A21"
+      ],
+      "trigger": "See decision_predicates.json",
+      "precedence": 0,
+      "trigger_ast_id": "P-P6"
+    },
+    "P2": {
+      "name": "Protect information first",
+      "first_actions": [
+        "A09",
+        "A07",
+        "A08"
+      ],
+      "trigger": "See decision_predicates.json",
+      "precedence": 1,
+      "trigger_ast_id": "P-P2"
+    },
+    "P0": {
+      "name": "Verify the unknowns",
+      "first_actions": [
+        "A00",
+        "A01",
+        "A02"
+      ],
+      "trigger": "See decision_predicates.json",
+      "precedence": 2,
+      "trigger_ast_id": "P-P0"
+    },
+    "P1": {
+      "name": "Strengthen operating foundations",
+      "first_actions": [
+        "A03",
+        "A04",
+        "A06"
+      ],
+      "trigger": "See decision_predicates.json",
+      "precedence": 3,
+      "trigger_ast_id": "P-P1"
+    },
+    "P4": {
+      "name": "Connect and streamline digital work",
+      "first_actions": [
+        "A14",
+        "A15",
+        "A16"
+      ],
+      "trigger": "See decision_predicates.json",
+      "precedence": 4,
+      "trigger_ast_id": "P-P4"
+    },
+    "P3": {
+      "name": "Build people capability",
+      "first_actions": [
+        "A11",
+        "A12",
+        "A13"
+      ],
+      "trigger": "See decision_predicates.json",
+      "precedence": 5,
+      "trigger_ast_id": "P-P3"
+    },
+    "P5": {
+      "name": "Prepare a measured low-risk pilot",
+      "first_actions": [
+        "A17",
+        "A18",
+        "A19"
+      ],
+      "trigger": "See decision_predicates.json",
+      "precedence": 6,
+      "trigger_ast_id": "P-P5"
+    }
+  },
+  "cost_classes": {
+    "C0": "No required external cash; staff time still costs effort",
+    "C1": "May incur low external spend; no numeric price until verified",
+    "C2": "Moderate external spend; no numeric price until verified",
+    "C3": "Specialist quote required"
+  },
+  "cost_evidence_expiry_days": 90,
+  "selection_rule": "Select path by numeric gates and precedence; select three actions whose prerequisites are met or explicitly called out; all paths may be supported by other actions; never auto-assert cash affordability without a current quote."
+}

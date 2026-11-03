@@ -1,0 +1,106 @@
+{
+  "blueprintVersion": "1.2.0",
+  "hosting": "github-pages",
+  "ruleContractVersions": "retain existing docs/domain/*.json version values until approved",
+  "stages": [
+    {
+      "id": "S0",
+      "name": "Concierge validation",
+      "status": "not_started",
+      "requiredPrevious": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S0-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    },
+    {
+      "id": "S1",
+      "name": "Freeze decision contracts",
+      "status": "not_started",
+      "requiredPrevious": "S0",
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S1-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    },
+    {
+      "id": "S2",
+      "name": "Repository, GitHub Pages and CI foundation",
+      "status": "not_started",
+      "requiredPrevious": "S1",
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S2-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    },
+    {
+      "id": "S3",
+      "name": "Guided assessment and storage",
+      "status": "not_started",
+      "requiredPrevious": "S2",
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S3-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    },
+    {
+      "id": "S4",
+      "name": "Deterministic readiness evaluator",
+      "status": "not_started",
+      "requiredPrevious": "S3",
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S4-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    },
+    {
+      "id": "S5",
+      "name": "Report and voluntary handoff",
+      "status": "not_started",
+      "requiredPrevious": "S4",
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S5-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    },
+    {
+      "id": "S6",
+      "name": "Independent QA and hardening",
+      "status": "not_started",
+      "requiredPrevious": "S5",
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S6-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    },
+    {
+      "id": "S7",
+      "name": "GitHub Pages release",
+      "status": "not_started",
+      "requiredPrevious": "S6",
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S7-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    },
+    {
+      "id": "S8",
+      "name": "Continuous calibration and maintenance",
+      "status": "not_started",
+      "requiredPrevious": "S7",
+      "approvedBy": null,
+      "approvedAt": null,
+      "handoffPath": "docs/handoffs/S8-handoff.md",
+      "commitSha": null,
+      "evidence": []
+    }
+  ]
+}

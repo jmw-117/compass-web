@@ -1,0 +1,180 @@
+{
+  "version": "1.3.0",
+  "field_handling": "local_browser_only; no background submission; voluntary handoff",
+  "fields": [
+    {
+      "id": "business_size",
+      "type": "enum",
+      "values": [
+        "solo",
+        "2_9",
+        "10_49",
+        "50_249",
+        "250_plus",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "context"
+    },
+    {
+      "id": "commercial_model",
+      "type": "enum",
+      "values": [
+        "services",
+        "products",
+        "subscription",
+        "project",
+        "hybrid",
+        "other",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "context"
+    },
+    {
+      "id": "value_stream",
+      "type": "enum",
+      "values": [
+        "lead_to_sale",
+        "order_to_cash",
+        "service_to_resolution",
+        "procure_to_pay",
+        "hire_to_retire",
+        "report_to_decision",
+        "other",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "discovery"
+    },
+    {
+      "id": "workflow_frequency",
+      "type": "enum",
+      "values": [
+        "many_daily",
+        "daily",
+        "weekly",
+        "monthly",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "discovery"
+    },
+    {
+      "id": "workflow_bottleneck",
+      "type": "enum",
+      "values": [
+        "waits",
+        "manual_entry",
+        "errors",
+        "rework",
+        "lost_leads",
+        "knowledge_search",
+        "compliance",
+        "other",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "discovery"
+    },
+    {
+      "id": "workflow_systems",
+      "type": "multi_enum",
+      "max_items": 7,
+      "values": [
+        "paper",
+        "whatsapp",
+        "spreadsheets",
+        "email",
+        "accounting",
+        "crm",
+        "erp",
+        "pos",
+        "other",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "discovery"
+    },
+    {
+      "id": "impact_measure",
+      "type": "enum",
+      "values": [
+        "time",
+        "cost",
+        "revenue",
+        "quality",
+        "risk",
+        "customer_experience",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "discovery"
+    },
+    {
+      "id": "baseline_known",
+      "type": "enum",
+      "values": [
+        "yes",
+        "estimated",
+        "no",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "discovery"
+    },
+    {
+      "id": "budget_window",
+      "type": "enum",
+      "values": [
+        "one_off_90_days",
+        "monthly_recurring",
+        "no_external_spend",
+        "prefer_not_to_say"
+      ],
+      "required": false,
+      "stage": "constraints"
+    },
+    {
+      "id": "monthly_budget_ceiling",
+      "type": "nonnegative_integer",
+      "currency": "KES",
+      "required": false,
+      "stage": "constraints"
+    },
+    {
+      "id": "decision_authority",
+      "type": "enum",
+      "values": [
+        "respondent",
+        "shared",
+        "other",
+        "unknown"
+      ],
+      "required": false,
+      "stage": "constraints"
+    },
+    {
+      "id": "preferred_next_step",
+      "type": "enum",
+      "values": [
+        "self_guided",
+        "training",
+        "consultant_review",
+        "implementation_discussion",
+        "unsure"
+      ],
+      "required": false,
+      "stage": "results"
+    },
+    {
+      "id": "optional_context",
+      "type": "string",
+      "max_chars": 240,
+      "required": false,
+      "stage": "discovery",
+      "warning": "Do not include names, confidential details or personal data"
+    }
+  ],
+  "merge_policy": "Existing profile_schema.json remains normative for its original fields. This file adds optional fields. A field cannot alter core maturity scoring. Budget constraints only affect recommendations."
+}
