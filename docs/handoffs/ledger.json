@@ -129,8 +129,8 @@
       "evidence": [
         "Product Owner approved S6 and clarified in chat on 2026-11-03 that GitHub Pages is for testing only; public use is intended for a custom host",
         "npm run verify passed locally on the S7 working tree with 27 tests, typecheck, production build, and static asset checks",
-        "GitHub Actions run 41707869969 passed Node quality checks on 8bcd0ee56d40d3eb4d810662c3c8b2e2478515f3 but failed extended Python validation because in_progress is not an allowed ledger status; ledger corrected to blocked pending gates",
-        "Main branch protection is not configured and GitHub Pages is not enabled; test deployment, live-site verification, and rollback evidence are pending",
+        "GitHub Actions run 41708176620 and PR check 41708283135 passed quality and extended Python validation on the corrected S7 change",
+        "Main branch protection now requires pull requests and the quality check; GitHub Pages is not enabled and test deployment/live-site verification remain pending",
         "Public launch remains out of scope and requires separate hosting/policy review and release approval"
       ]
     },
