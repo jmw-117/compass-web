@@ -1,5 +1,5 @@
 {
-  "version": "1.3.1",
+  "version": "1.3.3",
   "report_kind": "self_reported_ai_readiness",
   "mandatory_sections": [
     "document_identity",
@@ -31,8 +31,9 @@
     "watermark": "Self-reported assessment — not independently verified"
   },
   "scoring": {
-    "overall": "Show the nearest whole-number score when exact and complete; otherwise show [lower,upper], preserving uncertainty; no decimals or invented statistical confidence",
-    "dimension_display": "All seven dimensions with coverage and known/unknown status",
+    "overall": "Show the nearest whole-number score when exact and complete; otherwise show 'lower to upper out of 100' and explain it is a range, not a single score, that unknown answers may change; no bracket notation, decimals, or invented statistical confidence",
+    "dimension_display": "All seven dimensions with readable percentage values or ranges and known/unknown status",
+    "summary_labels": "Show known answers as a count out of the 14 core questions and describe triggered formal gates as safety checks to review; do not expose unexplained weighted coverage units in the client-facing summary",
     "unknown": "Each unknown shown explicitly as a verify action",
     "gates": "Every triggered gate shown with exact triggering evidence IDs"
   },

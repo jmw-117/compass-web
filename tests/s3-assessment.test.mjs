@@ -6,11 +6,13 @@ test('S3 assessment begins with the required three-field start profile and previ
   const app = await readFile('src/App.tsx', 'utf8');
   const profileSchema = JSON.parse(await readFile('docs/domain/profile_schema.json', 'utf8'));
 
-  assert.match(app, /Organisation type/);
-  assert.match(app, /Industry or sector/);
-  assert.match(app, /Business goal/);
-  assert.match(app, /<span>Industry or sector<\/span>[\s\S]*?<select[\s\S]*?<\/select>/);
-  assert.match(app, /<span>Business goal<\/span>[\s\S]*?<select[\s\S]*?<\/select>/);
+  assert.match(app, /Organisation Type/);
+  assert.match(app, /Industry \/ Sector/);
+  assert.match(app, /Business Goal/);
+  assert.match(app, /<span>Industry \/ Sector<\/span>[\s\S]*?<select[\s\S]*?<\/select>/);
+  assert.match(app, /<span>Business Goal<\/span>[\s\S]*?<select[\s\S]*?<\/select>/);
+  assert.match(app, /aria-label="Industry \/ Sector"/);
+  assert.match(app, /aria-label="Organisation Type"/);
 
   for (const fieldId of ['industry', 'primary_goal']) {
     const field = profileSchema.early_fields.find(({id}) => id === fieldId);
@@ -22,8 +24,8 @@ test('S3 assessment begins with the required three-field start profile and previ
 
   assert.match(app, /INDUSTRY_OPTIONS\.some/);
   assert.match(app, /BUSINESS_GOAL_OPTIONS\.some/);
-  assert.match(app, /Five-question quick preview/);
-  assert.match(app, /Quick preview/);
+  assert.match(app, /Five-Question Quick Preview/);
+  assert.match(app, /Quick Preview/);
 });
 
 test('S3 keeps local draft behavior explicit and self-reported results separate from validation', async () => {

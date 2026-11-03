@@ -23,4 +23,4 @@ State precise artifact paths, git SHA if available, input JSON versions, scope o
 
 ## v1.3 technical-product handoff addition
 
-Implement all report_contract.json mandatory sections and consultant review template. Show one whole-number score only when exact; otherwise preserve the score interval, alongside each dimension, evidence gaps, formal gates, actions, budget constraints, and optional technical annex. Use HTML first, print second, consented user-previewed handoff.
+Implement all report_contract.json mandatory sections and consultant review template. Show one whole-number score only when exact; otherwise explain the range in plain language without bracket notation. Use the same clear wording in results, report/PDF and share text; explain unknown-answer uncertainty. Show each dimension, known-answer count, safety checks, evidence gaps, actions, budget constraints, and optional technical annex. Do not expose unexplained weighted coverage units to clients. Use HTML first, print second, consented user-previewed handoff.

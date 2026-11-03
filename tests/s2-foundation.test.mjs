@@ -13,6 +13,8 @@ test('static landing shell remains semantic and usable without JavaScript', asyn
   assert.match(await readFile('src/styles/global.css', 'utf8'), /\.wordmark-mark[\s\S]*overflow:\s*hidden/);
   assert.match(await readFile('src/styles/global.css', 'utf8'), /\.wordmark-logo[\s\S]*width:\s*7rem/);
   assert.match(html, /Assess Your Readiness/);
+  assert.match(html, /<h1 id="hero-title">Understand your AI readiness<\/h1>/);
+  assert.doesNotMatch(html, /Discover what comes next/);
   assert.match(html, /No account required/);
   assert.match(html, /<p>AI readiness, considered\.<\/p>/);
   assert.doesNotMatch(html, /Development foundation|Not an assessment result/);
@@ -51,7 +53,7 @@ test('React enhancement loads the report preview on demand and keeps it user-con
   assert.match(app, /lazy\(\(\) => import\('\.\/report\/ReportModule'\)\)/);
   assert.match(app, /aria-expanded=\{isReportModuleOpen\}/);
   assert.match(app, /<ReportModule\s+profile=\{reportProfile\}/);
-  assert.match(report, /Self-reported assessment — not independently verified/);
+  assert.match(report, /Self-Reported Assessment — Not Independently Verified/);
   assert.match(report, /Save as PDF/);
   assert.doesNotMatch(report, /Copy summary/);
   assert.match(report, /Share via WhatsApp/);

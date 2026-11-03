@@ -546,6 +546,14 @@ h3 {
   text-transform: uppercase;
 }
 
+.report-score-note,
+.result-score-note {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
 .report-list {
   margin: 0;
   padding-left: 1.3rem;
@@ -569,6 +577,7 @@ h3 {
 
 .report-dimension-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
   font-size: 0.8rem;
@@ -972,6 +981,10 @@ h3 {
 .result-summary h3 {
   margin: 0.6rem 0 0;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.result-summary .result-score-note {
+  max-width: 34rem;
 }
 
 .dimension-list {

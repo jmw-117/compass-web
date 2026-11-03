@@ -27,6 +27,7 @@
   - Require a valid answer before advancing from each question; the explicit “I am not sure” choice remains a valid answer.
   - Center question numbers within their circular badges.
   - Display one nearest whole-number score when raw score endpoints are equal; preserve a range for genuine uncertainty and never show decimals.
+  - Apply consistent title-style capitalization to visible site headings and field labels, shorten the landing headline to “Understand your AI readiness”, and label the profile field “Industry / Sector”.
   - Add practical next-step guidance based on the evaluator's score interval and safety-aware selected path without changing score calculations.
   - Make every report section collapsible; show the executive summary first and expand all content only for Save as PDF, then restore the reader's previous open sections.
   - Remove the report's copy-summary control, simplify the PDF button label, and use readable, larger report section headings.
@@ -37,13 +38,15 @@
   - `index.html` — accessible assessment launch button, JavaScript availability copy, and removal of the development-only footer note
   - `src/main.tsx` — mounts the lazy assessment only after the launch action
   - `src/App.tsx` — assessment focus/progress, contract-backed profile selects, required-answer navigation/results guard, score-or-interval display, path-aware guidance, and uncertainty-preserving dimension ranges
+  - `index.html` — concise landing headline
   - `src/domain/report-guidance.ts` — pure whole-number score/interval formatting and selected-path guidance
   - `src/styles/global.css` — requested system font, right-aligned footer tagline, dark report text, progressive disclosure and print layout, and centered question-number badges
   - `src/report/ReportModule.tsx` — larger human-readable collapsible report sections, progressive disclosure, consistent score-or-interval display in reports and sharing, user-controlled WhatsApp handoff, and full-content Save as PDF action
   - `scripts/check-assets.mjs` — verify the actual code-split report component
   - `tests/s2-foundation.test.mjs` — launch behavior, footer, font, logo sizing, progress and topbar checks
-  - `tests/s3-assessment.test.mjs` — contract-backed select options and local draft disclosure checks
-  - `tests/s4-engine.test.ts` — safety-aware report guidance and interval-band behavior
+  - `tests/s3-assessment.test.mjs` — contract-backed select options, title-cased field labels and local draft disclosure checks
+  - `tests/s4-engine.test.ts` — safety-aware report guidance, title-cased labels and interval-band behavior
+  - `tests/s5-report.test.ts` — title-cased report headings, disclosure, print, and report action checks
   - `docs/domain/report_contract.json` — versioned exact-score display and share payload contract
   - `docs/domain/VERSION_MANIFEST.json` — updated report and product versions
   - `docs/adr/ADR-005-exact-score-display.md` — Product Owner approval and display decision
@@ -60,13 +63,14 @@
 ## 2. Tests and reproducible evidence
 | Command / manual action | Status: passed / failed / not_run | Evidence or run link |
 |---|---|---|
-| `npm run verify` | passed | Contract checks, lint/typecheck, 18 Node tests, Vite production build, and GitHub Pages asset validation all passed. |
+| `npm run verify` | passed | Contract checks, lint/typecheck, 20 Node tests, Vite production build, and GitHub Pages asset validation all passed. Entry JavaScript gzip: 67.18 KiB / 90 KiB. |
 | `git diff --check` | passed | No whitespace errors. |
-| Browser check at `/silverspark-compass/` | passed | All 14 questions blocked advance until a choice; “I am not sure” enabled advance. Results showed the readiness interval and path-aware recommendation. Report opened with only Executive summary expanded; all 16 report sections were collapsible; Save as PDF expanded all 16 and restored the previously open Executive summary and Business snapshot sections. Copy summary was absent and Save as PDF appeared once. |
+| Browser check at `/silverspark-compass/` | passed | Landing headline reads “Understand your AI readiness”. Assessment shows “Organisation Type”, “Industry / Sector”, and “Business Goal” in both visible labels and accessible names. A full assessment displayed title-cased result and recommendation headings; all 16 report section titles and report field labels use title-style capitalization. The question numeral's measured center differed from its circle by only 0.01px horizontally and 0.11px vertically. A synthetic exact 27.5 score rendered as `28 / 100` with no decimal. All 14 questions required an answer; “I am not sure” remains valid. |
+| Report disclosure browser check | passed | All 16 report sections were collapsible; Save as PDF expanded all sections and restored the previously open sections. Copy summary was absent and Save as PDF appeared once. Exact-score unit tests verify report guidance rounds to one whole number; uncertain intervals remain ranges. |
 | Persistent local preview at `http://127.0.0.1:5174/silverspark-compass/` | running | Vite development server launched detached and HTTP 200 verified for continued user inspection. |
 | Browser PDF dialog | not_run | The print call was stubbed to verify all sections were expanded and UI disclosure state restored. Native browser print dialog/save output was not generated or claimed. |
 | Browser check at 320px | not_run | Viewport verification was inconclusive in the integrated browser; no mobile-width result is claimed. |
-| Browser print/share check after this correction | not_run | Existing S5 print/share implementation was not re-tested as part of this correction. |
+| Native PDF output after this correction | not_run | The browser print dialog/PDF output was not generated as part of this correction. |
 
 ## 3. Acceptance and review
 - [ ] All required stage artifacts exist (`docs/handoffs/S4-handoff.md` remains missing)
@@ -80,13 +84,14 @@
 - The handoff remains voluntary; no automatic send or delivery is triggered.
 - `docs/handoffs/S4-handoff.md` remains missing despite the S4 approval entry in the ledger; the owner-authorized development override above does not resolve that artifact gap.
 - Manual mobile share and physical/browser PDF output checks remain for the independent reviewer.
-- ADRs or proposed contract changes: none in this stage.
-- Rollback/restoration approach: revert only the lines introduced for this correction if rejected; preserve unrelated pre-existing working-tree changes and the existing S5 implementation. The contract and evaluator rules remain unchanged.
+- ADR: `docs/adr/ADR-005-exact-score-display.md` records Product Owner approval for exact-score whole-number presentation; broader S1 independent review remains pending.
+- Rollback/restoration approach: revert only the presentation, report-contract, and ADR-005 changes if rejected; preserve unrelated pre-existing working-tree changes and the existing S5 implementation. Score calculations and evaluator behavior remain unchanged.
 
 ## 5. Next-stage handoff
 - Input files and exact versions:
-  - `docs/domain/report_contract.json` 1.3.0
-  - `docs/domain/rules.json` and related domain docs remain the S1-approved baseline
+  - `docs/domain/report_contract.json` 1.3.1
+  - `docs/domain/rules.json` 1.2.0 (score calculation unchanged; exact-score display clarification recorded in ADR-005)
+  - `docs/domain/VERSION_MANIFEST.json` 1.3.2
   - `docs/stages/S5-report-share.md` stage definition
 - Prerequisites still missing:
   - Human review of the report content and approval of the voluntary handoff UX

@@ -167,7 +167,7 @@ test('report guidance follows the score interval and evaluator-selected safety p
   const guidance = getReportGuidance(safetyResult);
 
   assert.equal(safetyResult.primaryPath, 'P2');
-  assert.equal(guidance.title, 'Protect information first');
+  assert.equal(guidance.title, 'Protect Information First');
   assert.match(guidance.guidance, /before using real or sensitive information/);
   assert.equal(guidance.firstActionId, safetyResult.actionIds[0]);
 });
@@ -175,18 +175,32 @@ test('report guidance follows the score interval and evaluator-selected safety p
 test('report guidance avoids asserting a single maturity band when the interval crosses one', () => {
   const guidance = getReportGuidance(evaluate(fixtureF05));
 
-  assert.equal(guidance.scoreLabel, 'Readiness interval');
-  assert.equal(guidance.scoreText, '[0, 100] / 100');
+  assert.equal(guidance.scoreLabel, 'Readiness Range');
+  assert.equal(guidance.scoreText, '0 to 100 out of 100');
+  assert.match(guidance.scoreNote, /range, not a single score/);
   assert.match(guidance.bandText, /spans the Foundational to Established bands/);
-  assert.match(guidance.bandText, /not a single band/);
-  assert.equal(guidance.title, 'Verify the unknowns');
+  assert.match(guidance.bandText, /does not support one maturity band/);
+  assert.equal(guidance.title, 'Verify The Unknowns');
+});
+
+test('report guidance describes uncertain endpoints in plain language', () => {
+  const guidance = getReportGuidance({
+    score: {lowerEighths: 192, upperEighths: 640, coverageUnits: 120},
+    primaryPath: 'P0',
+    actionIds: [],
+  });
+
+  assert.equal(guidance.scoreLabel, 'Readiness Range');
+  assert.equal(guidance.scoreText, '24 to 80 out of 100');
+  assert.doesNotMatch(guidance.scoreText, /[\[\]]/);
+  assert.match(guidance.scoreNote, /“I am not sure” answers can change the result/);
 });
 
 test('report guidance names one band when both score endpoints fall in the same band', () => {
   const guidance = getReportGuidance(evaluate(fixtureF03));
 
-  assert.equal(guidance.scoreLabel, 'Readiness score');
-  assert.equal(guidance.scoreText, '75 / 100');
+  assert.equal(guidance.scoreLabel, 'Readiness Score');
+  assert.equal(guidance.scoreText, '75 out of 100');
   assert.match(guidance.bandText, /score is in the Established band/);
 });
 
@@ -197,8 +211,8 @@ test('report guidance rounds an exact fractional score to one whole number witho
     actionIds: [],
   });
 
-  assert.equal(guidance.scoreLabel, 'Readiness score');
-  assert.equal(guidance.scoreText, '28 / 100');
+  assert.equal(guidance.scoreLabel, 'Readiness Score');
+  assert.equal(guidance.scoreText, '28 out of 100');
   assert.doesNotMatch(guidance.scoreText, /\.\d/);
   assert.match(guidance.bandText, /score is in the Emerging band/);
 });
@@ -215,6 +229,6 @@ test('report guidance keeps specialist review ahead of a high score in a high-im
   const guidance = getReportGuidance(result);
 
   assert.equal(result.primaryPath, 'P6');
-  assert.equal(guidance.title, 'Get specialist review before piloting');
+  assert.equal(guidance.title, 'Get Specialist Review Before Piloting');
   assert.match(guidance.guidance, /Pause piloting and seek appropriate domain-specific review/);
 });

@@ -75,14 +75,15 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
   const shareText = useMemo(
     () =>
       [
-        'Silverspark Compass readiness summary',
+        'Silverspark Compass Readiness Summary',
         `Assessment ID: ${assessmentId}`,
-        `Primary path: ${readiness.primaryPath}`,
+        `Primary Path: ${readiness.primaryPath}`,
         `${reportGuidance.scoreLabel}: ${reportGuidance.scoreText}`,
-        `Critical gate codes: ${readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'none'}`,
+        ...(reportGuidance.scoreNote ? [reportGuidance.scoreNote] : []),
+        `Safety Checks To Review: ${readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'No safety checks triggered'}`,
         'Request to discuss: yes',
       ].join('\n'),
-    [assessmentId, readiness, reportGuidance.scoreLabel, reportGuidance.scoreText],
+    [assessmentId, readiness, reportGuidance.scoreLabel, reportGuidance.scoreNote, reportGuidance.scoreText],
   );
 
   useEffect(() => {
@@ -128,8 +129,8 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
       {printError && <p className="storage-error" role="alert">{printError}</p>}
       <header className="report-header">
         <div>
-          <p className="eyebrow">Assessment report</p>
-          <h3>Self-reported assessment — not independently verified</h3>
+          <p className="eyebrow">Assessment Report</p>
+          <h3>Self-Reported Assessment — Not Independently Verified</h3>
         </div>
         <div className="report-actions">
           <button type="button" className="button-secondary" onClick={handleSaveAsPdf} disabled={printMode}>
@@ -143,7 +144,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
 
       <ReportSection
         id="executive-summary"
-        title="Executive summary"
+        title="Executive Summary"
         expanded={openSections.has('executive-summary')}
         printMode={printMode}
         onToggle={toggleSection}
@@ -158,32 +159,33 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
             <strong>{reportGuidance.scoreText}</strong>
           </div>
           <div>
-            <p className="report-label">Primary path</p>
+            <p className="report-label">Primary Path</p>
             <strong>{readiness.primaryPath}</strong>
           </div>
           <div>
-            <p className="report-label">Formal gates</p>
-            <strong>{readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'none'}</strong>
+            <p className="report-label">Safety Checks To Review</p>
+            <strong>{readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'No safety checks triggered'}</strong>
           </div>
         </div>
+        {reportGuidance.scoreNote && <p className="report-score-note">{reportGuidance.scoreNote}</p>}
       </ReportSection>
 
-      <ReportSection id="business-snapshot" title="Business snapshot" expanded={openSections.has('business-snapshot')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="business-snapshot" title="Business Snapshot" expanded={openSections.has('business-snapshot')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
-          <li>Organisation type: {profile.organizationType || 'Not shared'}</li>
-          <li>Industry: {profile.industry || 'Not shared'}</li>
-          <li>Business goal: {profile.businessGoal || 'Not yet defined'}</li>
-          <li>Budget fit: {readiness.costFit}</li>
+          <li>Organisation Type: {profile.organizationType || 'Not shared'}</li>
+          <li>Industry / Sector: {profile.industry || 'Not shared'}</li>
+          <li>Business Goal: {profile.businessGoal || 'Not yet defined'}</li>
+          <li>Budget Fit: {readiness.costFit}</li>
         </ul>
       </ReportSection>
 
-      <ReportSection id="methodology-limitations" title="Methodology and limitations" expanded={openSections.has('methodology-limitations')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="methodology-limitations" title="Methodology And Limitations" expanded={openSections.has('methodology-limitations')} printMode={printMode} onToggle={toggleSection}>
         <p>
           This report is a self-reported assessment based on the browser answers collected in this session. It is not an independent verification, legal review, or certification of client readiness.
         </p>
       </ReportSection>
 
-      <ReportSection id="practical-recommendation" title="A practical recommendation" expanded={openSections.has('practical-recommendation')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="practical-recommendation" title="A Practical Recommendation" expanded={openSections.has('practical-recommendation')} printMode={printMode} onToggle={toggleSection}>
         <p>{reportGuidance.bandText}</p>
         <p>{reportGuidance.guidance}</p>
         {reportGuidance.firstActionId && (
@@ -191,14 +193,17 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         )}
       </ReportSection>
 
-      <ReportSection id="seven-dimension-results" title="Seven dimension results" expanded={openSections.has('seven-dimension-results')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="seven-dimension-results" title="Seven Dimension Results" expanded={openSections.has('seven-dimension-results')} printMode={printMode} onToggle={toggleSection}>
         <div className="dimension-report-list">
           {Object.entries(readiness.dimensions).map(([dimensionId, metric]) => (
             <div key={dimensionId} className="report-dimension-item">
               <div className="report-dimension-header">
                 <span>{DIMENSION_LABELS[dimensionId] ?? dimensionId}</span>
                 <span>
-                  [{metric.lower}, {metric.upper}] · coverage {metric.known}/2
+                  {metric.lower === metric.upper
+                    ? `${Math.round((metric.lower / 4) * 100)}%`
+                    : `${Math.floor((metric.lower / 4) * 100)} to ${Math.ceil((metric.upper / 4) * 100)}% possible`}
+                  {' · '}{metric.known} of 2 indicators answered
                 </span>
               </div>
               <div className="dimension-track" aria-hidden="true">
@@ -209,7 +214,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         </div>
       </ReportSection>
 
-      <ReportSection id="uncertainty-coverage" title="Uncertainty and coverage" expanded={openSections.has('uncertainty-coverage')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="uncertainty-coverage" title="Uncertainty And Coverage" expanded={openSections.has('uncertainty-coverage')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {unknownQuestions.length ? (
             unknownQuestions.map((questionId) => <li key={questionId}>Verify {questionId}: confirm the answer before acting on this recommendation.</li>)
@@ -219,7 +224,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         </ul>
       </ReportSection>
 
-      <ReportSection id="positive-capabilities" title="Positive capabilities" expanded={openSections.has('positive-capabilities')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="positive-capabilities" title="Positive Capabilities" expanded={openSections.has('positive-capabilities')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {readiness.actionIds.length ? (
             readiness.actionIds.map((actionId) => <li key={actionId}>Action {actionId} is relevant to the current read-out.</li>)
@@ -229,7 +234,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         </ul>
       </ReportSection>
 
-      <ReportSection id="gaps-and-evidence" title="Gaps and evidence" expanded={openSections.has('gaps-and-evidence')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="gaps-and-evidence" title="Gaps And Evidence" expanded={openSections.has('gaps-and-evidence')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {readiness.formalGates.length ? (
             readiness.formalGates.map((gate) => <li key={gate.id}>{gate.id} — {gate.severity}</li>)
@@ -239,17 +244,17 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         </ul>
       </ReportSection>
 
-      <ReportSection id="critical-safety-gates" title="Critical safety gates" expanded={openSections.has('critical-safety-gates')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="critical-safety-gates" title="Critical Safety Gates" expanded={openSections.has('critical-safety-gates')} printMode={printMode} onToggle={toggleSection}>
         <p>{readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'No critical safety gates are triggered in this draft.'}</p>
       </ReportSection>
 
-      <ReportSection id="primary-path" title="Primary path" expanded={openSections.has('primary-path')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="primary-path" title="Primary Path" expanded={openSections.has('primary-path')} printMode={printMode} onToggle={toggleSection}>
         <p>
           Recommended primary path: <strong>{readiness.primaryPath}</strong>. Secondary paths: {readiness.secondaryPaths.length ? readiness.secondaryPaths.join(', ') : 'none'}.
         </p>
       </ReportSection>
 
-      <ReportSection id="three-priority-actions" title="Three priority actions" expanded={openSections.has('three-priority-actions')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="three-priority-actions" title="Three Priority Actions" expanded={openSections.has('three-priority-actions')} printMode={printMode} onToggle={toggleSection}>
         <ol className="report-list ordered">
           {readiness.actionIds.slice(0, 3).map((actionId) => (
             <li key={actionId}>{actionId}</li>
@@ -258,11 +263,11 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         </ol>
       </ReportSection>
 
-      <ReportSection id="budget-and-capacity-fit" title="Budget and capacity fit" expanded={openSections.has('budget-and-capacity-fit')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="budget-and-capacity-fit" title="Budget And Capacity Fit" expanded={openSections.has('budget-and-capacity-fit')} printMode={printMode} onToggle={toggleSection}>
         <p>Budget capacity fit: {readiness.costFit}. This does not imply a verified affordability conclusion.</p>
       </ReportSection>
 
-      <ReportSection id="next-30-60-90-days" title="Next 30, 60 and 90 days" expanded={openSections.has('next-30-60-90-days')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="next-30-60-90-days" title="Next 30, 60 And 90 Days" expanded={openSections.has('next-30-60-90-days')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           <li>Next 30 days: confirm the current evidence trail and resolve any unknown answers.</li>
           <li>Next 60 days: test one or two low-risk workflows using the primary path recommendations.</li>
@@ -270,15 +275,15 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         </ul>
       </ReportSection>
 
-      <ReportSection id="client-consultation-cta" title="Client consultation" expanded={openSections.has('client-consultation-cta')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="client-consultation-cta" title="Client Consultation" expanded={openSections.has('client-consultation-cta')} printMode={printMode} onToggle={toggleSection}>
         <p>Ask the client whether they want a short consult to discuss the readiness profile and next practical step.</p>
       </ReportSection>
 
-      <ReportSection id="appendix-answers-and-provenance" title="Appendix answers and provenance" expanded={openSections.has('appendix-answers-and-provenance')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="appendix-answers-and-provenance" title="Appendix Answers And Provenance" expanded={openSections.has('appendix-answers-and-provenance')} printMode={printMode} onToggle={toggleSection}>
         <p>Source answers: {Object.keys(answers).length ? Object.keys(answers).join(', ') : 'No answers recorded yet'}.</p>
       </ReportSection>
 
-      <ReportSection id="consultant-review-template" title="Consultant review template" expanded={openSections.has('consultant-review-template')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="consultant-review-template" title="Consultant Review Template" expanded={openSections.has('consultant-review-template')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           <li>Assessment ID: {assessmentId}</li>
           <li>Receipt method: user-controlled WhatsApp preview</li>

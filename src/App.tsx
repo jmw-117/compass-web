@@ -334,8 +334,10 @@ export default function App() {
     return {
       dimension,
       label: getDimensionLabel(dimension),
-      lower: Math.floor((metric.lower / 4) * 100),
       upper: Math.ceil((metric.upper / 4) * 100),
+      scoreText: metric.lower === metric.upper
+        ? `${Math.round((metric.lower / 4) * 100)}%`
+        : `${Math.floor((metric.lower / 4) * 100)} to ${Math.ceil((metric.upper / 4) * 100)}% possible`,
       known: metric.known,
     };
   });
@@ -405,8 +407,8 @@ export default function App() {
     return (
       <section className="assessment-panel start-panel" aria-labelledby="assessment-title">
         <div className="panel-header">
-          <p className="eyebrow">AI readiness profile</p>
-          <h2 id="assessment-title" tabIndex={-1}>Tell us a little about the business case.</h2>
+          <p className="eyebrow">AI Readiness Profile</p>
+          <h2 id="assessment-title" tabIndex={-1}>Tell Us A Little About The Business Case.</h2>
         </div>
 
         <form
@@ -420,13 +422,13 @@ export default function App() {
           }}
         >
           <label>
-            <span>Organisation type</span>
+            <span>Organisation Type</span>
             <select
               value={profile.organizationType}
               onChange={(event) => updateProfile('organizationType', event.target.value)}
-              aria-label="Organisation type"
+              aria-label="Organisation Type"
             >
-              <option value="">Select one</option>
+              <option value="">Select One</option>
               <option value="Sole proprietor">Sole proprietor</option>
               <option value="SME">SME team</option>
               <option value="Department">Department</option>
@@ -435,13 +437,13 @@ export default function App() {
           </label>
 
           <label>
-            <span>Industry or sector</span>
+            <span>Industry / Sector</span>
             <select
               value={profile.industry}
               onChange={(event) => updateProfile('industry', event.target.value)}
-              aria-label="Industry or sector"
+              aria-label="Industry / Sector"
             >
-              <option value="">Select an industry</option>
+              <option value="">Select An Industry / Sector</option>
               {INDUSTRY_OPTIONS.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
@@ -449,13 +451,13 @@ export default function App() {
           </label>
 
           <label>
-            <span>Business goal</span>
+            <span>Business Goal</span>
             <select
               value={profile.businessGoal}
               onChange={(event) => updateProfile('businessGoal', event.target.value)}
-              aria-label="Business goal"
+              aria-label="Business Goal"
             >
-              <option value="">Select a business goal</option>
+              <option value="">Select A Business Goal</option>
               {BUSINESS_GOAL_OPTIONS.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
@@ -578,7 +580,7 @@ export default function App() {
       <section className="assessment-panel" aria-labelledby="review-title">
         <div className="panel-header">
           <p className="eyebrow">UX-08 · Review</p>
-          <h2 id="review-title">Review and refine your draft.</h2>
+          <h2 id="review-title">Review And Refine Your Draft.</h2>
         </div>
 
         <div className="summary-grid">
@@ -627,22 +629,23 @@ export default function App() {
       <section className="assessment-panel" aria-labelledby="results-title">
         <div className="panel-header">
           <p className="eyebrow">UX-09 · Results</p>
-          <h2 id="results-title">Self-reported readiness snapshot</h2>
+          <h2 id="results-title">Self-Reported Readiness Snapshot</h2>
         </div>
 
         <div className="result-summary">
           <div>
             <p className="result-label">{reportGuidance.scoreLabel}</p>
             <h3>{reportGuidance.scoreText}</h3>
+            {reportGuidance.scoreNote && <p className="result-score-note">{reportGuidance.scoreNote}</p>}
           </div>
           <div>
-            <p className="result-label">Coverage</p>
-            <h3>{readinessResult.score.coverageUnits} / 200</h3>
+            <p className="result-label">Known Answers</p>
+            <h3>{scoreSummary.answered} of {coreQuestions.length}</h3>
           </div>
         </div>
 
         <aside className="pragmatic-recommendation" aria-labelledby="practical-next-step-title">
-          <p className="eyebrow">Practical next step</p>
+          <p className="eyebrow">Practical Next Step</p>
           <h3 id="practical-next-step-title">{reportGuidance.title}</h3>
           <p>{reportGuidance.bandText} {reportGuidance.guidance}</p>
         </aside>
@@ -652,7 +655,7 @@ export default function App() {
             <div key={dimension.dimension} className="dimension-row">
               <div className="dimension-label-row">
                 <span>{dimension.label}</span>
-                <span>{dimension.lower}–{dimension.upper}% · {dimension.known}/2 known</span>
+                <span>{dimension.scoreText} · {dimension.known} of 2 indicators answered</span>
               </div>
               <div className="dimension-track" aria-hidden="true">
                 <span style={{width: `${dimension.upper}%`}} />
@@ -672,8 +675,8 @@ export default function App() {
         </div>
 
         <div className="privacy-banner" aria-live="polite">
-          <p className="eyebrow">DESIGNED WITH CARE</p>
-          <h3>Your information stays yours.</h3>
+          <p className="eyebrow">Designed With Care</p>
+          <h3>Your Information Stays Yours.</h3>
         </div>
 
         <div className="button-row">
@@ -717,7 +720,7 @@ export default function App() {
       <div className="assessment-topbar">
         <p>Silverspark Compass</p>
         {screen !== 'start' && (
-          <span>{screen === 'preview' ? 'Quick preview' : screen === 'core' ? 'Core questions' : screen === 'review' ? 'Review' : 'Results'}</span>
+          <span>{screen === 'preview' ? 'Quick Preview' : screen === 'core' ? 'Core Questions' : screen === 'review' ? 'Review' : 'Results'}</span>
         )}
       </div>
 
@@ -727,16 +730,16 @@ export default function App() {
       {screen === 'preview' &&
         renderQuestionScreen(
           previewQuestions,
-          'Quick preview',
-          'Five-question quick preview',
+          'Quick Preview',
+          'Five-Question Quick Preview',
           'preview',
           questionIndex,
         )}
       {screen === 'core' &&
         renderQuestionScreen(
           remainingQuestions,
-          'Core assessment',
-          'Complete the remaining scoring questions.',
+          'Core Assessment',
+          'Complete The Remaining Scoring Questions.',
           'core',
           questionIndex,
         )}

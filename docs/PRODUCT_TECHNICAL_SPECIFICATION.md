@@ -83,7 +83,7 @@ Landing / privacy explanation
   → optional extended technical assessment (18 questions; only relevant questions shown)
   → capacity, timeline, budget ceiling, sensitive/high-impact use flags
   → pure evaluate(profile, answers, activeProbes, extension)
-  → nearest whole-number readiness score when exact, otherwise an interval + seven dimensions + gates + top 3 feasible actions
+  → nearest whole-number readiness score when exact, otherwise a plain-language range with an uncertainty explanation + seven dimensions + clear known-answer count + safety checks + top 3 feasible actions
   → full HTML report + print/save-as-PDF + summary copy
   → voluntary WhatsApp contact / consultation request; user approves transfer
   → Silverspark consultant separately records enquiry, validates assertions,
@@ -116,7 +116,7 @@ Journey states: `landing → start_3 → core_14 → expanded_opt_in → technic
 
 **J4 — Unsure Respondent:** Unknown answers and scarce information. Expected outcome: 0-100 possible if all unknown, no false zero or blocked output.
 
-Journey states: `start_3 → core_14_with_unknowns → results_score_or_interval → verify_actions`.
+Journey states: `start_3 → core_14_with_unknowns → results_score_or_explained_range → verify_answers_and_actions`.
 
 **J5 — Regulated Workflow:** High impact decision + intended AI use. Expected outcome: specialist review first despite a strong maturity score.
 
@@ -558,6 +558,8 @@ const coverage = coverageUnits / 2;
 ```
 
 **Maturity bands (provisional):** 0–under 25 Foundational; 25–under 50 Emerging; 50–under 75 Developing; 75–100 Established. Emit a single band only if both raw endpoints fall in the same band; otherwise present the interval with “readiness spans more than one band.” `UNK` extends the possible range without imputation; unknowns generate verification actions.
+
+**Client-facing display:** Exact scores use one nearest whole number. Differing endpoints use “lower to upper out of 100,” accompanied by an explanation that this is a range and confirming “I am not sure” answers may narrow it. Results show known answers out of 14 and identify triggered formal gates as safety checks to review; they do not expose weighted coverage units without explanation. These are presentation rules only and do not alter the scoring algorithm.
 
 ### 7.2 Worked example with unknowns
 
