@@ -1,6 +1,13 @@
 import {useEffect, useMemo, useRef, useState, type ReactNode} from 'react';
 import type {ReadinessResult} from '../domain/evaluate';
-import {getReportGuidance} from '../domain/report-guidance';
+import {
+  getActionLabel,
+  getCostFitLabel,
+  getGateLabel,
+  getQuestionLabel,
+  getReportGuidance,
+  getSeverityLabel,
+} from '../domain/report-guidance';
 import ReadinessSignal from '../ReadinessSignal';
 
 type ProfileLike = {
@@ -68,7 +75,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
 
   const assessmentId = useMemo(() => {
     const seed = `${profile.organizationType ?? 'unknown'}-${profile.industry ?? 'unknown'}-${Date.now()}`;
-    return `SELF-${seed.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24).toUpperCase()}`;
+    return `SELF-${seed.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toUpperCase()}`;
   }, [profile]);
 
   const reportGuidance = getReportGuidance(readiness);
@@ -78,13 +85,27 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
       [
         'Silverspark Compass Readiness Summary',
         `Assessment ID: ${assessmentId}`,
-        `Primary Path: ${readiness.primaryPath}`,
+        `Recommended focus: ${reportGuidance.primaryPathLabel} (reference ${readiness.primaryPath})`,
         `${reportGuidance.scoreLabel}: ${reportGuidance.scoreText}`,
         ...(reportGuidance.scoreNote ? [reportGuidance.scoreNote] : []),
-        `Safety Checks To Review: ${readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'No safety checks triggered'}`,
+        `Traffic-Light Signal: ${reportGuidance.signal.label} — ${reportGuidance.signal.title}`,
+        reportGuidance.signal.description,
+        ...(reportGuidance.signal.rangeNote ? [reportGuidance.signal.rangeNote] : []),
+        'This signal is not approval to deploy AI; confirm safeguards for the specific use case.',
+        `Safety Checks To Review: ${readiness.formalGates.length ? readiness.formalGates.map((gate) => `${getGateLabel(gate.id)} (reference ${gate.id})`).join('; ') : 'No safety checks triggered'}`,
         'Request to discuss: yes',
       ].join('\n'),
-    [assessmentId, readiness, reportGuidance.scoreLabel, reportGuidance.scoreNote, reportGuidance.scoreText],
+    [
+      assessmentId,
+      readiness,
+      reportGuidance.scoreLabel,
+      reportGuidance.scoreNote,
+      reportGuidance.scoreText,
+      reportGuidance.signal.label,
+      reportGuidance.signal.title,
+      reportGuidance.signal.description,
+      reportGuidance.signal.rangeNote,
+    ],
   );
 
   useEffect(() => {
@@ -160,12 +181,21 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
             <strong>{reportGuidance.scoreText}</strong>
           </div>
           <div>
-            <p className="report-label">Primary Path</p>
-            <strong>{readiness.primaryPath}</strong>
+            <p className="report-label">Recommended Focus</p>
+            <strong>{reportGuidance.primaryPathLabel}</strong>
+            <small>Reference: {readiness.primaryPath}</small>
           </div>
           <div>
             <p className="report-label">Safety Checks To Review</p>
-            <strong>{readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'No safety checks triggered'}</strong>
+            {readiness.formalGates.length ? (
+              <ul className="report-list">
+                {readiness.formalGates.map((gate) => (
+                  <li key={gate.id}>
+                    {getGateLabel(gate.id)} <small>(Reference: {gate.id})</small>
+                  </li>
+                ))}
+              </ul>
+            ) : <strong>No safety checks triggered</strong>}
           </div>
         </div>
         {reportGuidance.scoreNote && <p className="report-score-note">{reportGuidance.scoreNote}</p>}
@@ -177,7 +207,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
           <li>Organisation Type: {profile.organizationType || 'Not shared'}</li>
           <li>Industry / Sector: {profile.industry || 'Not shared'}</li>
           <li>Business Goal: {profile.businessGoal || 'Not yet defined'}</li>
-          <li>Budget Fit: {readiness.costFit}</li>
+          <li>Budget Fit: {getCostFitLabel(readiness.costFit)}</li>
         </ul>
       </ReportSection>
 
@@ -190,8 +220,11 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
       <ReportSection id="practical-recommendation" title="A Practical Recommendation" expanded={openSections.has('practical-recommendation')} printMode={printMode} onToggle={toggleSection}>
         <p>{reportGuidance.bandText}</p>
         <p>{reportGuidance.guidance}</p>
-        {reportGuidance.firstActionId && (
-          <p>Start with priority action {reportGuidance.firstActionId} in the action list below.</p>
+        {reportGuidance.firstActionLabel && (
+          <p>
+            Start here: {reportGuidance.firstActionLabel}.
+            {reportGuidance.firstActionId && <small> (Action reference: {reportGuidance.firstActionId})</small>}
+          </p>
         )}
       </ReportSection>
 
@@ -219,7 +252,12 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
       <ReportSection id="uncertainty-coverage" title="Uncertainty And Coverage" expanded={openSections.has('uncertainty-coverage')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {unknownQuestions.length ? (
-            unknownQuestions.map((questionId) => <li key={questionId}>Verify {questionId}: confirm the answer before acting on this recommendation.</li>)
+            unknownQuestions.map((questionId) => (
+              <li key={questionId}>
+                Confirm your answer about {getQuestionLabel(questionId)}.
+                <small> (Question reference: {questionId})</small>
+              </li>
+            ))
           ) : (
             <li>No unknown answers were declared in this draft.</li>
           )}
@@ -229,7 +267,12 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
       <ReportSection id="positive-capabilities" title="Positive Capabilities" expanded={openSections.has('positive-capabilities')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {readiness.actionIds.length ? (
-            readiness.actionIds.map((actionId) => <li key={actionId}>Action {actionId} is relevant to the current read-out.</li>)
+            readiness.actionIds.map((actionId) => (
+              <li key={actionId}>
+                {getActionLabel(actionId)}.
+                <small> (Action reference: {actionId})</small>
+              </li>
+            ))
           ) : (
             <li>No action ID was triggered in this draft; the result remains exploratory.</li>
           )}
@@ -239,7 +282,12 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
       <ReportSection id="gaps-and-evidence" title="Gaps And Evidence" expanded={openSections.has('gaps-and-evidence')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           {readiness.formalGates.length ? (
-            readiness.formalGates.map((gate) => <li key={gate.id}>{gate.id} — {gate.severity}</li>)
+            readiness.formalGates.map((gate) => (
+              <li key={gate.id}>
+                {getGateLabel(gate.id)} — {getSeverityLabel(gate.severity)}.
+                <small> (Reference: {gate.id})</small>
+              </li>
+            ))
           ) : (
             <li>No formal gates are currently triggered for this self-reported profile.</li>
           )}
@@ -247,26 +295,44 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
       </ReportSection>
 
       <ReportSection id="critical-safety-gates" title="Critical Safety Gates" expanded={openSections.has('critical-safety-gates')} printMode={printMode} onToggle={toggleSection}>
-        <p>{readiness.formalGates.length ? readiness.formalGates.map((gate) => gate.id).join(', ') : 'No critical safety gates are triggered in this draft.'}</p>
+        {readiness.formalGates.length ? (
+          <ul className="report-list">
+            {readiness.formalGates.map((gate) => (
+              <li key={gate.id}>
+                {getGateLabel(gate.id)} <small>(Reference: {gate.id})</small>
+                {gate.triggeringIds.length > 0 && (
+                  <span> Evidence to check: {gate.triggeringIds.map((id) => `${id.replace(/^(answer|profile|probe)\./, '')}`).join(', ')}.</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : <p>No critical safety checks are triggered in this draft.</p>}
       </ReportSection>
 
       <ReportSection id="primary-path" title="Primary Path" expanded={openSections.has('primary-path')} printMode={printMode} onToggle={toggleSection}>
         <p>
-          Recommended primary path: <strong>{readiness.primaryPath}</strong>. Secondary paths: {readiness.secondaryPaths.length ? readiness.secondaryPaths.join(', ') : 'none'}.
+          Recommended focus: <strong>{reportGuidance.primaryPathLabel}</strong>
+          <small> (Path reference: {readiness.primaryPath})</small>.
+          Other areas to consider: {reportGuidance.secondaryPathLabels.length
+            ? reportGuidance.secondaryPathLabels.join('; ')
+            : 'none identified'}.
         </p>
       </ReportSection>
 
       <ReportSection id="three-priority-actions" title="Three Priority Actions" expanded={openSections.has('three-priority-actions')} printMode={printMode} onToggle={toggleSection}>
         <ol className="report-list ordered">
-          {readiness.actionIds.slice(0, 3).map((actionId) => (
-            <li key={actionId}>{actionId}</li>
+          {reportGuidance.actions.slice(0, 3).map(({id, label}) => (
+            <li key={id}>
+              {label}
+              <small> (Action reference: {id})</small>
+            </li>
           ))}
           {readiness.actionIds.length === 0 && <li>No action is recommended in the current local draft.</li>}
         </ol>
       </ReportSection>
 
       <ReportSection id="budget-and-capacity-fit" title="Budget And Capacity Fit" expanded={openSections.has('budget-and-capacity-fit')} printMode={printMode} onToggle={toggleSection}>
-        <p>Budget capacity fit: {readiness.costFit}. This does not imply a verified affordability conclusion.</p>
+        <p>Budget capacity fit: {getCostFitLabel(readiness.costFit)} This is not a fixed quote or a guarantee of affordability.</p>
       </ReportSection>
 
       <ReportSection id="next-30-60-90-days" title="Next 30, 60 And 90 Days" expanded={openSections.has('next-30-60-90-days')} printMode={printMode} onToggle={toggleSection}>
@@ -282,7 +348,11 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
       </ReportSection>
 
       <ReportSection id="appendix-answers-and-provenance" title="Appendix Answers And Provenance" expanded={openSections.has('appendix-answers-and-provenance')} printMode={printMode} onToggle={toggleSection}>
-        <p>Source answers: {Object.keys(answers).length ? Object.keys(answers).join(', ') : 'No answers recorded yet'}.</p>
+        <p>
+          Assessment areas covered: {Object.keys(answers).length
+            ? Object.keys(answers).map((questionId) => `${getQuestionLabel(questionId)} (reference: ${questionId})`).join('; ')
+            : 'No answers recorded yet'}.
+        </p>
       </ReportSection>
 
       <ReportSection id="consultant-review-template" title="Consultant Review Template" expanded={openSections.has('consultant-review-template')} printMode={printMode} onToggle={toggleSection}>

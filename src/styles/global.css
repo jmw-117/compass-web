@@ -409,10 +409,15 @@ h3 {
 .report-module {
   display: grid;
   gap: 1rem;
+  min-width: 0;
   margin-top: 0.5rem;
   padding-top: 0.8rem;
   border-top: 1px solid var(--line);
   color: var(--charcoal);
+}
+
+.report-module :where(p, li, strong, small, span, code) {
+  overflow-wrap: anywhere;
 }
 
 .report-module .eyebrow {
@@ -532,6 +537,7 @@ h3 {
 }
 
 .report-grid > div {
+  min-width: 0;
   padding: 0.75rem;
   border: 1px solid var(--line);
   border-radius: 0.8rem;
@@ -990,64 +996,69 @@ h3 {
 .readiness-signal {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 1rem;
+  align-items: center;
+  gap: 1.25rem;
   margin: 1rem 0;
-  padding: 1rem 1.1rem;
+  padding: 1.1rem 1.2rem;
   border: 1px solid var(--line);
-  border-radius: 0.9rem;
-  background: #fff;
+  border-radius: 1.2rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 250, 251, 0.96));
+  box-shadow: 0 12px 30px rgba(14, 24, 40, 0.05);
 }
 
 .readiness-signal--red {
   border-color: #e2b9b6;
-  background: #fff8f7;
+  background: linear-gradient(180deg, #fffaf9 0%, #fff3f1 100%);
 }
 
 .readiness-signal--amber {
   border-color: #e2d0a6;
-  background: #fffcf4;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff9ee 100%);
 }
 
 .readiness-signal--green {
   border-color: #b7d5c5;
-  background: #f5fbf7;
+  background: linear-gradient(180deg, #f8fdf9 0%, #eefaf3 100%);
 }
 
 .traffic-light {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.4rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  width: min(15rem, 100%);
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
-  background: #263345;
+  background: linear-gradient(180deg, #263345 0%, #1a2434 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 28px rgba(14, 24, 40, 0.14);
 }
 
 .traffic-light__bulb {
-  width: 0.72rem;
-  height: 0.72rem;
+  width: 1.35rem;
+  height: 1.35rem;
   border: 1px solid rgb(255 255 255 / 55%);
   border-radius: 50%;
-  opacity: 0.3;
+  opacity: 0.28;
+  box-shadow: inset 0 0.2rem 0.45rem rgba(255, 255, 255, 0.08);
 }
 
 .traffic-light__bulb--red {
-  background: #b42318;
+  background: radial-gradient(circle at 35% 30%, #ff8a7b 0%, #cf352c 22%, #9d1d15 100%);
 }
 
 .traffic-light__bulb--amber {
-  background: #946200;
+  background: radial-gradient(circle at 35% 30%, #ffd77b 0%, #d4a333 25%, #8d6500 100%);
 }
 
 .traffic-light__bulb--green {
-  background: #167046;
+  background: radial-gradient(circle at 35% 30%, #98e6be 0%, #49b980 20%, #19724c 100%);
 }
 
 .traffic-light--red .traffic-light__bulb--red,
 .traffic-light--amber .traffic-light__bulb--amber,
 .traffic-light--green .traffic-light__bulb--green {
-  border-color: #fff;
-  box-shadow: 0 0 0.45rem currentColor;
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0.9rem rgba(255, 255, 255, 0.6), 0 0 1.6rem rgba(255, 255, 255, 0.18);
   opacity: 1;
 }
 

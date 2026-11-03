@@ -13,6 +13,12 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(report, /Executive Summary/);
   assert.match(report, /Industry \/ Sector:/);
   assert.match(report, /Primary Path/);
+  assert.match(report, /reportGuidance\.primaryPathLabel/);
+  assert.match(report, /getActionLabel\(actionId\)/);
+  assert.match(report, /getQuestionLabel\(questionId\)/);
+  assert.match(report, /getGateLabel\(gate\.id\)/);
+  assert.doesNotMatch(report, /slice\(0,\s*24\)/);
+  assert.match(styles, /\.report-module\s+:where\(p, li, strong, small, span, code\)\s*\{[^}]*overflow-wrap:\s*anywhere/);
   assert.match(report, /Save as PDF/);
   assert.doesNotMatch(report, /Copy summary|Print \/ save as PDF/);
   assert.match(report, /window\.print\(\)/);
@@ -26,6 +32,8 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(report, /A Practical Recommendation/);
   assert.match(report, /reportGuidance\.guidance/);
   assert.match(report, /reportGuidance\.scoreNote/);
+  assert.match(report, /Traffic-Light Signal:/);
+  assert.match(report, /reportGuidance\.signal\.rangeNote/);
   assert.match(app, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
   assert.match(report, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
   assert.match(signal, /This signal is not approval to deploy AI/);

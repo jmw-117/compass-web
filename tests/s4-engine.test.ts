@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { evaluate } from '../src/domain/evaluate.ts';
-import { getReportGuidance } from '../src/domain/report-guidance.ts';
+import {
+  getActionLabel,
+  getCostFitLabel,
+  getGateLabel,
+  getQuestionLabel,
+  getReportGuidance,
+  getSeverityLabel,
+} from '../src/domain/report-guidance.ts';
 
 const fixtureF01 = {
   assessmentId: 'F01',
@@ -183,12 +190,23 @@ test('report guidance avoids asserting a single maturity band when the interval 
   assert.equal(guidance.signal.color, 'red');
   assert.match(guidance.signal.rangeNote, /cautious signal follows the lower bound/);
   assert.equal(guidance.title, 'Verify The Unknowns');
+  assert.equal(guidance.primaryPathLabel, 'Verify The Unknowns');
+  assert.equal(guidance.firstActionLabel, 'Assign someone to confirm the missing information');
+});
+
+test('report guidance uses human-readable labels for actions, questions, and safety checks', () => {
+  assert.equal(getActionLabel('A00-VERIFY-BASELINE'), 'Assign someone to confirm the missing information');
+  assert.equal(getQuestionLabel('STR-02'), 'who can approve an AI or automation use case');
+  assert.equal(getGateLabel('DATA-UNKNOWN'), 'Essential data details need confirmation');
+  assert.equal(getSeverityLabel('BLOCK_PILOT'), 'Do not pilot until this is addressed');
+  assert.equal(getCostFitLabel('unknown'), 'Cost fit is unknown.');
 });
 
 test('report guidance describes uncertain endpoints in plain language', () => {
   const guidance = getReportGuidance({
     score: {lowerEighths: 192, upperEighths: 640, coverageUnits: 120},
     primaryPath: 'P0',
+    secondaryPaths: [],
     actionIds: [],
   });
 
@@ -215,6 +233,7 @@ test('report guidance rounds an exact fractional score to one whole number witho
   const guidance = getReportGuidance({
     score: {lowerEighths: 220, upperEighths: 220, coverageUnits: 200},
     primaryPath: 'P1',
+    secondaryPaths: [],
     actionIds: [],
   });
 
@@ -229,6 +248,7 @@ test('traffic-light signal follows existing band boundaries and uses the lower c
     getReportGuidance({
       score: {lowerEighths, upperEighths, coverageUnits: 200},
       primaryPath: 'P1',
+      secondaryPaths: [],
       actionIds: [],
     });
 
