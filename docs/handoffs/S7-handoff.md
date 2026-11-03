@@ -1,12 +1,12 @@
 # S7 — GitHub Pages release
 
-**Stage status:** blocked pending repository settings; test deployment only, no public launch  
+**Stage status:** blocked pending repository settings; test deployment only, no public launch
 **Submitted by:** Copilot engineering assistant  
 **Reviewer:** Pending  
 **Human approver:** Pending  
 **Date:** 2026-11-03  
 **Input handoff:** `docs/handoffs/S6-handoff.md`; S6 approved by explicit Product Owner chat instruction on 2026-11-03  
-**Baseline commit:** `8bcd0ee` (`codex`; latest pushed change is the executive README)  
+**Baseline commit at S7 start:** `bb96e23` (`codex`)
 **Domain versions:** manifest 1.3.5 (`DRAFT_UNAPPROVED`); rules 1.2.0; question bank 1.1.0; extension 1.3.0; discovery 1.3.0; requirements 1.3.0; report 1.3.4; gates 1.2.0; action catalog 1.1.0.
 
 ## 1. Scope and release gate
