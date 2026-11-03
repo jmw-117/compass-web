@@ -268,6 +268,16 @@ export default function App() {
     }
   }, [screen]);
 
+  useEffect(() => {
+    document.getElementById('assessment-title')?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (isReportModuleOpen) {
+      document.getElementById('report-module-panel')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+  }, [isReportModuleOpen]);
+
   const answeredCount = Object.keys(answers).length;
   const readinessResult = useMemo(
     () =>
@@ -389,7 +399,7 @@ export default function App() {
       <section className="assessment-panel start-panel" aria-labelledby="assessment-title">
         <div className="panel-header">
           <p className="eyebrow">AI readiness profile</p>
-          <h2 id="assessment-title">Tell us a little about the business case.</h2>
+          <h2 id="assessment-title" tabIndex={-1}>Tell us a little about the business case.</h2>
         </div>
 
         <form
@@ -463,7 +473,9 @@ export default function App() {
     currentIndex: number,
   ) {
     const currentQuestion = questions[currentIndex];
-    const answeredCountInSection = questions.filter((question) => typeof answers[question.id] !== 'undefined').length;
+    const progressQuestionNumber = step === 'preview'
+      ? currentIndex + 1
+      : previewQuestions.length + currentIndex + 1;
     const isFinalQuestion = currentIndex === questions.length - 1;
 
     if (!currentQuestion) {
@@ -479,14 +491,20 @@ export default function App() {
 
         <div className="progress-wrap" aria-live="polite">
           <span>
-            {step === 'preview'
-              ? `${answeredCountInSection}/${previewQuestions.length} quick answers`
-              : `${answeredCountInSection}/${remainingQuestions.length} core answers`}
+            Question {progressQuestionNumber} of {coreQuestions.length}
           </span>
-          <div className="progress-bar" aria-hidden="true">
+          <div
+            className="progress-bar"
+            role="progressbar"
+            aria-label="Assessment progress"
+            aria-valuemin={0}
+            aria-valuemax={coreQuestions.length}
+            aria-valuenow={progressQuestionNumber}
+            aria-valuetext={`Question ${progressQuestionNumber} of ${coreQuestions.length}`}
+          >
             <span
               style={{
-                width: `${Math.min(100, ((currentIndex + 1) / questions.length) * 100)}%`,
+                width: `${Math.min(100, (progressQuestionNumber / coreQuestions.length) * 100)}%`,
               }}
             />
           </div>
@@ -627,7 +645,9 @@ export default function App() {
 
         <div id="report-module-panel" className="report-module-panel">
           {isReportModuleOpen && (
-            <Suspense fallback={<p role="status">Loading the report preview…</p>}>
+            <Suspense
+              fallback={<p role="status">Preparing your report preview…</p>}
+            >
               <ReportModule profile={profile} answers={answers} readiness={readinessResult} />
             </Suspense>
           )}
@@ -640,7 +660,9 @@ export default function App() {
     <div className="assessment-shell">
       <div className="assessment-topbar">
         <p>Silverspark Compass</p>
-        <span>{screen === 'start' ? 'Start' : screen === 'preview' ? 'Quick preview' : screen === 'core' ? 'Core questions' : screen === 'review' ? 'Review' : 'Results'}</span>
+        {screen !== 'start' && (
+          <span>{screen === 'preview' ? 'Quick preview' : screen === 'core' ? 'Core questions' : screen === 'review' ? 'Review' : 'Results'}</span>
+        )}
       </div>
 
       {screen === 'start' && renderStartScreen()}

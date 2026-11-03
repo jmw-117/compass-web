@@ -81,6 +81,9 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
           <button type="button" className="button-secondary" onClick={handleCopySummary}>
             {copied ? 'Summary copied' : 'Copy summary'}
           </button>
+          <button type="button" className="button-secondary" onClick={() => window.print()}>
+            Print / save as PDF
+          </button>
           <button type="button" className="button-primary" onClick={handleWhatsAppClick}>
             Share via WhatsApp
           </button>

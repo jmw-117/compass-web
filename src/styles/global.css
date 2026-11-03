@@ -84,9 +84,9 @@ button:focus-visible {
 
 .wordmark-logo {
   display: block;
-  width: clamp(2.4rem, 3vw, 3.3rem);
+  width: clamp(2.8rem, 3.4vw, 3.6rem);
   height: auto;
-  max-height: 2.6rem;
+  max-height: 3rem;
   border-radius: 0.4rem;
   object-fit: contain;
   filter: drop-shadow(0 2px 10px rgba(14, 24, 40, 0.08));
@@ -192,8 +192,11 @@ h3 {
   min-height: 3.25rem;
   padding: 0.75rem 1.2rem;
   border: 1px solid #d4c197;
+  background: transparent;
   color: white;
+  cursor: pointer;
   font-size: 0.9rem;
+  font-family: inherit;
   font-weight: 650;
   text-decoration: none;
 }
@@ -766,6 +769,7 @@ h3 {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #0e1828, #6c7d90);
+  transition: width 320ms ease-out;
 }
 
 .question-block {
@@ -892,6 +896,7 @@ h3 {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+  color: var(--navy);
   font-size: 0.86rem;
   font-weight: 700;
 }
@@ -1020,5 +1025,86 @@ h3 {
 
   .hero-assessment-slot {
     min-height: 30rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar span {
+    transition: none;
+  }
+}
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  body {
+    min-width: 0;
+    background: white;
+    color: #172335;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .report-module,
+  .report-module * {
+    visibility: visible !important;
+  }
+
+  .report-module {
+    position: absolute !important;
+    inset: 0 auto auto 0;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #172335;
+  }
+
+  .report-actions {
+    display: none !important;
+  }
+
+  .report-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    background: white;
+    box-shadow: none;
+  }
+}
+
+.hero--assessment-active {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: calc(100vh - 5.25rem);
+  min-height: calc(100svh - 5.25rem);
+  padding: clamp(1.25rem, 4vw, 4rem);
+}
+
+.hero--assessment-active .hero-copy {
+  display: none;
+}
+
+.hero--assessment-active .hero-assessment-slot {
+  min-height: 0;
+  width: 100%;
+}
+
+.hero--assessment-active #react-enhancement {
+  max-width: 96rem;
+  margin-inline: auto;
+}
+
+.hero--assessment-active .assessment-shell {
+  min-height: 0;
+}
+
+@media (max-width: 420px) {
+  .wordmark-logo {
+    width: 2.75rem;
+    max-height: 2.75rem;
   }
 }

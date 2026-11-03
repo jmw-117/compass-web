@@ -33,10 +33,16 @@
           <p class="hero-lede">
             Evaluate your operating model, data quality, governance posture, and change readiness—without the fluff.
           </p>
-          <a class="primary-link" href="#react-enhancement">
-            Explore the assessment
+          <button
+            class="primary-link"
+            id="take-assessment"
+            type="button"
+            aria-controls="react-enhancement"
+            aria-expanded="false"
+          >
+            Take the assessment
             <span aria-hidden="true">→</span>
-          </a>
+          </button>
           <p class="hero-caption">No account required. Your responses stay in this browser unless you choose to share them.</p>
         </div>
 
@@ -55,7 +61,10 @@
     </footer>
 
     <noscript>
-      <p class="noscript-note">JavaScript is off. This information page is still available; interactive previews are optional.</p>
+      <p class="noscript-note">
+        This page remains readable without JavaScript. The questionnaire, scoring, recommendations,
+        and report preview require JavaScript; enable it to take the assessment.
+      </p>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
