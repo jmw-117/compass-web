@@ -120,7 +120,7 @@
     {
       "id": "S7",
       "name": "GitHub Pages release",
-      "status": "in_progress",
+      "status": "blocked",
       "requiredPrevious": "S6",
       "approvedBy": null,
       "approvedAt": null,
@@ -129,7 +129,7 @@
       "evidence": [
         "Product Owner approved S6 and clarified in chat on 2026-11-03 that GitHub Pages is for testing only; public use is intended for a custom host",
         "npm run verify passed locally on the S7 working tree with 27 tests, typecheck, production build, and static asset checks",
-        "GitHub Actions quality and extended Python validation passed on baseline commit bb96e232c18c6a8acf88dcda119b6ca37dd700dc; S7 worktree changes still require a new GitHub Actions run",
+        "GitHub Actions run 41707869969 passed Node quality checks on 8bcd0ee56d40d3eb4d810662c3c8b2e2478515f3 but failed extended Python validation because in_progress is not an allowed ledger status; ledger corrected to blocked pending gates",
         "Main branch protection is not configured and GitHub Pages is not enabled; test deployment, live-site verification, and rollback evidence are pending",
         "Public launch remains out of scope and requires separate hosting/policy review and release approval"
       ]
