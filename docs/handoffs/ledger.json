@@ -100,30 +100,39 @@
     {
       "id": "S6",
       "name": "Independent QA and hardening",
-      "status": "review_requested",
+      "status": "approved",
       "requiredPrevious": "S5",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "Product Owner (explicit chat approval; personal name not provided)",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S6-handoff.md",
       "commitSha": null,
       "evidence": [
         "docs/handoffs/S6-handoff.md records the QA matrix for all 23 product requirements, prioritized defects, and verification limits",
-        "npm run verify passed with 26 tests, typecheck, production build, and static asset checks on 2026-11-03",
-        "tests/s6-quality.test.mjs adds a source-level no-submission regression guard; a separate code-review agent identified a high-severity false-safe risk that remains unresolved",
-        "The UI businessGoal-to-primary_goal mapping was corrected and tested; human S6 approval remains pending",
-        "Python validators and a post-restoration GitHub Actions run remain outstanding; no push or deployment was made"
+        "npm run verify passed with 27 tests, typecheck, production build, and static asset checks on 2026-11-03",
+        "tests/s6-quality.test.mjs guards the static no-submission boundary and confirms private local paths are ignored while required contracts and handoffs remain visible",
+        "A separate code-review agent identified a high-severity false-safe risk that remains unresolved; S6 stage approval does not mean this finding is resolved",
+        "The UI businessGoal-to-primary_goal mapping was corrected and tested",
+        "Product Owner explicitly approved S6 and progression to S7 in chat on 2026-11-03; S7 release gates remain separate",
+        "GitHub Actions quality and extended Python validation passed on base S6 commit bb96e232c18c6a8acf88dcda119b6ca37dd700dc; the current uncommitted privacy/handoff changes need a subsequent run",
+        "No merge, deployment, or public launch was made"
       ]
     },
     {
       "id": "S7",
       "name": "GitHub Pages release",
-      "status": "not_started",
+      "status": "in_progress",
       "requiredPrevious": "S6",
       "approvedBy": null,
       "approvedAt": null,
       "handoffPath": "docs/handoffs/S7-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "Product Owner approved S6 and clarified in chat on 2026-11-03 that GitHub Pages is for testing only; public use is intended for a custom host",
+        "npm run verify passed locally on the S7 working tree with 27 tests, typecheck, production build, and static asset checks",
+        "GitHub Actions quality and extended Python validation passed on baseline commit bb96e232c18c6a8acf88dcda119b6ca37dd700dc; S7 worktree changes still require a new GitHub Actions run",
+        "Main branch protection is not configured and GitHub Pages is not enabled; test deployment, live-site verification, and rollback evidence are pending",
+        "Public launch remains out of scope and requires separate hosting/policy review and release approval"
+      ]
     },
     {
       "id": "S8",

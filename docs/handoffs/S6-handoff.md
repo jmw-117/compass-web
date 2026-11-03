@@ -1,11 +1,11 @@
 # S6 — Independent QA and hardening
 
-**Stage status:** review_requested; not approved  
+**Stage status:** approved for progression; QA exceptions remain open
 **Submitted by:** Copilot engineering assistant  
 **Independent reviewer:** Separate code-review agent completed; findings incorporated below  
-**Human approver:** Pending  
+**Human approver:** Product Owner (explicit chat approval; personal name not provided)
 **Date:** 2026-11-03  
-**Base commit:** `5cc7733bff49aebaa9f634f73f86d93a015f1f10` (`codex`; no S6 changes committed)  
+**Baseline commit at start of S6:** `5cc7733bff49aebaa9f634f73f86d93a015f1f10` (`codex`)
 **Input handoff:** `docs/handoffs/S5-handoff.md`, SHA-256 `B3E23F4EBC4BAC5DE59C60E2F1031C3C8AB7B596C776F08FAFEB9A156A4C130F`  
 **Contract inputs:** manifest 1.3.5 (`DRAFT_UNAPPROVED`); product requirements 1.3.0; rules 1.2.0; question bank 1.1.0; extension 1.3.0; discovery 1.3.0; report 1.3.4; gates 1.2.0; action catalog 1.1.0.
 
@@ -15,10 +15,11 @@ S6 checked the implemented assessment/report flow against all 23 product require
 
 | File | Change |
 |---|---|
+| `.gitignore` | Adds narrow local secret/private-material patterns and dedicated private-note directories without ignoring `docs/` generally. |
 | `src/App.tsx` | Maps the selected UI `businessGoal` to the evaluator's existing `primary_goal` field. SHA-256: `82D34F39F7DFC26E1963E6B92D515FC564D5E651FEFDA29EB8CB0F7185202177`. |
 | `tests/s3-assessment.test.mjs` | Guards the UI-to-evaluator profile mapping. SHA-256: `45047A556CA989154A3F48EAB06D2ADA682AEA51A8376F85DDE0A83FFE650739`. |
 | `tests/s4-engine.test.ts` | Verifies that a mapped efficiency goal activates the existing missing-baseline gate when its other conditions apply. SHA-256: `94754CDD604FCA1BDAA54E5A8094E0E5683CBD08093FEB11FECA77C0D0077E85`. |
-| `tests/s6-quality.test.mjs` | Added a source-wide guard against browser request APIs, and checks for explicit local-save disclosure and user-triggered WhatsApp handoff. SHA-256: `5A3892C4A0B4EC79939197A2E227B67B4CE0F585F5520A3F49BB6FDD89CA5400`. |
+| `tests/s6-quality.test.mjs` | Adds source-level no-submission and ignore-rule regression checks. |
 | `docs/handoffs/S6-handoff.md` | This QA evidence, 23-requirement coverage matrix, defect log, and handoff. |
 | `docs/handoffs/ledger.json` | Records S6 as review_requested; no approver is recorded. |
 | `docs/stages/INDEX.md` | Updates the current stage evidence to reflect S5 approval and S6 review. |
@@ -28,17 +29,17 @@ S6 checked the implemented assessment/report flow against all 23 product require
 
 | Command or check | Result | Evidence / limitation |
 |---|---|---|
-| `npm run verify` | Passed | Contract checks, lint/typecheck, all 26 Node tests, production build, and static asset checks passed after the field-mapping correction. The build is served from `/silverspark-compass/`; entry JavaScript is 67.18 KiB gzip against the existing 90 KiB budget. |
+| `npm run verify` | Passed locally | Contract checks, lint/typecheck, all 27 Node tests, production build, and static asset checks passed after the ignore-rule regression was added. The build is served from `/silverspark-compass/`; entry JavaScript is 67.18 KiB gzip against the existing 90 KiB budget. |
 | `npm audit` | Passed | Zero reported vulnerabilities. |
 | `npm audit --omit=dev` | Passed | Zero reported vulnerabilities in production dependencies. |
-| `node --test --experimental-strip-types tests/s6-quality.test.mjs` | Passed as part of `npm run verify` | Confirms current `src/**/*.ts(x)` contains no `fetch`, `XMLHttpRequest`, `sendBeacon`, or WebSocket submission path; local-save disclosure remains present; WhatsApp opening is user-triggered. This is a regression guard, not a network monitor. |
+| `node --test --experimental-strip-types tests/s6-quality.test.mjs` | Passed as part of `npm run verify` | Confirms source-level no-submission guard and that local private notes are ignored while the product requirements, stage contract, and ledger remain addable/tracked. This is a regression guard, not a network monitor. |
 | Business-goal mapping regression | Passed in final `npm run verify` | `tests/s3-assessment.test.mjs` guards the app mapping and `tests/s4-engine.test.ts` exercises the existing baseline gate for the mapped goal. |
 | Browser privacy/network check | Passed | Assessment/report flow used six same-origin static GET requests; no external request or assessment POST was observed. WhatsApp is only opened after the user activates its control. |
 | Browser flow and report at 320px | Passed for checked flow | Completed the 14 core questions with unknown answers and inspected the expanded report. No horizontal overflow was observed; the full professional-services assessment ID wrapped rather than truncating. This does not substitute for real Android/iOS device testing. |
 | Keyboard check | Passed for checked flow | Skip link is first; launching the assessment moves focus to the assessment heading. |
-| `git diff --check` | Passed after all edits | The ledger and stage index produce line-ending normalization warnings on Windows; no whitespace errors were reported. |
-| `python scripts/validate_kit.py` | Not run | Python is unavailable in the local environment. The restored S4 handoff now exists, but the prior CI run failed before deployment and no new GitHub Actions run has been triggered. |
-| `python scripts/validate_product_v13.py` | Not run | Python is unavailable locally; the prior CI run stopped at the earlier validator. |
+| `git diff --check` | Passed after ignore-rule edits | No whitespace errors. |
+| `python scripts/validate_kit.py` | Passed in CI | GitHub Actions run [41705328652](https://github.com/jmw-117/compass-web/actions/runs/41705328652), head `bb96e232c18c6a8acf88dcda119b6ca37dd700dc`; local Python/py is unavailable. |
+| `python scripts/validate_product_v13.py` | Passed in CI | GitHub Actions run [41705328652](https://github.com/jmw-117/compass-web/actions/runs/41705328652), head `bb96e232c18c6a8acf88dcda119b6ca37dd700dc`; the workflow's extended Python contract-validation step succeeded. |
 | Axe, screen-reader audit, real Android/iOS, native print/PDF, low-end-device performance, multi-tab and crash/resume tests | Not run | Required evidence remains open; no pass is claimed. |
 
 No push or deployment was made. Local verification does not establish that the GitHub Pages workflow is green.
@@ -97,16 +98,32 @@ The independent S6 code review found a high-severity false-safe risk (not an exp
 - [x] Narrow-width report wrapping and checked keyboard flow have evidence.
 - [ ] All 23 product requirements meet their acceptance criteria; gaps and partial coverage are listed above.
 - [ ] Resolve the independently identified high-severity false-safe risk; axe, screen-reader, and golden-case review also remain open.
-- [ ] GitHub Actions quality workflow passes after the S4 handoff restoration.
+- [x] GitHub Actions quality and extended Python validation passed after the S4 handoff restoration at `bb96e232c18c6a8acf88dcda119b6ca37dd700dc`.
 - [x] Separate code-review agent completed review and its findings were incorporated.
-- [ ] Human Product Owner approves S6.
+- [x] Human Product Owner approved S6 in chat on 2026-11-03.
 
-Risks: the manifest remains `DRAFT_UNAPPROVED`; golden fixtures and real-world calibration remain pending; public Pages use is blocked pending commercial-terms review; local verification does not prove CI or deployment status. S7 is not authorized by this handoff.
+Risks: the Product Owner approved S6 while the false-safe risk, requirement gaps, accessibility/device checks, golden-case review, and Python validators remain open; the approval records stage progression and does not resolve or validate those findings. The manifest remains `DRAFT_UNAPPROVED`; public Pages use is blocked pending commercial-terms review. Local verification does not prove CI or deployment status.
 
 ## 6. Rollback, outputs, and next-stage blockers
 
 - **Rollback:** revert only the `src/App.tsx` profile mapping and its two regression tests, `tests/s6-quality.test.mjs`, this S6 handoff, the S6 ledger/index status edits, and the whitespace-only cleanup if rejected. Preserve the existing S4/S5 product changes and approvals.
 - **Outputs:** S6 QA report and prioritized defect log in this file; regression test `tests/s6-quality.test.mjs`; no application bundle or domain contract version change.
-- **Next-stage blockers:** explicit human S6 approval; resolution of the high-severity false-safe risk and P1 product gaps/contract conflict; successful post-restoration GitHub Actions validators; commercial-use policy decision before any public release.
-- **Documentation privacy:** Product Owner chose to retain required tracked docs. No broad `docs/` ignore rule was added; no separate private/local documentation paths were specified.
+- **Next-stage blockers:** S7 release prerequisites remain: commercial-use policy decision, verified branch protection/permissions, successful post-restoration GitHub Actions validators, and resolution or explicit recorded acceptance of the high-severity false-safe risk and P1 product gaps.
+- **Documentation privacy:** Product Owner chose to retain required tracked docs. No broad `docs/` ignore rule was added; `.gitignore` now provides dedicated `docs/private/` and `docs/_private/` locations for future local-only files.
 - **Status:** submitted for separate review only. The implementing agent does not approve S6 or authorize S7.
+
+## 7. Proprietary-material and repository privacy assessment
+
+- `.gitignore` now covers common local credentials (`.env*`, local files, private keys/certificates), root private/secrets directories, `docs/private/`, `docs/_private/`, and explicitly named `*.private.*` files. It does not ignore `docs/` or the required contracts, stages, prompts, and handoffs.
+- The new regression test uses `git check-ignore` to prove representative private paths are ignored while `docs/domain/product_requirements.json`, `docs/handoffs/ledger.json`, and the S6 stage contract are not. This protects future additions from accidental staging; it does not remove existing tracked files, purge Git history, or prevent force-adding an ignored file.
+- S6 and the deployment validators require domain contracts, stage instructions, and handoffs to remain present. Hiding or removing those files would fail validation and is not an appropriate confidentiality control.
+- The repository is public by the Product Owner's description. Tracked documentation and source, including scoring rules and recommendation logic, are therefore public. A static browser application also exposes its shipped JavaScript; `.gitignore` cannot make that logic secret. If keeping the methodology confidential is a requirement, it conflicts with public source/static client-side delivery and needs a separate architecture/product decision before release.
+- No `LICENSE` or `NOTICE` file was found; `package.json` says `UNLICENSED`. This is not a complete IP or brand-protection program. Obtain legal review of an explicit copyright/proprietary notice, permitted use/redistribution terms, Silverspark Compass name/logo trademark treatment, third-party asset licenses, and any patent/public-disclosure implications. Do not invent a license or legal claim in code.
+- Never put client evidence, personal information, credentials, signing keys, or unreleased commercial material in this public repository, browser URLs, test fixtures, or CI logs. If any such material was committed previously, ignore rules are insufficient; assess its public exposure and rotate/revoke credentials where applicable.
+
+## 8. Human approval
+
+**Decision:** S6 approved for stage progression
+**Human approver:** Product Owner (explicit chat approval; personal name not provided)
+**Date:** 2026-11-03
+**Exceptions still open:** the high-severity false-safe risk, incomplete MUST requirements, unrun axe/screen-reader/real-device checks, unrun Python validators, and pending commercial-use policy review are not resolved by this approval. S7 must honor its own release gates; no deployment is authorized by this record.
