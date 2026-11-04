@@ -152,6 +152,18 @@ export function getCostFitLabel(costFit: ReadinessResult['costFit']): string {
   return labels[costFit];
 }
 
+export function getSafetyChecksMessage(
+  readiness: Pick<ReadinessResult, 'formalGates' | 'safetyContextConfirmed'>,
+): string {
+  if (!readiness.safetyContextConfirmed) {
+    return 'Safety context is incomplete or includes “Not sure”. Other checks may apply; this report is not a safety clearance.';
+  }
+  if (readiness.formalGates.length > 0) {
+    return 'Formal safety checks have been triggered. Review them; this report is not a safety clearance.';
+  }
+  return 'No formal safety checks were triggered for the context entered. This report is not a safety clearance.';
+}
+
 export function getReportGuidance(readiness: ReadinessSummary) {
   const recommendation = PATH_RECOMMENDATIONS[readiness.primaryPath] ?? DEFAULT_RECOMMENDATION;
   const isExactScore = readiness.score.lowerEighths === readiness.score.upperEighths;

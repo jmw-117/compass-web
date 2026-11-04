@@ -5,6 +5,7 @@ import {
   getActionLabel,
   getCostFitLabel,
   getGateLabel,
+  getSafetyChecksMessage,
   getQuestionLabel,
   getReportGuidance,
   getSeverityLabel,
@@ -169,6 +170,80 @@ test('S4 keeps path selection monotonic and scores within the valid range', () =
   assert.equal(result.dimensions.GOV.upper, 3);
 });
 
+test('unknown core answers widen each dimension across both indicators', () => {
+  const result = evaluate({
+    ...fixtureF03,
+    coreAnswers: {
+      ...fixtureF03.coreAnswers,
+      'STR-02': 'STR-02-UNK',
+    },
+  });
+
+  assert.deepEqual(result.dimensions.STR, {lower: 1.5, upper: 3.5, known: 1});
+  for (const dimension of Object.values(result.dimensions)) {
+    assert.ok(dimension.lower >= 0);
+    assert.ok(dimension.upper <= 4);
+    assert.ok(dimension.lower <= dimension.upper);
+  }
+});
+
+test('unknown core answers do not satisfy numeric safety or path predicates', () => {
+  const result = evaluate({
+    ...fixtureF03,
+    coreAnswers: {
+      ...fixtureF03.coreAnswers,
+      'DAT-01': 'DAT-01-UNK',
+      'GOV-01': 'GOV-01-UNK',
+      'MET-01': 'MET-01-UNK',
+      'STR-02': 'STR-02-UNK',
+      'TEC-01': 'TEC-01-UNK',
+      'TEC-02': 'TEC-02-UNK',
+    },
+    profile: {
+      ...fixtureF03.profile,
+      data_category: 'restricted',
+      planned_use_real_data: 'yes',
+    },
+  });
+
+  const gateIds = result.formalGates.map(({id}) => id);
+  for (const gateId of ['DATA-UNKNOWN', 'GOV-DATA', 'OWN-NONE', 'BASELINE-MISSING']) {
+    assert.ok(!gateIds.includes(gateId), `Unknown answers must not trigger ${gateId}`);
+  }
+  assert.notEqual(result.primaryPath, 'P4');
+  assert.ok(!result.secondaryPaths.includes('P4'));
+});
+
+test('safety context completeness distinguishes confirmed profile values from unknowns', () => {
+  const complete = evaluate({
+    ...fixtureF03,
+    profile: {
+      ...fixtureF03.profile,
+      current_ai_use: 'team_pilot',
+      data_category: 'routine',
+      high_impact_ai_workflow: 'no',
+      planned_ai_use: 'yes',
+      planned_use_real_data: 'no',
+    },
+  });
+  const incomplete = evaluate({
+    ...fixtureF03,
+    profile: {
+      ...fixtureF03.profile,
+      current_ai_use: 'unknown',
+      data_category: 'routine',
+      high_impact_ai_workflow: 'no',
+      planned_ai_use: 'yes',
+      planned_use_real_data: 'no',
+    },
+  });
+
+  assert.equal(complete.safetyContextConfirmed, true);
+  assert.equal(incomplete.safetyContextConfirmed, false);
+  assert.equal(evaluate(fixtureF03).safetyContextConfirmed, true);
+  assert.equal(evaluate(fixtureF05).safetyContextConfirmed, false);
+});
+
 test('report guidance follows the score interval and evaluator-selected safety path', () => {
   const safetyResult = evaluate({
     ...fixtureF01,
@@ -213,6 +288,18 @@ test('report guidance uses human-readable labels for actions, questions, and saf
   assert.equal(getGateLabel('DATA-UNKNOWN'), 'Essential data details need confirmation');
   assert.equal(getSeverityLabel('BLOCK_PILOT'), 'Do not pilot until this is addressed');
   assert.equal(getCostFitLabel('unknown'), 'Cost fit is unknown.');
+});
+
+test('no-triggered-gate messaging distinguishes incomplete context from a safety clearance', () => {
+  const incomplete = getSafetyChecksMessage({formalGates: [], safetyContextConfirmed: false});
+  const noGates = getSafetyChecksMessage({formalGates: [], safetyContextConfirmed: true});
+  const withGate = getSafetyChecksMessage({formalGates: [{id: 'GOV-DATA'}], safetyContextConfirmed: true});
+
+  assert.match(incomplete, /context is incomplete/i);
+  assert.match(incomplete, /not a safety clearance/i);
+  assert.match(noGates, /context entered/i);
+  assert.match(noGates, /not a safety clearance/i);
+  assert.match(withGate, /checks have been triggered/i);
 });
 
 test('report guidance describes uncertain endpoints in plain language', () => {

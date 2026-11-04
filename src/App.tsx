@@ -19,12 +19,22 @@ type Profile = {
   organizationType: string;
   industry: string;
   businessGoal: string;
+  current_ai_use: string;
+  data_category: string;
+  high_impact_ai_workflow: string;
+  planned_ai_use: string;
+  planned_use_real_data: string;
 };
 
 const emptyProfile: Profile = {
   organizationType: '',
   industry: '',
   businessGoal: '',
+  current_ai_use: '',
+  data_category: '',
+  high_impact_ai_workflow: '',
+  planned_ai_use: '',
+  planned_use_real_data: '',
 };
 
 const INDUSTRY_OPTIONS = [
@@ -48,8 +58,64 @@ const BUSINESS_GOAL_OPTIONS = [
   ['explore', 'Explore AI opportunities'],
 ] as const;
 
+const SAFETY_CONTEXT_QUESTIONS = [
+  {
+    id: 'current_ai_use',
+    label: 'How is AI currently used in this organisation?',
+    options: [
+      {value: 'none', label: 'No current AI use'},
+      {value: 'personal', label: 'Personal experimentation'},
+      {value: 'team_pilot', label: 'A team pilot'},
+      {value: 'operational', label: 'Part of an operational workflow'},
+      {value: 'unknown', label: 'Not sure'},
+    ],
+  },
+  {
+    id: 'data_category',
+    label: 'What type of information is expected to be used?',
+    options: [
+      {value: 'routine', label: 'Routine business information'},
+      {value: 'personal', label: 'Personal information'},
+      {value: 'restricted', label: 'Restricted or confidential information'},
+      {value: 'unknown', label: 'Not sure'},
+    ],
+  },
+  {
+    id: 'high_impact_ai_workflow',
+    label: 'Will AI help make decisions about healthcare, credit, hiring, access to important services, or a similarly high-impact matter?',
+    options: [
+      {value: 'yes', label: 'Yes'},
+      {value: 'no', label: 'No'},
+      {value: 'unknown', label: 'Not sure'},
+    ],
+  },
+  {
+    id: 'planned_ai_use',
+    label: 'Is an AI use planned?',
+    options: [
+      {value: 'yes', label: 'Yes'},
+      {value: 'no', label: 'No'},
+      {value: 'unknown', label: 'Not sure'},
+    ],
+  },
+  {
+    id: 'planned_use_real_data',
+    label: 'Would a planned pilot use real business or customer data?',
+    options: [
+      {value: 'yes', label: 'Yes'},
+      {value: 'no', label: 'No'},
+      {value: 'unknown', label: 'Not sure'},
+    ],
+  },
+] as const;
+
 function getProfileOptionLabel(options: readonly (readonly [string, string])[], value: string) {
   return options.find(([optionValue]) => optionValue === value)?.[1] ?? value;
+}
+
+function getSafetyContextOptionLabel(fieldId: (typeof SAFETY_CONTEXT_QUESTIONS)[number]['id'], value: string) {
+  const field = SAFETY_CONTEXT_QUESTIONS.find(({id}) => id === fieldId);
+  return field?.options.find((option) => option.value === value)?.label ?? 'Not answered';
 }
 
 const coreQuestions: Question[] = [
@@ -264,8 +330,8 @@ export default function App() {
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (!raw) return;
-      const draft = JSON.parse(raw) as {profile?: Profile; answers?: Record<string, string>};
-      if (draft.profile) setProfile(draft.profile);
+      const draft = JSON.parse(raw) as {profile?: Partial<Profile>; answers?: Record<string, string>};
+      if (draft.profile) setProfile({...emptyProfile, ...draft.profile});
       if (draft.answers) setAnswers(draft.answers);
     } catch {
       setStorageError('Draft storage is unavailable in this browser, so the assessment will only stay in this tab.');
@@ -349,10 +415,18 @@ export default function App() {
       INDUSTRY_OPTIONS.some(([value]) => value === profile.industry) &&
       BUSINESS_GOAL_OPTIONS.some(([value]) => value === profile.businessGoal),
   );
+  const safetyContextAnswered = SAFETY_CONTEXT_QUESTIONS.every(({id, options}) =>
+    options.some(({value}) => profile[id] === value),
+  );
   const reportProfile = {
     ...profile,
     industry: getProfileOptionLabel(INDUSTRY_OPTIONS, profile.industry),
     businessGoal: getProfileOptionLabel(BUSINESS_GOAL_OPTIONS, profile.businessGoal),
+    current_ai_use: getSafetyContextOptionLabel('current_ai_use', profile.current_ai_use),
+    data_category: getSafetyContextOptionLabel('data_category', profile.data_category),
+    high_impact_ai_workflow: getSafetyContextOptionLabel('high_impact_ai_workflow', profile.high_impact_ai_workflow),
+    planned_ai_use: getSafetyContextOptionLabel('planned_ai_use', profile.planned_ai_use),
+    planned_use_real_data: getSafetyContextOptionLabel('planned_use_real_data', profile.planned_use_real_data),
   };
   const reportGuidance = getReportGuidance(readinessResult);
   const allCoreQuestionsAnswered = answeredCount === coreQuestions.length;
@@ -599,6 +673,29 @@ export default function App() {
           </div>
         </div>
 
+        <div className="profile-form safety-context-form" role="group" aria-labelledby="safety-context-title">
+          <h3 id="safety-context-title">Safety And Data Context</h3>
+          <p className="inline-note" id="safety-context-note">
+            These answers help identify relevant checks. Choose “Not sure” when uncertain; that context will be clearly marked as unverified.
+          </p>
+          {SAFETY_CONTEXT_QUESTIONS.map((question) => (
+            <label key={question.id}>
+              <span>{question.label}</span>
+              <select
+                value={profile[question.id]}
+                onChange={(event) => updateProfile(question.id, event.target.value)}
+                aria-label={question.label}
+                aria-describedby="safety-context-note"
+              >
+                <option value="">Choose One</option>
+                {question.options.map(({value, label}) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
+
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={() => {
             setQuestionIndex(0);
@@ -610,9 +707,9 @@ export default function App() {
             type="button"
             className="button-primary"
             onClick={() => {
-              if (allCoreQuestionsAnswered) setScreen('results');
+              if (allCoreQuestionsAnswered && safetyContextAnswered) setScreen('results');
             }}
-            disabled={!allCoreQuestionsAnswered}
+            disabled={!allCoreQuestionsAnswered || !safetyContextAnswered}
           >
             See readiness snapshot
           </button>
@@ -620,6 +717,11 @@ export default function App() {
         {!allCoreQuestionsAnswered && (
           <p className="inline-note answer-required-note" role="status">
             Answer all {coreQuestions.length} questions before viewing your results.
+          </p>
+        )}
+        {allCoreQuestionsAnswered && !safetyContextAnswered && (
+          <p className="inline-note answer-required-note" role="status">
+            Choose one response for each safety and data context question. “Not sure” is valid.
           </p>
         )}
       </section>

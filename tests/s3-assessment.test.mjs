@@ -45,6 +45,31 @@ test('S3 maps the selected business goal to the evaluator profile contract', asy
   assert.match(app, /primary_goal:\s*profile\.businessGoal/);
 });
 
+test('the review flow collects every existing safety-context profile field before results', async () => {
+  const app = await readFile('src/App.tsx', 'utf8');
+  const profileSchema = JSON.parse(await readFile('docs/domain/profile_schema.json', 'utf8'));
+  const fieldIds = [
+    'current_ai_use',
+    'data_category',
+    'high_impact_ai_workflow',
+    'planned_ai_use',
+    'planned_use_real_data',
+  ];
+
+  for (const fieldId of fieldIds) {
+    const field = profileSchema.later_fields.find(({id}) => id === fieldId);
+    assert.ok(field, `Missing ${fieldId} in the profile schema`);
+    assert.ok(app.includes(`id: '${fieldId}'`), `Missing UI question for ${fieldId}`);
+    for (const value of field.values) {
+      assert.ok(app.includes(`value: '${value}'`), `Missing ${fieldId} option ${value}`);
+    }
+  }
+
+  assert.match(app, /safetyContextAnswered/);
+  assert.match(app, /disabled=\{!allCoreQuestionsAnswered\s*\|\|\s*!safetyContextAnswered\}/);
+  assert.match(app, /“Not sure” is valid/);
+});
+
 test('S3 retains the lazy report preview contract required by the foundation shell', async () => {
   const app = await readFile('src/App.tsx', 'utf8');
 
@@ -62,8 +87,8 @@ test('questions and results cannot be advanced to without valid selected answers
   assert.match(app, /if \(!question\.options\.some/);
   assert.match(app, /Choose one response to continue\./);
   assert.match(app, /“I am not sure” is a valid answer\./);
-  assert.match(app, /disabled=\{!allCoreQuestionsAnswered\}/);
-  assert.match(app, /if \(allCoreQuestionsAnswered\) setScreen\('results'\)/);
+  assert.match(app, /disabled=\{!allCoreQuestionsAnswered\s*\|\|\s*!safetyContextAnswered\}/);
+  assert.match(app, /if \(allCoreQuestionsAnswered && safetyContextAnswered\) setScreen\('results'\)/);
   assert.match(app, /Answer all \{coreQuestions\.length\} questions before viewing your results\./);
 });
 

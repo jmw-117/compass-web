@@ -6,6 +6,7 @@ import {
   getGateLabel,
   getQuestionLabel,
   getReportGuidance,
+  getSafetyChecksMessage,
   getSeverityLabel,
 } from '../domain/report-guidance';
 import ReadinessSignal from '../ReadinessSignal';
@@ -14,6 +15,11 @@ type ProfileLike = {
   organizationType?: string;
   industry?: string;
   businessGoal?: string;
+  current_ai_use?: string;
+  data_category?: string;
+  high_impact_ai_workflow?: string;
+  planned_ai_use?: string;
+  planned_use_real_data?: string;
   [key: string]: unknown;
 };
 
@@ -92,7 +98,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         reportGuidance.signal.description,
         ...(reportGuidance.signal.rangeNote ? [reportGuidance.signal.rangeNote] : []),
         'This signal is not approval to deploy AI; confirm safeguards for the specific use case.',
-        `Safety Checks To Review: ${readiness.formalGates.length ? readiness.formalGates.map((gate) => `${getGateLabel(gate.id)} (reference ${gate.id})`).join('; ') : 'No safety checks triggered'}`,
+        `Safety Checks To Review: ${readiness.formalGates.length ? readiness.formalGates.map((gate) => `${getGateLabel(gate.id)} (reference ${gate.id})`).join('; ') : getSafetyChecksMessage(readiness)}`,
         'Request to discuss: yes',
       ].join('\n'),
     [
@@ -195,7 +201,8 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
                   </li>
                 ))}
               </ul>
-            ) : <strong>No safety checks triggered</strong>}
+            ) : <strong>{getSafetyChecksMessage(readiness)}</strong>}
+            {readiness.formalGates.length > 0 && <p>{getSafetyChecksMessage(readiness)}</p>}
           </div>
         </div>
         {reportGuidance.scoreNote && <p className="report-score-note">{reportGuidance.scoreNote}</p>}
@@ -207,6 +214,11 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
           <li>Organisation Type: {profile.organizationType || 'Not shared'}</li>
           <li>Industry / Sector: {profile.industry || 'Not shared'}</li>
           <li>Business Goal: {profile.businessGoal || 'Not yet defined'}</li>
+          <li>Current AI Use: {profile.current_ai_use || 'Not answered'}</li>
+          <li>Data Category: {profile.data_category || 'Not answered'}</li>
+          <li>High-Impact AI Workflow: {profile.high_impact_ai_workflow || 'Not answered'}</li>
+          <li>Planned AI Use: {profile.planned_ai_use || 'Not answered'}</li>
+          <li>Planned Use of Real Data: {profile.planned_use_real_data || 'Not answered'}</li>
           <li>Budget Fit: {getCostFitLabel(readiness.costFit)}</li>
         </ul>
       </ReportSection>
@@ -289,8 +301,9 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
               </li>
             ))
           ) : (
-            <li>No formal gates are currently triggered for this self-reported profile.</li>
+            <li>{getSafetyChecksMessage(readiness)}</li>
           )}
+          {readiness.formalGates.length > 0 && <li>{getSafetyChecksMessage(readiness)}</li>}
         </ul>
       </ReportSection>
 
@@ -306,7 +319,8 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
               </li>
             ))}
           </ul>
-        ) : <p>No critical safety checks are triggered in this draft.</p>}
+        ) : <p>{getSafetyChecksMessage(readiness)}</p>}
+        {readiness.formalGates.length > 0 && <p>{getSafetyChecksMessage(readiness)}</p>}
       </ReportSection>
 
       <ReportSection id="primary-path" title="Primary Path" expanded={openSections.has('primary-path')} printMode={printMode} onToggle={toggleSection}>

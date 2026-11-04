@@ -17,6 +17,18 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(report, /getActionLabel\(actionId\)/);
   assert.match(report, /getQuestionLabel\(questionId\)/);
   assert.match(report, /getGateLabel\(gate\.id\)/);
+  assert.match(report, /getSafetyChecksMessage\(readiness\)/);
+  assert.match(report, /Safety context is incomplete or includes/);
+  assert.doesNotMatch(report, /No safety checks triggered/);
+  for (const contextField of [
+    'current_ai_use',
+    'data_category',
+    'high_impact_ai_workflow',
+    'planned_ai_use',
+    'planned_use_real_data',
+  ]) {
+    assert.ok(report.includes(`profile.${contextField}`), `Missing safety context in report: ${contextField}`);
+  }
   assert.doesNotMatch(report, /slice\(0,\s*24\)/);
   assert.match(styles, /\.report-module\s+:where\(p, li, strong, small, span, code\)\s*\{[^}]*overflow-wrap:\s*anywhere/);
   assert.match(report, /Save as PDF/);

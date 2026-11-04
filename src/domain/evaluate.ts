@@ -17,6 +17,7 @@ export type ReadinessResult = {
     upperEighths: number;
     coverageUnits: number;
   };
+  safetyContextConfirmed: boolean;
   dimensions: Record<DimensionId, { lower: number; upper: number; known: number }>;
   formalGates: Array<{ id: string; triggeringIds: string[]; severity: string }>;
   flags: Array<{ id: string; sourceQuestionIds: string[]; status: 'self_reported' | 'clarified' | 'example_unverified' }>;
@@ -57,6 +58,14 @@ const QUESTION_SCORE_MAP: Record<string, Record<string, number | null>> = {
 const QUESTION_ID_ORDER = Object.keys(QUESTION_SCORE_MAP) as Array<keyof typeof QUESTION_SCORE_MAP>;
 const DIMENSION_ORDER: DimensionId[] = ['STR', 'PRO', 'DAT', 'TEC', 'PEO', 'GOV', 'MET'];
 
+const SAFETY_CONTEXT_VALUES: Record<string, ReadonlySet<string>> = {
+  current_ai_use: new Set(['none', 'personal', 'team_pilot', 'operational']),
+  data_category: new Set(['routine', 'personal', 'restricted']),
+  high_impact_ai_workflow: new Set(['yes', 'no']),
+  planned_ai_use: new Set(['yes', 'no']),
+  planned_use_real_data: new Set(['yes', 'no']),
+};
+
 function getQuestionDimension(questionId: string): DimensionId {
   if (questionId.startsWith('STR')) return 'STR';
   if (questionId.startsWith('PRO')) return 'PRO';
@@ -79,6 +88,16 @@ function asString(value: unknown): string {
 
 function getProfileString(profile: Record<string, unknown>, key: string): string {
   return asString(profile[key]);
+}
+
+function scoreAtMost(questionId: string, optionId: string | undefined, maximum: number): boolean {
+  const score = getAnswerScore(questionId, optionId);
+  return score !== null && score <= maximum;
+}
+
+function scoreAtLeast(questionId: string, optionId: string | undefined, minimum: number): boolean {
+  const score = getAnswerScore(questionId, optionId);
+  return score !== null && score >= minimum;
 }
 
 function toBand(score: number): string {
@@ -135,13 +154,10 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   for (const dimension of DIMENSION_ORDER) {
     const current = dimensions[dimension] ?? { lower: 0, upper: 0, known: 0 };
     dimensions[dimension] = current;
-    if (current.known > 0) {
-      current.lower = current.lower / (current.known * DIMENSION_WEIGHTS[dimension]);
-      current.upper = current.upper / (current.known * DIMENSION_WEIGHTS[dimension]);
-    } else {
-      current.lower = 0;
-      current.upper = 4;
-    }
+    const indicatorCount = QUESTION_ID_ORDER.filter((questionId) => getQuestionDimension(questionId) === dimension).length;
+    const denominator = indicatorCount * DIMENSION_WEIGHTS[dimension];
+    current.lower = denominator === 0 ? 0 : current.lower / denominator;
+    current.upper = denominator === 0 ? 0 : current.upper / denominator;
   }
 
   const gateMap: Record<string, { triggered: boolean; ids: string[]; severity: string }> = {
@@ -183,34 +199,34 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
 
   const shareProbe = getProfileString(profile, 'PR-GOV-SHARE');
   const dataCategory = getProfileString(profile, 'data_category');
-  const gov01Score = getAnswerScore('GOV-01', coreAnswers['GOV-01']) ?? 0;
+  const gov01Score = getAnswerScore('GOV-01', coreAnswers['GOV-01']);
   const plannedUseRealData = getProfileString(profile, 'planned_use_real_data');
   const govDataGate = gateMap['GOV-DATA'] ?? { triggered: false, ids: [], severity: 'BLOCK_UNCONTROLLED_AI' };
   govDataGate.triggered =
     (shareProbe === 'Yes' && ['personal', 'restricted'].includes(dataCategory)) ||
-    (gov01Score <= 1 && dataCategory === 'restricted' && plannedUseRealData === 'yes');
+    (gov01Score !== null && gov01Score <= 1 && dataCategory === 'restricted' && plannedUseRealData === 'yes');
   gateMap['GOV-DATA'] = govDataGate;
 
   const dat01Missing = getAnswerScore('DAT-01', coreAnswers['DAT-01']) === null;
   const dat02Missing = getAnswerScore('DAT-02', coreAnswers['DAT-02']) === null;
-  const dat01Score = getAnswerScore('DAT-01', coreAnswers['DAT-01']) ?? 0;
+  const dat01Score = getAnswerScore('DAT-01', coreAnswers['DAT-01']);
   const dataUnknownGate = gateMap['DATA-UNKNOWN'] ?? { triggered: false, ids: [], severity: 'VERIFY' };
   dataUnknownGate.triggered = (dat01Missing && dat02Missing) || dat01Score === 0;
   gateMap['DATA-UNKNOWN'] = dataUnknownGate;
 
-  const str02Score = getAnswerScore('STR-02', coreAnswers['STR-02']) ?? 0;
+  const str02Score = getAnswerScore('STR-02', coreAnswers['STR-02']);
   const strOwnerProbe = getProfileString(profile, 'PR-STR-OWNER');
   const ownNoneGate = gateMap['OWN-NONE'] ?? { triggered: false, ids: [], severity: 'BLOCK_PILOT' };
   ownNoneGate.triggered =
-    str02Score === 0 || (['No one yet', 'Not sure'].includes(strOwnerProbe) && str02Score <= 1);
+    str02Score === 0 || (['No one yet', 'Not sure'].includes(strOwnerProbe) && str02Score !== null && str02Score <= 1);
   gateMap['OWN-NONE'] = ownNoneGate;
 
-  const met01Score = getAnswerScore('MET-01', coreAnswers['MET-01']) ?? 0;
+  const met01Score = getAnswerScore('MET-01', coreAnswers['MET-01']);
   const primaryGoal = getProfileString(profile, 'primary_goal');
   const metStartProbe = getProfileString(profile, 'PR-MET-START');
   const baselineGate = gateMap['BASELINE-MISSING'] ?? { triggered: false, ids: [], severity: 'BLOCK_FINANCIAL_CLAIMS' };
   baselineGate.triggered =
-    met01Score <= 1 && ['efficiency', 'growth', 'service', 'risk'].includes(primaryGoal) && metStartProbe !== 'Yes';
+    met01Score !== null && met01Score <= 1 && ['efficiency', 'growth', 'service', 'risk'].includes(primaryGoal) && metStartProbe !== 'Yes';
   gateMap['BASELINE-MISSING'] = baselineGate;
 
   const formalGates = Object.entries(gateMap)
@@ -226,18 +242,18 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   if ((gateMap['GOV-DATA'] ?? { triggered: false, ids: [], severity: 'BLOCK_UNCONTROLLED_AI' }).triggered) enabledPaths.add('P2');
   if (unknownCount >= 3 || coverageUnits < 150 || (dat01Missing && dat02Missing)) enabledPaths.add('P0');
   if (dimensions.PRO.upper <= 1.5 || dimensions.DAT.upper <= 1.5) enabledPaths.add('P1');
-  if ((getAnswerScore('TEC-01', coreAnswers['TEC-01']) ?? 0) <= 2 && (getAnswerScore('TEC-02', coreAnswers['TEC-02']) ?? 0) <= 2) enabledPaths.add('P4');
+  if (scoreAtMost('TEC-01', coreAnswers['TEC-01'], 2) && scoreAtMost('TEC-02', coreAnswers['TEC-02'], 2)) enabledPaths.add('P4');
   if (dimensions.PEO.upper <= 1.5) enabledPaths.add('P3');
   if (
     coverageUnits >= 180 &&
     dimensions.DAT.lower >= 2 &&
-    (getAnswerScore('GOV-01', coreAnswers['GOV-01']) ?? 0) >= 2 &&
-    (getAnswerScore('GOV-02', coreAnswers['GOV-02']) ?? 0) >= 2 &&
-    (getAnswerScore('STR-02', coreAnswers['STR-02']) ?? 0) >= 2 &&
-    (getAnswerScore('MET-01', coreAnswers['MET-01']) ?? 0) >= 2 &&
-    (getAnswerScore('PEO-01', coreAnswers['PEO-01']) ?? 0) >= 2 &&
-    (getAnswerScore('PRO-01', coreAnswers['PRO-01']) ?? 0) >= 2 &&
-    (getAnswerScore('TEC-01', coreAnswers['TEC-01']) ?? 0) >= 2 &&
+    scoreAtLeast('GOV-01', coreAnswers['GOV-01'], 2) &&
+    scoreAtLeast('GOV-02', coreAnswers['GOV-02'], 2) &&
+    scoreAtLeast('STR-02', coreAnswers['STR-02'], 2) &&
+    scoreAtLeast('MET-01', coreAnswers['MET-01'], 2) &&
+    scoreAtLeast('PEO-01', coreAnswers['PEO-01'], 2) &&
+    scoreAtLeast('PRO-01', coreAnswers['PRO-01'], 2) &&
+    scoreAtLeast('TEC-01', coreAnswers['TEC-01'], 2) &&
     ['limited', 'available'].includes(getProfileString(profile, 'staff_capacity')) &&
     pilotBlockingGateCount === 0
   ) {
@@ -265,6 +281,9 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   }
 
   const budgetBand = getProfileString(profile, 'budget_band') as BudgetBand;
+  const safetyContextConfirmed = Object.entries(SAFETY_CONTEXT_VALUES).every(([field, values]) =>
+    values.has(getProfileString(profile, field)),
+  );
   let costFit: ReadinessResult['costFit'];
   if (budgetBand === 'unknown') costFit = 'unknown';
   else if (budgetBand === 'none') costFit = 'no_cash_option';
@@ -286,6 +305,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
       upperEighths: Math.round(upperEighths),
       coverageUnits: Math.round(coverageUnits),
     },
+    safetyContextConfirmed,
     dimensions: {
       STR: { lower: Number(dimensions.STR.lower.toFixed(2)), upper: Number(dimensions.STR.upper.toFixed(2)), known: dimensions.STR.known },
       PRO: { lower: Number(dimensions.PRO.lower.toFixed(2)), upper: Number(dimensions.PRO.upper.toFixed(2)), known: dimensions.PRO.known },

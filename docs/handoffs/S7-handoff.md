@@ -1,10 +1,10 @@
 # S7 — GitHub Pages release
 
-**Stage status:** blocked pending repository settings; test deployment only, no public launch
+**Stage status:** blocked pending review-findings disposition and repository settings; test deployment only, no public launch
 **Submitted by:** Copilot engineering assistant  
-**Reviewer:** Pending  
-**Human approver:** Pending  
-**Date:** 2026-11-03  
+**Independent reviewer:** Separate code-review agent (2026-11-04; findings recorded below; no GitHub review submitted)
+**Human approver:** Pending
+**Date:** 2026-11-04
 **Input handoff:** `docs/handoffs/S6-handoff.md`; S6 approved by explicit Product Owner chat instruction on 2026-11-03  
 **Baseline commit at S7 start:** `bb96e23` (`codex`)
 **Domain versions:** manifest 1.3.5 (`DRAFT_UNAPPROVED`); rules 1.2.0; question bank 1.1.0; extension 1.3.0; discovery 1.3.0; requirements 1.3.0; report 1.3.4; gates 1.2.0; action catalog 1.1.0.
@@ -31,15 +31,26 @@ The S6 approval is recorded as Product Owner because no personal name was provid
 | Public commercial launch | Blocked / out of scope | Public hosting and policy suitability require a separate human decision; no custom-host deployment is authorized or attempted by this S7 test deployment. |
 | Python validators | Passed in CI at baseline SHA | Both are executed by the successful extended validation step in run 41705328652; local Python/py launcher is unavailable. |
 | Workflow deployment / live-site evidence | Not run | No deployment dispatch or publish was made; no live-site evidence exists. |
+| Independent PR diff review | Completed with findings | A separate read-only code-review agent reviewed the full diff against `origin/main` on 2026-11-04; see findings below. The review was not submitted as a GitHub PR review. |
+| Review-record documentation checks | Pass | `git diff --check` passed, and `node -e "JSON.parse(require('fs').readFileSync('docs/handoffs/ledger.json','utf8'))"` printed `ledger JSON valid`. |
+
+### Independent review findings
+
+1. **High — safety gates lack required context.** `src/App.tsx:303-315` does not send the high-impact AI, AI-use, or data-context fields required by safety gates; `src/report/ReportModule.tsx:198` may consequently show “No safety checks triggered” without having assessed that context. Confidence: high.
+2. **Medium — unknown answers produce invalid dimension ranges.** `src/domain/evaluate.ts:114-140` normalizes endpoints using known-answer counts rather than both indicators in a dimension; the review reports that one known score of 3 and one unknown can yield `[3, 7]` and a displayed `75 to 175% possible`. Confidence: high.
+3. **Medium — unknown scores act as zero in predicates.** `src/domain/evaluate.ts:201-205,229` uses `?? 0`, which can trigger the `OWN-NONE` blocker for unknown STR-02 or select path P4 for unknown TEC-01/TEC-02, contrary to the contract's unknown-answer handling. Confidence: high.
+
+These are review findings, not verified fixes. No implementation or contract changes were made. The safety and evaluator findings require human disposition and must not be silently accepted by this S7 handoff. Changes affecting score intervals or gates must follow the repository's contract/version and S1 approval requirements.
 
 ## 3. Outstanding blockers
 
-1. Complete independent PR review, merge the PR after required checks pass, and verify the resulting `main` commit.
-2. Dispatch the gated workflow from `main` with `deploy=true` for a test-only Pages deployment; confirm Pages setup succeeds. Verify the live `/silverspark-compass/` route, report, assets, privacy behavior, and rollback; record run URL, artifact SHA, and test URL.
-3. Keep public launch blocked until public hosting/policy is reviewed, the high-severity S6 false-safe risk and P1 gaps are resolved or explicitly accepted, and remaining product/release evidence is approved.
+1. Obtain human disposition of the independent review findings before merge; changes must remain within the authorized stage and contract/version approval rules.
+2. Complete the required GitHub PR review, merge only after the findings are dispositioned and checks pass, and verify the resulting `main` commit.
+3. Dispatch the gated workflow from `main` with `deploy=true` for a test-only Pages deployment; confirm Pages setup succeeds. Verify the live `/silverspark-compass/` route, report, assets, privacy behavior, and rollback; record run URL, artifact SHA, and test URL.
+4. Keep public launch blocked until public hosting/policy is reviewed, the high-severity S6 false-safe risk and P1 gaps are resolved or explicitly accepted, and remaining product/release evidence is approved.
 
 ## 4. Rollback and status
 
 No artifact was deployed, so there is nothing to roll back. The current workflow uploads/deploys only when manually dispatched with `deploy=true` on `main`, and the deploy job is separately guarded by `needs: quality`. Any resulting Pages URL is a test deployment only, not a public launch or validated production site.
 
-**Status:** S7 test deployment is blocked pending independent PR review/merge and Pages configuration. Hosted checks on the current PR head pass. This handoff is not a live release record.
+**Status:** S7 test deployment is blocked pending human disposition of the review findings, GitHub PR review/merge, and Pages configuration. Hosted checks on the current PR head pass. This handoff is not a live release record.
