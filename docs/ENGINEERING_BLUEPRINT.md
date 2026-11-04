@@ -157,7 +157,7 @@ Never advertise a PDF **download** if all the app does is invoke `window.print()
 | `docs/domain/question_bank.json` | Seven weighted dimensions, 14 universal indicators, five anchored choices + explicit unknown; no inferred N/A |
 | `docs/domain/probes.json` | Seven optional evidence questions and exact trigger predicates; never scored |
 | `docs/domain/rules.json` | Integer scoring, gate metadata, path precedence, ranking and budget-class controls |
-| `docs/domain/decision_predicates.json` | **Normative machine-readable predicates** for six gates and seven paths |
+| `docs/domain/decision_predicates.json` | **Normative machine-readable predicates** for five gates and seven paths |
 | `docs/domain/action_catalog.json` | 24 initial actions with IDs, linked evidence, roles, prerequisites, validation, effort/cash classes |
 | `docs/domain/golden_cases.json` | Twelve proposed synthetic hand-authored expectations and metamorphic cases, NOT executed outcomes |
 
@@ -238,9 +238,10 @@ Because 2 anchors × 4 maximum score × weights 100 / 8 = 100, these exact formu
 | DATA-UNKNOWN | Both core data indicators unknown, or vital records absent (DAT-01=0) | Verify first P0; ask what data actually exists |
 | OWN-NONE | STR-02=0 or no named role can authorize urgent change | Block pilot selection; ownership action mandatory |
 | BASELINE-MISSING | Goal is measurable, MET-01≤1, and no baseline confirmed | Do not claim financial benefit; baseline action mandatory |
-| BUDGET-UNKNOWN | No amount or clear band supplied | Do not claim affordability; show no-cash options with staff-time caveat |
 
 **Important:** ordinary customer names or phone numbers count as personal data for privacy handling, but **their mere existence does not automatically force governance as the primary recommendation**. Unsafe use or planned restricted-data processing is a stronger explicit trigger. A 'No' answer to unsafe sharing is self-reported, not a declaration of compliance.
+
+An unavailable budget produces an unverified cost-fit status, not a formal gate. Budget may inform action feasibility and cost-fit labels, but never changes readiness scores, readiness bands, formal gates, or assessment confidence.
 
 **Safety precedence:** P6 before P2 before P0 before P1/P4/P3/P5. Show every applicable gate, even if another path wins. `OWN-NONE` and `BASELINE-MISSING` block a pilot but do not automatically override a more relevant foundational path.
 

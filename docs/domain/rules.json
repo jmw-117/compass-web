@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "scoring": {
     "weights_pct": {
       "STR": 15,
@@ -32,7 +32,7 @@
       "Developing",
       "Established"
     ],
-    "rounding": "Store exact integer eighths; display lower as floor(lower_eighths/8), upper as ceil(upper_eighths/8); determine maturity band using raw integer endpoints, never the displayed rounded values.",
+    "rounding": "Store exact integer eighths; when lower and upper are equal, display their nearest whole-number score; otherwise display lower as floor(lower_eighths/8) and upper as ceil(upper_eighths/8). Determine maturity band using raw integer endpoints, never the displayed rounded values.",
     "unknown_policy": "Unknown is a set of possible scores 0..4, never imputed. Every unknown produces a verification action or open question; no complete-score suppression.",
     "band_policy": "Show one band only when lower and upper raw integer eighths are inside the same band; otherwise show all intersected bands without asserting one label.",
     "high_score_warning": "A high self-reported score never bypasses governance gates or proves suitability for a specific AI use case."
@@ -77,14 +77,6 @@
       "primary_path": null,
       "reason": "No reliable business baseline is available.",
       "predicate_ast_id": "G-BASELINE-MISSING"
-    },
-    {
-      "id": "BUDGET-UNKNOWN",
-      "predicate": "See decision_predicates.json",
-      "severity": "LABEL_COST_UNVERIFIED",
-      "primary_path": null,
-      "reason": "Budget fit cannot be validated.",
-      "predicate_ast_id": "G-BUDGET-UNKNOWN"
     }
   ],
   "gate_precedence": [
@@ -92,8 +84,7 @@
     "GOV-DATA",
     "DATA-UNKNOWN",
     "OWN-NONE",
-    "BASELINE-MISSING",
-    "BUDGET-UNKNOWN"
+    "BASELINE-MISSING"
   ],
   "path_priority": [
     "P6",
@@ -120,6 +111,7 @@
     "gating": "Hard safety path precedence overrides numeric action rank."
   },
   "budget": {
+    "effect_scope": "Budget may constrain action feasibility and cost-fit labels only. It never changes readiness scores, readiness bands, formal gates, or assessment confidence.",
     "question": "Maximum external cash spend you could authorize over the next 90 days (optional; excludes your own staff time)",
     "currency_default": "KES",
     "accept_amount_as_ceiling": true,
@@ -155,7 +147,7 @@
       ]
     },
     "allow_true_affordable_label_only_if": "dated catalog cost upper bound <= provided numeric ceiling, matching currency, all relevant cost components included, estimate reviewed within 90 days",
-    "unknown_default": "Possible only (not fit) for qualitative categories; show staff time and implementation cost exclusions."
+    "unknown_default": "Unverified cost fit (not a gate); show staff time and implementation cost exclusions."
   },
   "applicability": {
     "core": "ALWAYS",

@@ -1,9 +1,22 @@
 node_modules/
 dist/
 .DS_Store
+# Local credentials and private working material; required product docs stay tracked.
 .env
 .env.*
 !.env.example
+*.local
+*.local.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.secret
+/private/
+/secrets/
+/docs/private/
+/docs/_private/
+*.private.*
 *.log
 coverage/
 playwright-report/

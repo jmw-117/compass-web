@@ -1,6 +1,6 @@
 # Staged execution index — Silverspark Compass v1.2
 
-**Protocol:** strict order S0 → S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8; a human-signed handoff unlocks the next stage. No stage is currently approved.
+**Protocol:** stages normally proceed S0 → S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8. The Product Owner / Architect may explicitly approve or override development sequencing under `docs/ARCHITECT_AUTHORITY.md`; no override implies empirical validation or release approval.
 
 | Stage | Contract | Main output |
 |---|---|---|
@@ -21,4 +21,4 @@ A preceding stage must have human approval and its referenced artifacts must exi
 Use `.github/prompts/SN.prompt.md` for a fresh session. Keep the stage implementation and reviewer separate. Human product owner is final signatory.
 
 ## Current evidence
-All stages are `not_started` and none of the included synthetic cases is a validated customer case.
+S0 real-world validation remains incomplete and unapproved (0 actual participants and 0 independent reviews per the explicitly synthetic summary). The Product Owner / Architect approved S1 in Copilot chat on 2026-11-03; the S1 handoff records the approval, while the domain manifest remains draft because independent golden-case review and real-world calibration have not occurred. S2 foundation implementation is complete and `approved` by the human owner; S3 and S4 are `approved`; S5 is `approved` by explicit Product Owner chat approval. S6 was approved by the Product Owner in chat on 2026-11-03 with unresolved QA exceptions recorded in its handoff. The Product Owner authorized GitHub Pages for testing only and stated public use is intended for a custom host. S7 test deployment is blocked pending independent PR review/merge and Pages configuration. Main is protected by required PRs and the `quality` check; hosted quality and extended validators passed on PR head `17eb7af`. No public launch is approved.

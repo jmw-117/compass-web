@@ -6,7 +6,7 @@
 S4 accepted; verified WhatsApp destination and approved copy. Confirm `docs/handoffs/ledger.json` shows previous stage as `approved` by named human; if not, only draft proposals and stop.
 
 ## Bounded execution scope
-Seven dimensions, range, evidence, prioritized actions, print CSS, share preview + copy + WhatsApp fallback. Implement tests/evidence appropriate to scope and do not modify unrelated stages.
+Seven dimensions, score interval (or one nearest whole-number score when exact), evidence, prioritized actions, print CSS, share preview + copy + WhatsApp fallback. Implement tests/evidence appropriate to scope and do not modify unrelated stages.
 
 ## Deliverables
 Accessible results/print flows, exact outbound payload examples, report-version evidence. Create `docs/handoffs/S5-handoff.md` using the standard handoff template.
@@ -23,4 +23,4 @@ State precise artifact paths, git SHA if available, input JSON versions, scope o
 
 ## v1.3 technical-product handoff addition
 
-Implement all report_contract.json mandatory sections and consultant review template. Show score interval, each dimension, evidence gaps, formal gates, actions, budget constraints, optional technical annex. Use HTML first, print second, consented user-previewed handoff.
+Implement all report_contract.json mandatory sections and consultant review template. Show one whole-number score only when exact; otherwise explain the range in plain language without bracket notation. Use the same clear wording in results, report/PDF and share text; explain unknown-answer uncertainty. Show each dimension, known-answer count, safety checks, evidence gaps, actions, budget constraints, and optional technical annex. Include the approved traffic-light mapping in results, report and voluntary share text; use the conservative lower-bound color for uncertain ranges and state that the signal is not deployment approval. Do not expose unexplained weighted coverage units to clients. Use HTML first, print second, consented user-previewed handoff.

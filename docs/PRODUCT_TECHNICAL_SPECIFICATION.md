@@ -1,7 +1,7 @@
 # SILVERSPARK COMPASS
 ## Product Technical Specification — AI Readiness & Prospective Client Discovery
 
-**Version:** 1.3.0 — 3 November 2026  
+**Version:** 1.3.1 — 3 November 2026
 **Status:** Proposed product contract; not yet empirically calibrated or implemented  
 **Product owner:** Silverspark Consulting · Strategy in Action  
 **Deployment requirement:** GitHub Pages static artifact; React + Vite + TypeScript; zero paid runtime APIs  
@@ -83,7 +83,7 @@ Landing / privacy explanation
   → optional extended technical assessment (18 questions; only relevant questions shown)
   → capacity, timeline, budget ceiling, sensitive/high-impact use flags
   → pure evaluate(profile, answers, activeProbes, extension)
-  → readiness interval + seven dimensions + gates + top 3 feasible actions
+  → nearest whole-number readiness score when exact, otherwise a plain-language range with an uncertainty explanation + seven dimensions + clear known-answer count + safety checks + top 3 feasible actions
   → full HTML report + print/save-as-PDF + summary copy
   → voluntary WhatsApp contact / consultation request; user approves transfer
   → Silverspark consultant separately records enquiry, validates assertions,
@@ -116,7 +116,7 @@ Journey states: `landing → start_3 → core_14 → expanded_opt_in → technic
 
 **J4 — Unsure Respondent:** Unknown answers and scarce information. Expected outcome: 0-100 possible if all unknown, no false zero or blocked output.
 
-Journey states: `start_3 → core_14_with_unknowns → results_interval → verify_actions`.
+Journey states: `start_3 → core_14_with_unknowns → results_score_or_explained_range → verify_answers_and_actions`.
 
 **J5 — Regulated Workflow:** High impact decision + intended AI use. Expected outcome: specialist review first despite a strong maturity score.
 
@@ -529,7 +529,7 @@ Shown when: `ALL`; related dimension: `GOV`.
 
 `docs/domain/technical_extension.json` defines `flag_generation` as **exact answer value → flag** mappings and `flag_to_existing_action_ids` as **exact flag → action ID** mappings. Flags are append-only findings with evidence IDs, not free-text instructions, and are deduplicated by flag name. Any flag without a prescribed action is a diagnostic finding pending consultant review; never fabricate a solution.
 
-**Pilot gating:** Current formal hard gates remain `URGENT-REGULATED`, `GOV-DATA`, `DATA-UNKNOWN`, `OWN-NONE`, `BASELINE-MISSING` and `BUDGET-UNKNOWN` as already defined in `docs/domain/decision_predicates.json`. Deep-dive red flags (e.g. no fallback, uncontrolled sharing, high impact) are **referred to human review** and can block an affirmative “pilot-ready” claim; they must not silently override the signed decision AST. S1 must reconcile any new gate predicate before implementation.
+**Pilot gating:** Current formal gates are `URGENT-REGULATED`, `GOV-DATA`, `DATA-UNKNOWN`, `OWN-NONE`, and `BASELINE-MISSING`, as defined in `docs/domain/decision_predicates.json`. Budget availability is a cost-fit status, not a gate. Deep-dive red flags (e.g. no fallback, uncontrolled sharing, high impact) are **referred to human review** and can block an affirmative “pilot-ready” claim; they must not silently override the signed decision AST.
 
 ---
 
@@ -558,6 +558,10 @@ const coverage = coverageUnits / 2;
 ```
 
 **Maturity bands (provisional):** 0–under 25 Foundational; 25–under 50 Emerging; 50–under 75 Developing; 75–100 Established. Emit a single band only if both raw endpoints fall in the same band; otherwise present the interval with “readiness spans more than one band.” `UNK` extends the possible range without imputation; unknowns generate verification actions.
+
+**Client-facing display:** Exact scores use one nearest whole number. Differing endpoints use “lower to upper out of 100,” accompanied by an explanation that this is a range and confirming “I am not sure” answers may narrow it. Results show known answers out of 14 and identify triggered formal gates as safety checks to review; they do not expose weighted coverage units without explanation. These are presentation rules only and do not alter the scoring algorithm.
+
+**Traffic-light signal:** Red maps to Foundational (0–under 25), Amber maps to Emerging/Developing (25–under 75), and Green maps to Established (75–100). When an uncertainty range spans colors, use the lower endpoint's cautious color and explain the higher signal it reaches. Use the same text signal in results, report/PDF and voluntary share text. Always retain the score/range and state that a Green signal is not approval to deploy AI; use-case-specific safeguards still require review.
 
 ### 7.2 Worked example with unknowns
 
@@ -604,9 +608,10 @@ The full engine and fixture contract remains in `docs/domain/rules.json`, `docs/
 | `DATA-UNKNOWN` | Both DAT indicators unknown OR vital records absent | Verify what data exists before proposing integrations |
 | `OWN-NONE` | No accountable authorization role | Ownership is a required preliminary action |
 | `BASELINE-MISSING` | Measurable goal and weak measurement with no baseline | No financial value claims |
-| `BUDGET-UNKNOWN` | Cash ceiling/band unavailable | No affordability claim |
 
 **Normative syntax:** the *machine-readable* predicate AST in `docs/domain/decision_predicates.json` overrides this human-readable summary. An agent must not implement threshold comparisons from prose if the AST differs. Report contradictions for human resolution.
+
+An unavailable budget produces an **unverified cost-fit status**, not a formal gate. Budget may inform action feasibility and cost-fit labels, but never changes readiness scores, readiness bands, formal gates, or assessment confidence.
 
 ### 8.3 Seven actionable recommendation paths
 
@@ -927,4 +932,3 @@ Validate the questionnaire and recommendations *before* optimizing the interface
 - GitHub Pages custom workflows: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 
 **Document control:** V1.3 is a complete proposed *product specification* and agent handoff, not a shipped app, completed pilot, signed regulatory opinion, certified standard, measured user experience or approved commercial deployment. S0/S1 must validate the substance before S2–S7 produce code and publish it.
-

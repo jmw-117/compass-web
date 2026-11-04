@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0e1828" />
+    <meta
+      name="description"
+      content="A practical, privacy-conscious AI readiness assessment for growing businesses."
+    />
+    <link rel="stylesheet" href="/src/styles/global.css" />
+    <title>Silverspark Compass | AI readiness</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header" id="top">
+      <a class="wordmark" href="#top" aria-label="Silverspark Compass home">
+        <span class="wordmark-mark">
+          <img src="./src/assets/silverspark-mark.webp" alt="Silverspark logo" class="wordmark-logo" />
+        </span>
+        <span class="wordmark-text">
+          <span>Silverspark</span>
+          <span class="wordmark-divider" aria-hidden="true">/</span>
+          <span class="wordmark-product">Compass</span>
+        </span>
+      </a>
+      <span class="header-note">Strategy in Action</span>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span aria-hidden="true"></span> A Clearer Path To Responsible AI</p>
+          <h1 id="hero-title">Understand your AI readiness</h1>
+          <p class="hero-lede">
+            Evaluate your operating model, data quality, governance posture, and change readiness—without the fluff.
+          </p>
+          <button
+            class="primary-link"
+            id="take-assessment"
+            type="button"
+            aria-controls="react-enhancement"
+            aria-expanded="false"
+          >
+            Assess Your Readiness
+            <span aria-hidden="true">→</span>
+          </button>
+          <p class="hero-caption">No account required. Your responses stay in this browser unless you choose to share them.</p>
+        </div>
+
+        <div class="hero-assessment-slot" id="react-enhancement" aria-label="Silverspark Compass assessment"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="wordmark footer-wordmark" href="#top" aria-label="Back to top">
+        <span>Silverspark</span>
+        <span class="wordmark-divider" aria-hidden="true">/</span>
+        <span class="wordmark-product">Compass</span>
+      </a>
+      <p>AI readiness, considered.</p>
+    </footer>
+
+    <noscript>
+      <p class="noscript-note">
+        This page remains readable without JavaScript. The questionnaire, scoring, recommendations,
+        and report preview require JavaScript; enable it to take the assessment.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

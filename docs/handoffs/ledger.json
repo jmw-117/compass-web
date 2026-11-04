@@ -1,95 +1,139 @@
 {
   "blueprintVersion": "1.2.0",
   "hosting": "github-pages",
-  "ruleContractVersions": "retain existing docs/domain/*.json version values until approved",
+  "ruleContractVersions": "S1 owner approval recorded for development; manifest remains draft pending independent golden-case review and real-world calibration",
   "stages": [
     {
       "id": "S0",
       "name": "Concierge validation",
-      "status": "not_started",
+      "status": "review_requested",
       "requiredPrevious": null,
       "approvedBy": null,
       "approvedAt": null,
       "handoffPath": "docs/handoffs/S0-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "gateDecision": "architect_override",
+      "developmentState": "overridden_for_development",
+      "overrideScope": "S1 contract review only; does not approve real-world S0 or permit S2",
+      "evidence": [
+        "docs/S0_VALIDATION_PACKAGE.md (proposed; requires human approval)",
+        "docs/S0_SYNTHETIC_PILOT_SUMMARY.md (synthetic only; 0 participants and 0 independent reviews)",
+        "docs/ARCHITECT_AUTHORITY.md (development-only override policy)",
+        "docs/handoffs/S0-handoff.md (real-world S0 incomplete; override recorded)"
+      ]
     },
     {
       "id": "S1",
       "name": "Freeze decision contracts",
-      "status": "not_started",
+      "status": "approved",
       "requiredPrevious": "S0",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "Product Owner / Architect (explicit chat approval; personal name not provided)",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S1-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "gateDecision": "architect_override",
+      "evidence": [
+        "docs/S1_CONTRACT_REVIEW.md (draft audit and budget decision recorded)",
+        "docs/handoffs/S1-handoff.md (Architect approval recorded; research and independent validation exceptions remain)"
+      ]
     },
     {
       "id": "S2",
       "name": "Repository, GitHub Pages and CI foundation",
-      "status": "not_started",
+      "status": "approved",
       "requiredPrevious": "S1",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "User approval on 2026-11-03",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S2-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "gateDecision": "auto_continue",
+      "evidence": [
+        "S1 approved by the Product Owner / Architect on 2026-11-03",
+        "S2 foundation implementation complete; user approval received on 2026-11-03"
+      ]
     },
     {
       "id": "S3",
       "name": "Guided assessment and storage",
-      "status": "not_started",
+      "status": "approved",
       "requiredPrevious": "S2",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "User approval on 2026-11-03",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S3-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "S3 assessment wizard, local draft save, and review flow implemented and locally validated",
+        "Human owner explicitly proceeded to S4 on 2026-11-03"
+      ]
     },
     {
       "id": "S4",
       "name": "Deterministic readiness evaluator",
-      "status": "not_started",
+      "status": "approved",
       "requiredPrevious": "S3",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "User approval on 2026-11-03",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S4-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "Pure evaluator implemented with score intervals, gates, path selection, and budget independence; targeted engine tests passed",
+        "Human owner approved the stage progression to S5 on 2026-11-03",
+        "Retrospective S4 handoff restored and accepted by the Product Owner in chat on 2026-11-03; unrun Python validators and independent golden-case review remain open"
+      ]
     },
     {
       "id": "S5",
       "name": "Report and voluntary handoff",
-      "status": "not_started",
+      "status": "approved",
       "requiredPrevious": "S4",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "Product Owner (explicit chat approval; personal name not provided)",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S5-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "Report module implemented with mandatory report sections and user-controlled WhatsApp handoff; 320px full-ID wrapping checked in browser",
+        "npm run verify passed with 23 tests, typecheck, production build, and asset checks",
+        "Product Owner explicitly approved S5 and progression to S6 in chat on 2026-11-03",
+        "Python validators and a new GitHub Actions run after restoring the S4 handoff remain outstanding"
+      ]
     },
     {
       "id": "S6",
       "name": "Independent QA and hardening",
-      "status": "not_started",
+      "status": "approved",
       "requiredPrevious": "S5",
-      "approvedBy": null,
-      "approvedAt": null,
+      "approvedBy": "Product Owner (explicit chat approval; personal name not provided)",
+      "approvedAt": "2026-11-03",
       "handoffPath": "docs/handoffs/S6-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "docs/handoffs/S6-handoff.md records the QA matrix for all 23 product requirements, prioritized defects, and verification limits",
+        "npm run verify passed with 27 tests, typecheck, production build, and static asset checks on 2026-11-03",
+        "tests/s6-quality.test.mjs guards the static no-submission boundary and confirms private local paths are ignored while required contracts and handoffs remain visible",
+        "A separate code-review agent identified a high-severity false-safe risk that remains unresolved; S6 stage approval does not mean this finding is resolved",
+        "The UI businessGoal-to-primary_goal mapping was corrected and tested",
+        "Product Owner explicitly approved S6 and progression to S7 in chat on 2026-11-03; S7 release gates remain separate",
+        "GitHub Actions quality and extended Python validation passed on base S6 commit bb96e232c18c6a8acf88dcda119b6ca37dd700dc; the current uncommitted privacy/handoff changes need a subsequent run",
+        "No merge, deployment, or public launch was made"
+      ]
     },
     {
       "id": "S7",
       "name": "GitHub Pages release",
-      "status": "not_started",
+      "status": "blocked",
       "requiredPrevious": "S6",
       "approvedBy": null,
       "approvedAt": null,
       "handoffPath": "docs/handoffs/S7-handoff.md",
       "commitSha": null,
-      "evidence": []
+      "evidence": [
+        "Product Owner approved S6 and clarified in chat on 2026-11-03 that GitHub Pages is for testing only; public use is intended for a custom host",
+        "npm run verify passed locally on the S7 working tree with 27 tests, typecheck, production build, and static asset checks",
+        "GitHub Actions run 41708176620 and PR check 41708283135 passed quality and extended Python validation on the corrected S7 change",
+        "Separate read-only code-review agent reviewed PR #1 against origin/main on 2026-11-04 and recorded one high and two medium findings in docs/handoffs/S7-handoff.md; no GitHub review was submitted and human disposition is pending",
+        "Main branch protection now requires pull requests and the quality check; GitHub Pages is not enabled and test deployment/live-site verification remain pending",
+        "Public launch remains out of scope and requires separate hosting/policy review and release approval"
+      ]
     },
     {
       "id": "S8",
