@@ -11,6 +11,7 @@ import {
 } from '../domain/report-guidance';
 import ReadinessSignal from '../ReadinessSignal';
 import {catalogActions} from '../domain/recommendations';
+import questionBank from '../../docs/domain/question_bank.json';
 import manifest from '../../docs/domain/VERSION_MANIFEST.json';
 
 type ProfileLike = {
@@ -172,6 +173,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
           <div className="report-score">
             <p className="result-label">{reportGuidance.scoreLabel}</p>
             <p className="report-score-value"><strong>{reportGuidance.scoreValue}</strong> <span>out of 100</span></p>
+            <p>{Object.values(readiness.dimensions).reduce((total, dimension) => total + dimension.known, 0)} of {questionBank.questions.length} core answers are known.</p>
             {reportGuidance.scoreNote && <p className="report-score-note">{reportGuidance.scoreNote}</p>}
           </div>
           <div className="report-next-step">
@@ -383,11 +385,15 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
           <div><dt>Method version</dt><dd>{readiness.ruleVersion}</dd></div>
           <div><dt>Report version</dt><dd>{manifest.report_version}</dd></div>
         </dl>
-        <p>
-          Assessment areas covered: {Object.keys(answers).length
-            ? Object.keys(answers).map((questionId) => `${getQuestionLabel(questionId)} (reference: ${questionId})`).join('; ')
-            : 'No answers recorded yet'}.
-        </p>
+        <h5>Your assessment answers</h5>
+        <dl className="report-answers">
+          {questionBank.questions.map(({id, prompt, options}) => (
+            <div key={id}>
+              <dt>{prompt} <small>({id})</small></dt>
+              <dd>{options.find((option) => option.id === answers[id])?.label ?? 'No answer recorded'}</dd>
+            </div>
+          ))}
+        </dl>
       </ReportSection>
 
       <ReportSection id="consultant-review-template" title="Consultant Review Template" expanded={openSections.has('consultant-review-template')} onToggle={toggleSection}>

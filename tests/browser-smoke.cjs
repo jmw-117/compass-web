@@ -259,6 +259,9 @@ async function run() {
     })()`),true);
     await click('#report-appendix-answers-and-provenance-title');
     await until(()=>js("document.querySelector('.report-metadata').closest('details').open && document.querySelector('.report-metadata code').innerText.startsWith('SELF-')"),'Opening the appendix did not show the assessment reference');
+    assert.equal(await js("document.querySelectorAll('.report-answers dd').length"),questions.length);
+    assert.equal(await js("document.querySelector('.report-answers dd').textContent"),questions[0].options.at(-1).label);
+    assert.equal(await js("document.querySelector('.report-score').textContent.includes('13 of 14 core answers are known')"),true);
     await click('#report-appendix-answers-and-provenance-title');
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
     await js(`window.open=(url)=>{window.testShareDestination=url;}; true`);
