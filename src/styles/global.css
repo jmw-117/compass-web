@@ -462,7 +462,7 @@ h3 {
   gap: 1rem;
 }
 
-.report-header h3 {
+.report-header h1 {
   margin: 0;
   font-size: clamp(1.35rem, 1.15rem + 1vw, 1.8rem);
 }
@@ -1555,4 +1555,33 @@ h3 {
   .assessment-panel .button-row > button {
     flex: 1 1 auto;
   }
+}
+
+.results-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem 1rem;
+  margin-top: 1.5rem;
+}
+.results-toolbar .results-back { justify-self: start; }
+.results-toolbar :is(.button-primary, .button-secondary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+.results-toolbar svg { flex: none; }
+.results-toolbar > :is(.compass-share-preview, .storage-error) { grid-column: 1 / -1; }
+.standalone-report {
+  max-width: 58rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: white;
+}
+.standalone-report .report-module { margin: 0; padding: 0; border: 0; }
+@media (max-width: 42rem) {
+  .results-toolbar { grid-template-columns: minmax(0, 1fr); }
+  .results-toolbar .report-actions { justify-content: flex-start; }
 }

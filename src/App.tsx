@@ -1,3 +1,4 @@
+import ActionIcon from './report/ActionIcon';
 import {lazy, Suspense, useEffect, useMemo, useState} from 'react';
 import questionBank from '../docs/domain/question_bank.json';
 import {evaluate} from './domain/evaluate';
@@ -180,7 +181,6 @@ export default function App() {
   const [draftStatus, setDraftStatus] = useState('');
   const [draftBusy, setDraftBusy] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
-  const [isReportModuleOpen, setIsReportModuleOpen] = useState(false);
 
   function applyDraft(raw: string) {
     if (raw.length > 32_768) throw new Error('Draft is too large.');
@@ -236,12 +236,6 @@ export default function App() {
     shell?.querySelector('h2')?.focus({preventScroll: true});
     shell?.scrollIntoView({block: 'start', behavior: 'instant'});
   }, [screen, questionIndex]);
-
-  useEffect(() => {
-    if (isReportModuleOpen) {
-      document.getElementById('report-module-panel')?.scrollIntoView({block: 'start'});
-    }
-  }, [isReportModuleOpen]);
 
   const answeredCount = coreQuestions.filter((question) =>
     question.options.some((option) => option.id === answers[question.id]),
@@ -401,7 +395,6 @@ export default function App() {
         setExtendedAnswers({});
         setQuestionIndex(0);
         setEditingFromReview(false);
-        setIsReportModuleOpen(false);
         setScreen('start');
         await clearDeviceDraft();
         setDraftStatus('Draft cleared from this session and device.');
@@ -757,34 +750,12 @@ export default function App() {
 
         <p className="inline-note result-privacy">Your answers stay in this browser. You choose whether to save or share your report.</p>
 
-        <div className="button-row">
-          <button type="button" className="button-secondary" onClick={() => setScreen('review')}>
-            Back to review
+        <div className="results-toolbar">
+          <button type="button" className="button-secondary results-back" onClick={() => setScreen('review')}>
+            <ActionIcon name="back" /> Back
           </button>
-          <button
-            type="button"
-            className="button-primary"
-            aria-expanded={isReportModuleOpen}
-            aria-controls="report-module-panel"
-            disabled={!allCoreQuestionsAnswered}
-            onClick={() => {
-              if (allCoreQuestionsAnswered) setIsReportModuleOpen((open) => !open);
-            }}
-          >
-            {isReportModuleOpen ? 'Hide report preview' : 'View report preview'}
-          </button>
-        </div>
-        {!allCoreQuestionsAnswered && (
-          <p className="inline-note answer-required-note" role="status">
-            Answer all {coreQuestions.length} questions before viewing the report.
-          </p>
-        )}
-
-        <div id="report-module-panel" className="report-module-panel">
-          {isReportModuleOpen && (
-            <Suspense
-              fallback={<p role="status">Preparing your report preview…</p>}
-            >
+          {allCoreQuestionsAnswered && (
+            <Suspense fallback={<p role="status">Preparing report actions…</p>}>
               <ReportModule profile={reportProfile} assessmentId={assessmentId} answers={answers} readiness={readinessResult} />
             </Suspense>
           )}
