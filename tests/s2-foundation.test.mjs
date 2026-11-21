@@ -12,7 +12,7 @@ test('static landing shell remains semantic and usable without JavaScript', asyn
   assert.match(html, /<span class="wordmark-mark">[\s\S]*class="wordmark-logo"/);
   assert.match(await readFile('src/styles/global.css', 'utf8'), /\.wordmark-mark[\s\S]*overflow:\s*hidden/);
   assert.match(await readFile('src/styles/global.css', 'utf8'), /\.wordmark-logo[\s\S]*width:\s*7rem/);
-  assert.match(html, /Assess Your Readiness/);
+  assert.match(html, /Start Assessment/);
   assert.match(html, /<h1 id="hero-title">Understand your AI readiness<\/h1>/);
   assert.doesNotMatch(html, /Discover what comes next/);
   assert.match(html, /No account required/);
@@ -57,7 +57,7 @@ test('React enhancement loads the report preview on demand and keeps it user-con
   assert.match(report, /Export Report/);
   assert.match(report, /Copy summary/);
   assert.match(report, /Send Report/);
-  assert.match(report, /Open Silverspark in WhatsApp/);
+  assert.match(report, /Open WhatsApp/);
 });
 
 test('branch pushes run checks and verified main builds can deploy', async () => {
