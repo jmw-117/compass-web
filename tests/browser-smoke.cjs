@@ -249,41 +249,19 @@ async function run() {
     assert.equal(await noHorizontalOverflow(),true,'Results overflow at 200% text size');
     await js("document.documentElement.style.fontSize=''");
     await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true});
+    await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
+    await until(()=>js(`(()=>{
+      const back=document.querySelector('.results-back').getBoundingClientRect();
+      const buttons=[...document.querySelectorAll('.report-actions > *')].map(el=>el.getBoundingClientRect());
+      return buttons.length===3 && buttons.every(b=>Math.abs(b.top-back.top)<2) && buttons[0].left>back.right+12;
+    })()`),'Desktop navigation and report actions are misaligned');
+    await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true});
     const previewLink='.report-actions a[target="_blank"]';
     await until(()=>js("Boolean(document.querySelector('.report-actions a[href]'))"),'Preview link missing');
     assert.equal(await noHorizontalOverflow(),true,'Result actions overflow at 320px');
     assert.equal(await js("document.querySelector('.report-module').getClientRects().length"),0,'Report should stay off the results page');
     assert.deepEqual(await js("[...document.querySelectorAll('.results-toolbar > .results-back, .report-actions > *')].map(el=>[el.textContent.trim(),!!el.querySelector('svg[aria-hidden=true]')])"),
       [['Back',true],['Preview Report',true],['Export Report',true],['Send Report',true]]);
-    const previewUrl=await js("document.querySelector('.report-actions a').href");
-    await call('Runtime.evaluate',{expression:"document.querySelector("+JSON.stringify(previewLink)+").click()",userGesture:true});
-    const target=await until(async()=>(await call('Target.getTargets')).targetInfos.find(item=>item.type==='page' && item.url===previewUrl),'Report did not open in a new tab');
-    const {sessionId}=await call('Target.attachToTarget',{targetId:target.targetId,flatten:true});
-    const previewJs=async(expression)=>{
-      const response=await call('Runtime.evaluate',{expression,returnByValue:true},sessionId);
-      if(response.exceptionDetails) throw Error(response.exceptionDetails.exception?.description??response.exceptionDetails.text);
-      return response.result.value;
-    };
-    await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true},sessionId);
-    await until(()=>previewJs("document.readyState==='complete' && document.querySelector('.report-module') && getComputedStyle(document.querySelector('.traffic-light')).display==='inline-grid'"),'Preview content or styles missing');
-    assert.equal(await previewJs("window.opener===null && !document.querySelector('.report-actions')"),true);
-    assert.equal(await previewJs("document.documentElement.scrollWidth<=document.documentElement.clientWidth"),true,'Report overflows at 320px');
-    assert.equal(await previewJs("document.querySelectorAll('.traffic-light__bulb--amber[data-active]').length"),1);
-    assert.equal(await previewJs("document.querySelector('.report-next-step').innerText.includes('Recommended next step')"),true);
-    assert.equal(await previewJs("document.querySelector('.report-safety').innerText.includes('specialist review')"),true);
-    assert.equal(await previewJs("document.querySelector('.report-score-value').textContent.includes('out of 100')"),true);
-    assert.equal(await previewJs(`(()=>{
-      const metadata=document.querySelector('.report-metadata');
-      const appendix=metadata.closest('details');
-      return !appendix.open && appendix.querySelector('summary').textContent.includes('Provenance');
-    })()`),true);
-    await previewJs("document.querySelector('#report-appendix-answers-and-provenance-title').click()");
-    await until(()=>previewJs("document.querySelector('.report-metadata').closest('details').open && document.querySelector('.report-metadata code').innerText.startsWith('SELF-')"),'Opening the appendix did not show the assessment reference');
-    assert.equal(await previewJs("document.querySelectorAll('.report-answers dd').length"),questions.length);
-    assert.equal(await previewJs("document.querySelector('.report-answers dd').textContent"),questions[0].options.at(-1).label);
-    assert.equal(await previewJs("document.querySelector('.report-score').textContent.includes('13 of 14 core answers are known')"),true);
-    await previewJs("document.querySelector('#report-appendix-answers-and-provenance-title').click()");
-    await call('Target.closeTarget',{targetId:target.targetId});
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
     await js(`window.open=(url)=>{window.testShareDestination=url;}; true`);
     await click('[aria-controls="compass-share-preview"]');
@@ -312,6 +290,35 @@ async function run() {
     }
     assert.equal(downloadedReport.getTitle(),'Silverspark Compass Assessment Report');
     assert.ok(downloadedReport.getPageCount()>1,'Expected a paginated report');
+    const previewUrl=await js("document.querySelector('.report-actions a').href");
+    await call('Runtime.evaluate',{expression:"document.querySelector("+JSON.stringify(previewLink)+").click()",userGesture:true});
+    const target=await until(async()=>(await call('Target.getTargets')).targetInfos.find(item=>item.type==='page' && item.url===previewUrl),'Report did not open in a new tab');
+    const {sessionId}=await call('Target.attachToTarget',{targetId:target.targetId,flatten:true});
+    const previewJs=async(expression)=>{
+      const response=await call('Runtime.evaluate',{expression,returnByValue:true},sessionId);
+      if(response.exceptionDetails) throw Error(response.exceptionDetails.exception?.description??response.exceptionDetails.text);
+      return response.result.value;
+    };
+    await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true},sessionId);
+    await until(()=>previewJs("document.readyState==='complete' && document.querySelector('.report-module') && document.querySelector('.traffic-light__bulb[data-active]').getBoundingClientRect().width>=32"),'Preview content or styles missing');
+    assert.equal(await previewJs("window.opener===null && !document.querySelector('.report-actions')"),true);
+    assert.equal(await previewJs("document.documentElement.scrollWidth<=document.documentElement.clientWidth"),true,'Report overflows at 320px');
+    assert.equal(await previewJs("document.querySelectorAll('.traffic-light__bulb--amber[data-active]').length"),1);
+    assert.equal(await previewJs("document.querySelector('.report-next-step').innerText.includes('Recommended next step')"),true);
+    assert.equal(await previewJs("document.querySelector('.report-safety').innerText.includes('specialist review')"),true);
+    assert.equal(await previewJs("document.querySelector('.report-score-value').textContent.includes('out of 100')"),true);
+    assert.equal(await previewJs(`(()=>{
+      const metadata=document.querySelector('.report-metadata');
+      const appendix=metadata.closest('details');
+      return !appendix.open && appendix.querySelector('summary').textContent.includes('Provenance');
+    })()`),true);
+    await previewJs("document.querySelector('#report-appendix-answers-and-provenance-title').click()");
+    await until(()=>previewJs("document.querySelector('.report-metadata').closest('details').open && document.querySelector('.report-metadata code').innerText.startsWith('SELF-')"),'Opening the appendix did not show the assessment reference');
+    assert.equal(await previewJs("document.querySelectorAll('.report-answers dd').length"),questions.length);
+    assert.equal(await previewJs("document.querySelector('.report-answers dd').textContent"),questions[0].options.at(-1).label);
+    assert.equal(await previewJs("document.querySelector('.report-score').textContent.includes('13 of 14 core answers are known')"),true);
+    await previewJs("document.querySelector('#report-appendix-answers-and-provenance-title').click()");
+    await call('Target.closeTarget',{targetId:target.targetId});
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);
     console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, direct results, optional step navigation, responsive field pairs and checkboxes, report hierarchy, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and direct PDF download ('+bytes.length+' bytes). No external requests.');
