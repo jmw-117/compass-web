@@ -161,6 +161,21 @@ async function run() {
     assert.equal(await js("/specialist review/i.test(document.body.innerText)"),true);
     assert.equal(await noHorizontalOverflow(),true,'Results overflow at 320px');
     assert.equal(await js("document.querySelector('.readiness-signal').classList.contains('readiness-signal--amber')"),true);
+    const activeLight=async scope=>js(`(()=>{
+      const lights=document.querySelector(${JSON.stringify(scope)}+' .traffic-light');
+      const active=Array.from(lights.querySelectorAll('[data-active]'));
+      return {
+        decorative:lights.getAttribute('aria-hidden')==='true',
+        active:active.map(light=>light.classList.contains('traffic-light__bulb--amber')),
+        width:active[0]?.getBoundingClientRect().width,
+        ring:active[0] && getComputedStyle(active[0]).borderTopColor,
+      };
+    })()`);
+    const resultLight=await activeLight('.assessment-panel');
+    assert.equal(resultLight.decorative,true);
+    assert.deepEqual(resultLight.active,[true]);
+    assert.ok(resultLight.width>=32);
+    assert.notEqual(resultLight.ring,'rgba(0, 0, 0, 0)');
     await checkTextContrast('.readiness-signal__copy .eyebrow','.readiness-signal');
     await checkTextContrast('.readiness-signal__copy p:nth-of-type(2)','.readiness-signal');
     await checkTextContrast('#practical-next-step-title','.pragmatic-recommendation[aria-labelledby=practical-next-step-title]');
@@ -172,6 +187,7 @@ async function run() {
     await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true});
     await until(()=>js(`(()=>{const button=Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('View report preview')); if(!button) return false; button.click(); return true;})()`),'Report control missing');
     await until(()=>js("document.querySelector('.report-module') !== null"),'Report did not render');
+    assert.deepEqual((await activeLight('.report-module')).active,[true]);
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
     await js(`window.open=(url)=>{window.testShareDestination=url;}; window.print=()=>{window.testPrintRequested=document.querySelectorAll('.report-section:not([open])').length===0;}; true`);
     await click('[aria-controls="compass-share-preview"]');

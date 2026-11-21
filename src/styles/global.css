@@ -1121,39 +1121,72 @@ h3 {
 }
 
 .traffic-light {
-  display: flex;
-  gap: 0.43rem;
-  width: fit-content;
-  padding: 0.53rem 0.65rem;
-  border-radius: 999px;
-  background: var(--navy);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.375rem;
+  justify-self: start;
+  inline-size: min(100%, 8.5rem);
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.875rem;
+  background: #fff;
 }
 
 .traffic-light__bulb {
-  width: 0.8rem;
-  height: 0.8rem;
+  display: grid;
+  place-items: center;
+  min-inline-size: 0;
+  aspect-ratio: 1;
+  border: 2px solid transparent;
   border-radius: 50%;
-  opacity: 0.35;
+}
+
+.traffic-light__bulb::before {
+  content: "";
+  inline-size: 68%;
+  aspect-ratio: 1;
+  border: 1px solid #8995a3;
+  border-radius: 50%;
+  background: var(--lamp-rest);
 }
 
 .traffic-light__bulb--red {
-  background: #f37b72;
+  --lamp-rest: #fbe8e6;
+  --lamp-light: #d9473c;
+  --lamp-edge: #a02c23;
 }
 
 .traffic-light__bulb--amber {
-  background: #f5c34a;
+  --lamp-rest: #fff1ce;
+  --lamp-light: #f5b837;
+  --lamp-edge: #8e6008;
 }
 
 .traffic-light__bulb--green {
-  background: #67d4a2;
+  --lamp-rest: #e1f3e9;
+  --lamp-light: #238d61;
+  --lamp-edge: #146c47;
 }
 
-.traffic-light--red .traffic-light__bulb--red,
-.traffic-light--amber .traffic-light__bulb--amber,
-.traffic-light--green .traffic-light__bulb--green {
-  outline: 1px solid white;
-  outline-offset: 2px;
-  opacity: 1;
+.traffic-light__bulb[data-active] {
+  border-color: var(--lamp-edge);
+}
+
+.traffic-light__bulb[data-active]::before {
+  inline-size: 82%;
+  border-color: var(--lamp-edge);
+  background: var(--lamp-light);
+}
+
+@media (forced-colors: active) {
+  .traffic-light__bulb::before {
+    border-color: GrayText;
+  }
+
+  .traffic-light__bulb[data-active],
+  .traffic-light__bulb[data-active]::before {
+    border-color: CanvasText;
+  }
 }
 
 .readiness-signal__copy .eyebrow {

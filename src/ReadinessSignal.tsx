@@ -1,5 +1,7 @@
 import type {TrafficLightSignal} from './domain/report-guidance';
 
+const lightColors = ['red', 'amber', 'green'] as const;
+
 type ReadinessSignalProps = {
   signal: TrafficLightSignal;
 };
@@ -7,10 +9,14 @@ type ReadinessSignalProps = {
 export default function ReadinessSignal({signal}: ReadinessSignalProps) {
   return (
     <section className={`readiness-signal readiness-signal--${signal.color}`} aria-label="Traffic-light readiness signal">
-      <div className={`traffic-light traffic-light--${signal.color}`} aria-hidden="true">
-        <span className="traffic-light__bulb traffic-light__bulb--red" />
-        <span className="traffic-light__bulb traffic-light__bulb--amber" />
-        <span className="traffic-light__bulb traffic-light__bulb--green" />
+      <div className="traffic-light" aria-hidden="true">
+        {lightColors.map((color) => (
+          <span
+            key={color}
+            className={`traffic-light__bulb traffic-light__bulb--${color}`}
+            data-active={color === signal.color ? '' : undefined}
+          />
+        ))}
       </div>
       <div className="readiness-signal__copy">
         <p className="eyebrow">Readiness Signal</p>
