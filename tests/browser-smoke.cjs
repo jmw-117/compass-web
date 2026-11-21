@@ -109,6 +109,9 @@ async function run() {
     }
     await until(()=>js("document.activeElement.id==='assessment-title'"),'Profile heading did not receive focus');
     assert.equal(await js("Array.from(document.querySelectorAll('.profile-form select')).every(el=>el.labels.length&&parseFloat(getComputedStyle(el).fontSize)>=16)"),true);
+    assert.equal(await js(`[...document.querySelectorAll('.profile-form select')].every(select=>
+      getComputedStyle(select).fontWeight==='400' && getComputedStyle(select.options[0]).fontWeight==='400' &&
+      Number(getComputedStyle(select.labels[0]).fontWeight)>=600)`),true,'Question labels and dropdown answers need distinct weights');
     await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
     await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
     assert.equal(await js("document.activeElement.id"),'profile-organisation');
@@ -241,6 +244,7 @@ async function run() {
     await checkTextContrast('#practical-next-step-title','.pragmatic-recommendation[aria-labelledby=practical-next-step-title]');
     assert.equal(await js("document.querySelector('[aria-labelledby=practical-next-step-title]').innerText.includes('Start here.')"),true);
     await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
+    assert.ok((await activeLight('.assessment-panel')).width>=32,'Desktop readiness lamp collapsed');
     await js("document.documentElement.style.fontSize='200%'");
     assert.equal(await noHorizontalOverflow(),true,'Results overflow at 200% text size');
     await js("document.documentElement.style.fontSize=''");
@@ -284,6 +288,11 @@ async function run() {
     assert.ok(bytes.includes(Buffer.from('%%EOF')));
     const {PDFDocument}=await import('pdf-lib');
     const downloadedReport=await PDFDocument.load(bytes);
+    const {PDFName}=await import('pdf-lib');
+    for(const page of downloadedReport.getPages()){
+      const resources=page.node.Resources();
+      assert.ok(resources.lookup(PDFName.of('XObject')).keys().length,'Every report page should carry the brand mark');
+    }
     assert.equal(downloadedReport.getTitle(),'Silverspark Compass Assessment Report');
     assert.ok(downloadedReport.getPageCount()>1,'Expected a paginated report');
     assert.equal(errors.length,0,errors.join('\n'));
