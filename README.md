@@ -2,6 +2,10 @@
 
 Silverspark Compass is a digital discovery experience designed to help business leaders explore their preparedness for practical, responsible AI adoption and identify useful next conversations.
 
+## Development
+
+Use one continuous build. Track completion against the [100-point scale](docs/BUILD_STATUS.md) using CI and deployment evidence.
+
 ## Status
 
 Compass is a test-stage prototype and is not yet a public service. The current GitHub Pages environment is for testing only; any public deployment will be considered separately.

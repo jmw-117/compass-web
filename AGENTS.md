@@ -6,5 +6,5 @@ Use the product specification and the versioned machine-readable contracts in `d
 - Use the 14 scored anchors as the sole numeric readiness instrument. Unknown answers widen the interval. Conditional evidence questions and the technical annex are diagnostic. Keep inactive answers out of decisions and reports.
 - Keep assessment data browser-local. Show the exact minimised summary before opening WhatsApp. Preserve voluntary sharing and self-reported results.
 - Keep domain rules separate from UI, validate references, and preserve expected golden results. Get product-owner approval for changes to the scoring method, gates or expected results. Report test and real-user evidence accurately.
-- Deliver and verify the product continuously. Stage reviews, numbered handoffs and prior-stage approvals are retired. Use the completion scale in docs/BUILD_STATUS.md.
+- Use one continuous build flow from implementation through verification, integration and live checks. Do not create pull requests or require stage approvals or handoffs. Use the 100-point completion scale in docs/BUILD_STATUS.md.
 - Use SHA-pinned Actions, quality-gated deployment from protected main, static subpath checks and a rollback path. Verify the intended Pages deployment and get the required release approval before public commercial use.

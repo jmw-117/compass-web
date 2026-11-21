@@ -1,6 +1,6 @@
-# Staged execution index — Silverspark Compass v1.2
+# Historical Compass workstreams
 
-S0–S8 describe product workstreams. They can progress independently as dependencies allow.
+Each entry retains context from the former S0–S8 plan. For current delivery, follow [the repository instructions](../../AGENTS.md) and [the completion scale](../BUILD_STATUS.md).
 
 | Stage | Contract | Main output |
 |---|---|---|
@@ -14,6 +14,4 @@ S0–S8 describe product workstreams. They can progress independently as depende
 | S7 | [GitHub Pages release](S7-pages-release.md) | Live URL and SHA evidence, workflow run proof, release log, rollback instructions |
 | S8 | [Continuous calibration and maintenance](S8-calibration.md) | Release retrospective, revised backlog, versioned ADRs and fixture updates for future stages |
 
-## Delivery
-
-Record build, test and deployment evidence in the pull request or workflow. The former stage ledger and handoffs are historical records.
+The former stage ledger and handoffs are historical records.

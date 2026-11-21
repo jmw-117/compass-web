@@ -1,10 +1,2 @@
-Stage S0: Concierge research.
-Stage S1: Contract, rubric, fixtures.
-Stage S2: Scaffolding and GitHub Pages pipeline, test scripts.
-Stage S3: Assessment wizard and local draft.
-Stage S4: Deterministic evaluator and tests.
-Stage S5: Results report and voluntary share.
-Stage S6: Independent QA, accessibility, hardening.
-Stage S7: Github Pages deployment + smoke + rollback evidence.
-Stage S8: Calibrate, support, version upgrades.
-See docs/stages/INDEX.md for workstream scope and docs/BUILD_STATUS.md for the completion scale.
+Compass uses one continuous build flow: implement, verify, integrate, deploy and verify the running site.
+See AGENTS.md for current instructions and docs/BUILD_STATUS.md for progress scoring. Numbered stages in docs/stages are historical.

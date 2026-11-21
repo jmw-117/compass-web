@@ -30,3 +30,5 @@ launchButton.addEventListener('click', () => {
     </StrictMode>,
   );
 });
+
+launchButton.disabled = false;

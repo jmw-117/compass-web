@@ -1,1 +1,1 @@
-Follow root AGENTS.md and the versioned domain contracts. Build and verify the static Compass product. Record test and release evidence in the PR or final report. Existing stage records document project history.
+Follow the root AGENTS.md and versioned domain contracts. Work through one continuous build. Use commit, CI and deployment evidence for progress. Do not create pull requests, numbered handoffs or stage reviews.

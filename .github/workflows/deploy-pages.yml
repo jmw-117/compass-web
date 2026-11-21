@@ -1,7 +1,5 @@
 name: Quality checks and gated GitHub Pages deployment
 on:
-  pull_request:
-    branches: [main, codex, develop, maintenance, upgrade]
   push:
     branches: [main, codex, develop, maintenance, upgrade]
   workflow_dispatch:

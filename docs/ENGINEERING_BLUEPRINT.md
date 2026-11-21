@@ -1,5 +1,7 @@
 > **v1.3 companion:** This v1.2 delivery blueprint is retained as the baseline. The authoritative *expanded product feature and technical specification* is `docs/PRODUCT_TECHNICAL_SPECIFICATION.md`. The v1.3 JSON addenda define optional deep diagnostic and complete report/UX requirements. The original 14-question scoring engine remains unchanged pending S1 review.
 
+Delivery follows the [current repository instructions](../AGENTS.md). Numbered stages, approval chains and handoff templates cited below describe the earlier process.
+
 # SILVERSPARK COMPASS
 ## AI Readiness & Budget-Aware Discovery — Product Engineering Blueprint v1.2
 

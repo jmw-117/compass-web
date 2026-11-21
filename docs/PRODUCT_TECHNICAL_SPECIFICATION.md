@@ -1,4 +1,6 @@
 # SILVERSPARK COMPASS
+
+Delivery follows the [current repository instructions](../AGENTS.md). Numbered stages, approval chains and handoff templates cited below describe the earlier process.
 ## Product Technical Specification — AI Readiness & Prospective Client Discovery
 
 **Version:** 1.3.1 — 3 November 2026

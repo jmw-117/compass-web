@@ -50,7 +50,10 @@ async function run() {
         pending.delete(message.id);
         if(message.error) resolver?.reject(Error(message.error.message)); else resolver?.resolve(message.result);
       }
-      if(message.method==='Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.text);
+      if(message.method==='Runtime.exceptionThrown') {
+        const details = message.params.exceptionDetails;
+        errors.push(details.exception?.description ?? details.text);
+      }
       if(message.method==='Network.requestWillBeSent') destinations.add(message.params.request.url);
     });
     const call=(method,params={})=>new Promise((resolve,reject)=>{
@@ -70,8 +73,14 @@ async function run() {
     await until(async () => (await fetch(app)).ok, 'The Compass test URL did not return HTTP 200');
     await call('Page.navigate',{url:app.href});
     const click=async(selector)=>until(()=>js('(()=>{ const el=document.querySelector('+JSON.stringify(selector)+'); if (!el || el.disabled) return false; el.click(); return true; })()'),'Missing enabled '+selector);
+    await until(() => js("document.readyState === 'complete'"), 'The static page did not finish loading');
     await click('#take-assessment');
-    await until(()=>js("document.querySelectorAll('.profile-form select').length === 3"),'Profile not rendered');
+    try {
+      await until(()=>js("document.querySelectorAll('.profile-form select').length === 3"),'Profile not rendered');
+    } catch (error) {
+      console.error('Page status:', await js("document.body.innerText.slice(0, 500)"), errors);
+      throw error;
+    }
     await js(`Array.from(document.querySelectorAll('.profile-form select')).forEach(select=>{select.selectedIndex=1; select.dispatchEvent(new Event('change',{bubbles:true}));}); true`);
     await click('.profile-form button[type="submit"]');
     const answer = async () => {
@@ -94,6 +103,7 @@ async function run() {
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
     await js(`window.open=(url)=>{window.testShareDestination=url;}; window.print=()=>{window.testPrintRequested=document.querySelectorAll('.report-section:not([open])').length===0;}; true`);
     await click('[aria-controls="compass-share-preview"]');
+    await until(()=>js("!document.querySelector('#compass-share-preview').hidden"),'Message preview did not open');
     assert.equal(await js('window.testShareDestination===undefined'),true);
     await click('#compass-share-preview button.button-primary');
     const share=await js('window.testShareDestination');
