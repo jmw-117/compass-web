@@ -141,12 +141,31 @@ async function run() {
     for(let i=5;i<questions.length;i++) await answer(i);
     await until(()=>js("document.querySelectorAll('.safety-context-form select').length===5"),'Safety context form missing');
     assert.equal(await js("document.querySelector('[aria-controls=report-module-panel]')===null"),true);
-    const lastContext=await js("Array.from(document.querySelectorAll('.compass-context details summary')).map(el=>el.textContent)");
-    assert.ok(lastContext.some(label=>label.includes('Business workflow')));
-    await checkTextContrast('.compass-context summary','.assessment-panel');
-    await checkTextContrast('.compass-context summary small','.assessment-panel');
-    assert.equal(await js("document.querySelector('.compass-context summary').getBoundingClientRect().height>=48"),true);
-    await click('.compass-context details:first-child summary');
+    assert.equal(await js("document.querySelector('.compass-field-grid')===null"),true);
+    await checkTextContrast('.answer-review summary','.assessment-panel');
+    await click('.answer-review summary');
+    await click('[aria-label="Edit question 6"]');
+    await until(()=>js("document.activeElement.id==='question-panel-title' && document.activeElement.textContent==="+JSON.stringify(questions[5].prompt)),
+      'Editing answer did not return to question 6');
+    await click('input[id="'+questions[5].options[3].id+'"]');
+    await click('.question-panel .button-primary');
+    await until(()=>js("document.activeElement.id==='review-title'"),'Edited answer did not return to review');
+    assert.equal(await js("document.querySelector('.answer-review li:nth-child(6) p').textContent"),questions[5].options[3].label);
+    assert.equal(await js("document.querySelector('.assessment-panel .button-row .button-primary').disabled"),true);
+    await js(`(()=>{const values=['team_pilot','restricted','yes','yes','yes']; Array.from(document.querySelectorAll('.safety-context-form select')).forEach((select,i)=>{select.value=values[i]; select.dispatchEvent(new Event('change',{bubbles:true}));}); return true;})()`);
+    const pressButton=text=>until(()=>js(`(()=>{
+      const button=[...document.querySelectorAll('.assessment-panel button')]
+        .find(item=>item.textContent.trim()===${JSON.stringify(text)});
+      if (!button || button.disabled) return false;
+      button.click();
+      return true;
+    })()`),'Missing enabled button '+text);
+    await pressButton('See readiness snapshot');
+    await until(()=>js("document.activeElement.id==='results-title'"),'Review did not lead directly to results');
+    await pressButton('Back to review');
+    await pressButton('Add optional details');
+    await until(()=>js("document.activeElement.textContent==='Business workflow'"),'Business workflow step missing');
+    await checkTextContrast('.compass-context .eyebrow','.assessment-panel');
     const toolLayout=()=>js(`(()=>{
       const grid=document.querySelector('.compass-option-grid');
       const labels=[...grid.querySelectorAll('label')];
@@ -162,31 +181,42 @@ async function run() {
         }),
       };
     })()`);
+    const fieldPairs=()=>js(`(()=>{
+      const first=document.querySelector('.compass-field-grid select').getBoundingClientRect();
+      const second=document.querySelectorAll('.compass-field-grid select')[1].getBoundingClientRect();
+      return first.right < second.left && first.top === second.top;
+    })()`);
+    assert.equal(await fieldPairs(),false);
     assert.deepEqual(await toolLayout(),{columns:1,count:10,aligned:true});
     assert.equal(await noHorizontalOverflow(),true,'Tool options overflow at 320px');
     await click('.compass-option-grid label:first-child');
     assert.equal(await js("document.querySelector('.compass-option-grid input').checked"),true);
-    await click('.compass-option-grid label:first-child');
-    assert.equal(await js("document.querySelector('.compass-option-grid input').checked"),false);
     await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
     const desktopTools=await until(async()=>{
       const layout=await toolLayout();
       return layout.columns>1 ? layout : null;
     },'Tool options did not switch to multiple columns');
     assert.equal(desktopTools.aligned,true);
+    assert.equal(await fieldPairs(),true,'Business workflow fields should sit side by side');
+    await pressButton('Next section');
+    await until(()=>js("document.activeElement.textContent==='Staff capacity, timing and budget'"),'Staff and budget step missing');
+    assert.equal(await fieldPairs(),true,'Staff and budget fields should sit side by side');
+    assert.equal(await js(`(()=>{
+      const inputs=[...document.querySelectorAll('.compass-field-grid input[type="number"]')];
+      const first=inputs[0].getBoundingClientRect(), second=inputs[1].getBoundingClientRect();
+      return first.right<second.left && first.top===second.top;
+    })()`),true);
     await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true});
-    await click('.compass-context details:first-child summary');
-    await click('.answer-review summary');
-    await click('[aria-label="Edit question 6"]');
-    await until(()=>js("document.activeElement.id==='question-panel-title' && document.activeElement.textContent==="+JSON.stringify(questions[5].prompt)),
-      'Editing answer did not return to question 6');
-    await click('input[id="'+questions[5].options[3].id+'"]');
-    await click('.question-panel .button-primary');
-    await until(()=>js("document.activeElement.id==='review-title'"),'Edited answer did not return to review');
-    assert.equal(await js("document.querySelector('.answer-review li:nth-child(6) p').textContent"),questions[5].options[3].label);
-    assert.equal(await js("document.querySelector('.assessment-panel .button-row .button-primary').disabled"),true);
-    await js(`(()=>{const values=['team_pilot','restricted','yes','yes','yes']; Array.from(document.querySelectorAll('.safety-context-form select')).forEach((select,i)=>{select.value=values[i]; select.dispatchEvent(new Event('change',{bubbles:true}));}); return true;})()`);
-    await until(()=>js(`(()=>{const button=Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('See readiness snapshot')); if(!button||button.disabled) return false; button.click(); return true;})()`),'Results unavailable');
+    await until(async()=>!(await fieldPairs()),'Staff and budget columns did not stack at 320px');
+    await pressButton('Previous section');
+    await until(()=>js("document.activeElement.textContent==='Business workflow'"),'Previous did not return to business workflow');
+    assert.equal(await js("document.querySelector('.compass-option-grid input').checked"),true);
+    await pressButton('Next section');
+    await pressButton('Next section');
+    await until(()=>js("document.activeElement.textContent==='Evidence checks'"),'Applicable evidence step missing');
+    await pressButton('Next section');
+    await until(()=>js("document.activeElement.textContent==='Technical assessment'"),'Technical assessment step missing');
+    await pressButton('See readiness snapshot');
     await until(()=>js("document.body.innerText.includes('readiness snapshot') || document.body.innerText.includes('Readiness Snapshot')"),'Results not rendered');
     assert.equal(await js("/specialist review/i.test(document.body.innerText)"),true);
     assert.equal(await noHorizontalOverflow(),true,'Results overflow at 320px');
@@ -218,8 +248,17 @@ async function run() {
     await until(()=>js(`(()=>{const button=Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('View report preview')); if(!button) return false; button.click(); return true;})()`),'Report control missing');
     await until(()=>js("document.querySelector('.report-module') !== null"),'Report did not render');
     assert.deepEqual((await activeLight('.report-module')).active,[true]);
+    assert.equal(await noHorizontalOverflow(),true,'Report overflows at 320px');
+    assert.equal(await js("document.querySelector('.report-next-step').innerText.includes('Recommended next step')"),true);
+    assert.equal(await js("document.querySelector('.report-safety').innerText.includes('specialist review')"),true);
+    assert.equal(await js("document.querySelector('.report-score-value').textContent.includes('out of 100')"),true);
+    assert.equal(await js(`(()=>{
+      const metadata=document.querySelector('.report-metadata');
+      return metadata.closest('details').querySelector('summary').textContent.includes('Provenance')
+        && metadata.getBoundingClientRect().height===0;
+    })()`),true);
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
-    await js(`window.open=(url)=>{window.testShareDestination=url;}; window.print=()=>{window.testPrintRequested=document.querySelectorAll('.report-section:not([open])').length===0;}; true`);
+    await js(`window.open=(url)=>{window.testShareDestination=url;}; true`);
     await click('[aria-controls="compass-share-preview"]');
     await until(()=>js("!document.querySelector('#compass-share-preview').hidden"),'Message preview did not open');
     assert.equal(await js('window.testShareDestination===undefined'),true);
@@ -228,16 +267,18 @@ async function run() {
     assert.equal(new URL(share).origin,'https://wa.me');
     assert.equal(new URL(share).pathname,'/254762057288');
     assert.equal(new URL(share).searchParams.get('text'),await js("document.querySelector('#compass-share-text').value"));
-    await click('.report-actions button.button-secondary');
-    assert.equal(await until(()=>js('window.testPrintRequested===true'),'Print report sections did not expand'),true);
-    await call('Emulation.setEmulatedMedia',{media:'print'});
-    const pdf=await call('Page.printToPDF',{paperWidth:8.27,paperHeight:11.69,printBackground:true});
-    const bytes=Buffer.from(pdf.data,'base64');
+    await call('Page.setDownloadBehavior',{behavior:'allow',downloadPath:profile});
+    await pressButton('Export Report');
+    const bytes=await until(async()=>{
+      const filename=(await fs.readdir(profile)).find(name=>/^Silverspark-Compass-SELF-.+\.pdf$/.test(name));
+      return filename && await fs.readFile(path.join(profile,filename));
+    },'Export Report did not download a PDF',20000);
     assert.equal(bytes.subarray(0,5).toString(),'%PDF-');
     assert.ok(bytes.length>3000);
+    assert.ok(bytes.includes(Buffer.from('%%EOF')));
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);
-    console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, aligned tool checkboxes, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and PDF ('+bytes.length+' bytes). No external requests.');
+    console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, direct results, optional step navigation, responsive field pairs and checkboxes, report hierarchy, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and direct PDF download ('+bytes.length+' bytes). No external requests.');
   } catch(error) { if(messages) console.error(messages.split('\n').slice(0,5).join('\n')); throw error; }
   finally { socket?.close(); child.kill(); preview?.kill(); }
 }

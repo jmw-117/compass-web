@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import discovery from '../../docs/domain/prospective_client_discovery.json';
 import schema from '../../docs/domain/profile_schema.json';
 import { activeProbes, applicableTechnicalQuestions } from '../domain/diagnostics';
@@ -9,6 +9,8 @@ type AssessmentDetailsProps = {
   answers: Record<string, string>;
   probeAnswers: Record<string, string>;
   extendedAnswers: Record<string, string>;
+  onBack: () => void;
+  onResults: () => void;
   update: (field: string, value: string | string[] | boolean | number | undefined) => void;
   answerProbe: (id: string, value: string) => void;
   answerTechnical: (id: string, value: string) => void;
@@ -49,10 +51,13 @@ function labelValue(value: string) {
 }
 
 const contextFields = discovery.fields.filter(({stage}) => stage === 'context' || stage === 'discovery');
+const constraintFieldSources = [...schema.later_fields, ...discovery.fields];
 const constraintFields = [
-  ...schema.later_fields.filter(({id}) => ['staff_capacity', 'timeline', 'budget_band', 'budget_ceiling'].includes(id)),
-  ...discovery.fields.filter(({stage}) => stage === 'constraints' || stage === 'results'),
-];
+  'staff_capacity', 'timeline',
+  'budget_window', 'budget_band',
+  'budget_ceiling', 'monthly_budget_ceiling',
+  'decision_authority', 'preferred_next_step',
+].flatMap((id) => constraintFieldSources.filter((field) => field.id === id));
 
 type Field = { id: string; type?: string; values?: string[]; max_chars?: number; max_items?: number };
 
@@ -86,7 +91,7 @@ function OptionalField({field, value, update}: {field: Field; value: unknown; up
   }
 
   return (
-    <label>
+    <label data-field={id}>
       <span>{label}</span>
       {field.values ? (
         <select value={typeof value === 'string' ? value : ''} onChange={(event) => update(id, event.target.value)}>
@@ -110,55 +115,73 @@ function OptionalField({field, value, update}: {field: Field; value: unknown; up
   );
 }
 
-export default function AssessmentDetails({profile, answers, probeAnswers, extendedAnswers, update, answerProbe, answerTechnical}: AssessmentDetailsProps) {
+export default function AssessmentDetails({
+  profile, answers, probeAnswers, extendedAnswers, update, answerProbe, answerTechnical, onBack, onResults,
+}: AssessmentDetailsProps) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const heading = useRef<HTMLHeadingElement>(null);
   const probes = activeProbes(profile, (id) => getAnswerScore(id, answers[id]));
   const questions = applicableTechnicalQuestions(profile);
+  const firstStep = {id: 'workflow', title: 'Business workflow', description: 'Tell us how the work happens today and where it gets stuck.'};
+  const steps = [
+    firstStep,
+    {id: 'capacity', title: 'Staff capacity, timing and budget', description: 'Tell us what time and budget your organisation could commit.'},
+    ...(probes.length > 0 ? [{id: 'evidence', title: 'Evidence checks', description: 'A few follow-up questions can clarify your answers.'}] : []),
+    {id: 'technical', title: 'Technical assessment', description: 'Add technical detail to help identify safeguards for current or planned AI use.'},
+  ];
+  const step = steps[stepIndex] ?? firstStep;
+  const isLastStep = stepIndex === steps.length - 1;
+
+  useEffect(() => {
+    heading.current?.focus({preventScroll: true});
+    heading.current?.closest('.assessment-shell')?.scrollIntoView({block: 'start', behavior: 'instant'});
+  }, [stepIndex]);
 
   return (
-    <div className="compass-context">
-      <details>
-        <summary>Business workflow <small>Optional</small></summary>
-        <div className="profile-form">
-          {contextFields.map((field) => <OptionalField key={field.id} field={field} value={profile[field.id]} update={update} />)}
+    <section className="assessment-panel compass-context" aria-labelledby="optional-context-title">
+      <header className="panel-header">
+        <p className="eyebrow">Optional details · Step {stepIndex + 1} of {steps.length}</p>
+        <h2 id="optional-context-title" ref={heading} tabIndex={-1}>{step.title}</h2>
+        <p>{step.description}</p>
+      </header>
+
+      {(step.id === 'workflow' || step.id === 'capacity') && (
+        <div className="profile-form compass-field-grid">
+          {(step.id === 'workflow' ? contextFields : constraintFields).map((field) => (
+            <OptionalField key={field.id} field={field} value={profile[field.id]} update={update} />
+          ))}
+          {step.id === 'capacity' && (
+            <p className="inline-note">Separate one-off and monthly amounts. Enter zero for no external cash. Budget does not change readiness.</p>
+          )}
         </div>
-      </details>
-      <details>
-        <summary>Staff capacity, timing and budget <small>Optional</small></summary>
-        <div className="profile-form">
-          {constraintFields.map((field) => <OptionalField key={field.id} field={field} value={profile[field.id]} update={update} />)}
-          <p className="inline-note">Separate one-off and monthly amounts. Enter zero for no external cash. Budget does not change readiness.</p>
-        </div>
-      </details>
-      {probes.length > 0 && (
-        <details open>
-          <summary>Evidence checks <small>Optional</small></summary>
-          <div className="profile-form">
-            <p className="inline-note">These questions clarify your answers and any relevant safety checks.</p>
-            {probes.map(({id, prompt, choices}) => (
-              <label key={id}>
-                <span>{prompt}</span>
-                {choices ? (
-                  <select value={probeAnswers[id] ?? ''} onChange={(event) => answerProbe(id, event.target.value)}>
-                    <option value="">Skip</option>
-                    {choices.map((choice) => <option key={choice}>{choice}</option>)}
-                  </select>
-                ) : (
-                  <textarea rows={2} maxLength={140} value={probeAnswers[id] ?? ''} onChange={(event) => answerProbe(id, event.target.value)} />
-                )}
-              </label>
-            ))}
-          </div>
-        </details>
       )}
-      <details>
-        <summary>Technical assessment <small>Optional</small></summary>
+
+      {step.id === 'evidence' && (
+        <div className="profile-form">
+          {probes.map(({id, prompt, choices}) => (
+            <label key={id}>
+              <span>{prompt}</span>
+              {choices ? (
+                <select value={probeAnswers[id] ?? ''} onChange={(event) => answerProbe(id, event.target.value)}>
+                  <option value="">Skip</option>
+                  {choices.map((choice) => <option key={choice}>{choice}</option>)}
+                </select>
+              ) : (
+                <textarea rows={2} maxLength={140} value={probeAnswers[id] ?? ''} onChange={(event) => answerProbe(id, event.target.value)} />
+              )}
+            </label>
+          ))}
+        </div>
+      )}
+
+      {step.id === 'technical' && (
         <div className="profile-form">
           <label className="compass-checkbox">
             <input type="checkbox" checked={profile.extended_assessment === true}
               onChange={(event) => update('extended_assessment', event.target.checked)} />
             Include technical questions in my assessment
           </label>
-          <p className="inline-note">Questions adapt to your current or planned AI use. The answers add diagnostic findings and leave the readiness score unchanged.</p>
+          <p className="inline-note">These answers help identify technical issues and leave the readiness score unchanged.</p>
           {questions.map((question) => (
             <label key={question.id}>
               <span>{question.prompt}</span>
@@ -169,7 +192,22 @@ export default function AssessmentDetails({profile, answers, probeAnswers, exten
             </label>
           ))}
         </div>
-      </details>
-    </div>
+      )}
+
+      <div className="button-row">
+        <button type="button" className="button-secondary"
+          onClick={stepIndex === 0 ? onBack : () => setStepIndex((current) => current - 1)}>
+          {stepIndex === 0 ? 'Back to review' : 'Previous section'}
+        </button>
+        <button type="button" className={isLastStep ? 'button-primary' : 'button-secondary'} onClick={onResults}>
+          See readiness snapshot
+        </button>
+        {!isLastStep && (
+          <button type="button" className="button-primary" onClick={() => setStepIndex((current) => current + 1)}>
+            Next section
+          </button>
+        )}
+      </div>
+    </section>
   );
 }
