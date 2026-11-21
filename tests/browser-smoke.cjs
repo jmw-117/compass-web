@@ -254,9 +254,12 @@ async function run() {
     assert.equal(await js("document.querySelector('.report-score-value').textContent.includes('out of 100')"),true);
     assert.equal(await js(`(()=>{
       const metadata=document.querySelector('.report-metadata');
-      return metadata.closest('details').querySelector('summary').textContent.includes('Provenance')
-        && metadata.getBoundingClientRect().height===0;
+      const appendix=metadata.closest('details');
+      return !appendix.open && appendix.querySelector('summary').textContent.includes('Provenance');
     })()`),true);
+    await click('#report-appendix-answers-and-provenance-title');
+    await until(()=>js("document.querySelector('.report-metadata').closest('details').open && document.querySelector('.report-metadata code').innerText.startsWith('SELF-')"),'Opening the appendix did not show the assessment reference');
+    await click('#report-appendix-answers-and-provenance-title');
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
     await js(`window.open=(url)=>{window.testShareDestination=url;}; true`);
     await click('[aria-controls="compass-share-preview"]');
@@ -276,6 +279,10 @@ async function run() {
     assert.equal(bytes.subarray(0,5).toString(),'%PDF-');
     assert.ok(bytes.length>3000);
     assert.ok(bytes.includes(Buffer.from('%%EOF')));
+    const {PDFDocument}=await import('pdf-lib');
+    const downloadedReport=await PDFDocument.load(bytes);
+    assert.equal(downloadedReport.getTitle(),'Silverspark Compass Assessment Report');
+    assert.ok(downloadedReport.getPageCount()>1,'Expected a paginated report');
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);
     console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, direct results, optional step navigation, responsive field pairs and checkboxes, report hierarchy, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and direct PDF download ('+bytes.length+' bytes). No external requests.');
