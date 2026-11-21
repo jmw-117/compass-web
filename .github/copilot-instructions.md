@@ -1,1 +1,1 @@
-Follow the root AGENTS.md and versioned domain contracts. Work through one continuous build. Use commit, CI and deployment evidence for progress. Do not create pull requests, numbered handoffs or stage reviews.
+Follow the root AGENTS.md and versioned domain contracts. Work through one continuous build. Use commit, CI and deployment evidence for progress. Follow the standing authorization in AGENTS.md to open and merge verified pull requests, then verify the live Pages release.

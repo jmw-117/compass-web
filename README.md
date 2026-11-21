@@ -4,7 +4,7 @@ Silverspark Compass is a digital discovery experience designed to help business 
 
 ## Development
 
-Use one continuous build. Track completion against the [100-point scale](docs/BUILD_STATUS.md) using CI and deployment evidence.
+Codex opens and merges the release pull request after required checks pass, then verifies the deployed GitHub Pages site. Track completion against the [100-point scale](docs/BUILD_STATUS.md) using CI and deployment evidence.
 
 ## Status
 
