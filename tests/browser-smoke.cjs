@@ -17,7 +17,7 @@ async function until(action,message,timeout=8500) {
 }
 
 async function run(reduceMotion = false) {
-  const basePath = process.env.COMPASS_BASE_PATH || '/silverspark-compass/';
+  const basePath = process.env.COMPASS_BASE_PATH || '/compass-web/';
   const externalUrl = process.env.COMPASS_SMOKE_URL;
   const app = new URL(externalUrl || 'http://127.0.0.1:4187' + basePath);
   const preview = externalUrl ? null : spawn(process.execPath,
@@ -159,7 +159,13 @@ async function run(reduceMotion = false) {
     assert.equal(await js("document.querySelector('.panel-header').innerText.includes('1 of the first five answers needs confirmation')"),true);
     await click('.assessment-panel .button-row .button-primary');
     for(let i=5;i<questions.length;i++) await answer(i);
-    await until(()=>js("document.querySelectorAll('.safety-context-form select').length===5"),'Safety context form missing');
+    for (const [index,value] of ['team_pilot','restricted','yes','yes','yes'].entries()) {
+      await until(()=>js("document.querySelector('.question-panel .eyebrow')?.textContent.includes("+JSON.stringify((index+1)+' of 5')+")"),'Safety phase did not advance');
+      assert.equal(await js("document.querySelector('.question-panel .button-primary').disabled"),true);
+      await click('.question-panel input[value="'+value+'"]');
+      await click('.question-panel .button-primary');
+    }
+    await until(()=>js("document.activeElement.id==='review-title'"),'Safety phase did not open review');
     assert.equal(await js("document.querySelector('[aria-controls=report-module-panel]')===null"),true);
     assert.equal(await js("document.querySelector('.compass-field-grid')===null"),true);
     await checkTextContrast('.answer-review summary','.assessment-panel');
@@ -171,8 +177,7 @@ async function run(reduceMotion = false) {
     await click('.question-panel .button-primary');
     await until(()=>js("document.activeElement.id==='review-title'"),'Edited answer did not return to review');
     assert.equal(await js("document.querySelector('.answer-review li:nth-child(6) p').textContent"),questions[5].options[3].label);
-    assert.equal(await js("document.querySelector('.assessment-panel .button-row .button-primary').disabled"),true);
-    await js(`(()=>{const values=['team_pilot','restricted','yes','yes','yes']; Array.from(document.querySelectorAll('.safety-context-form select')).forEach((select,i)=>{select.value=values[i]; select.dispatchEvent(new Event('change',{bubbles:true}));}); return true;})()`);
+    assert.equal(await js("document.querySelector('.assessment-panel .button-row .button-primary').disabled"),false);
     const pressButton=text=>until(()=>js(`(()=>{
       const button=[...document.querySelectorAll('.assessment-panel button')]
         .find(item=>item.textContent.trim()===${JSON.stringify(text)});
@@ -299,7 +304,7 @@ async function run(reduceMotion = false) {
     await call('Page.setDownloadBehavior',{behavior:'allow',downloadPath:profile});
     await pressButton('Export Report');
     const bytes=await until(async()=>{
-      const filename=(await fs.readdir(profile)).find(name=>/^Silverspark-Compass-SELF-.+\.pdf$/.test(name));
+      const filename=(await fs.readdir(profile)).find(name=>/^Silverspark_Compass_AI_Readiness_Report_\d{4}-\d{2}-\d{2}\.pdf$/.test(name));
       return filename && await fs.readFile(path.join(profile,filename));
     },'Export Report did not download a PDF',20000);
     assert.equal(bytes.subarray(0,5).toString(),'%PDF-');
@@ -307,6 +312,11 @@ async function run(reduceMotion = false) {
     assert.ok(bytes.includes(Buffer.from('%%EOF')));
     const {PDFDocument}=await import('pdf-lib');
     const downloadedReport=await PDFDocument.load(bytes);
+    assert.match(downloadedReport.getSubject(), /SELF-/);
+    if(process.env.COMPASS_PDF_PROOF) {
+      await fs.mkdir(process.env.COMPASS_PDF_PROOF,{recursive:true});
+      await fs.writeFile(path.join(process.env.COMPASS_PDF_PROOF,'synthetic-report.pdf'),bytes);
+    }
     const {PDFName}=await import('pdf-lib');
     for(const page of downloadedReport.getPages()){
       const resources=page.node.Resources();
@@ -330,6 +340,7 @@ async function run(reduceMotion = false) {
     assert.equal(await previewJs("document.querySelectorAll('.traffic-light__bulb--amber[data-active]').length"),1);
     assert.equal(await previewJs("document.querySelector('.report-next-step').innerText.includes('Recommended next step')"),true);
     assert.equal(await previewJs("document.querySelector('.report-safety').innerText.includes('specialist review')"),true);
+    assert.equal(await previewJs("document.querySelector('.decision-summary').innerText.includes('Hold')"),true);
     assert.equal(await previewJs("document.querySelector('.report-score-value').textContent.includes('out of 100')"),true);
     assert.equal(await previewJs(`(()=>{
       const metadata=document.querySelector('.report-metadata');

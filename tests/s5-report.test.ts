@@ -12,12 +12,12 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(report, /Assessment Report/);
   assert.match(report, /Executive Summary/);
   assert.match(report, /Industry \/ Sector:/);
-  assert.match(report, /Primary Path/);
+  assert.doesNotMatch(report, /Path reference:|Cost class:|Consultant Review Template|Next 30, 60 And 90 Days/);
   assert.match(report, /reportGuidance\.primaryPathLabel/);
   assert.match(report, /catalogActions\.get\(id\)/);
   assert.match(report, /getQuestionLabel\(questionId\)/);
   assert.match(report, /getGateLabel\(gate\.id\)/);
-  assert.match(report, /getSafetyChecksMessage\(readiness\)/);
+  assert.match(report, /DecisionSummary result=\{readiness\}/);
   assert.doesNotMatch(report, /No safety checks triggered/);
   for (const contextField of [
     'current_ai_use',
@@ -41,7 +41,7 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(report, /new Set\(\['executive-summary'\]\)/);
   assert.match(report, /open=\{expanded\}/);
   assert.match(styles, /\.report-section\s*>\s*\.report-section-content\s*\{\s*display:\s*block !important/);
-  assert.match(report, /A Practical Recommendation/);
+  assert.match(report, /className="first-action"/);
   assert.match(report, /reportGuidance\.guidance/);
   assert.match(report, /reportGuidance\.scoreNote/);
   assert.match(app, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
@@ -55,14 +55,9 @@ test('S5 builds a report contract with the mandatory report sections and volunta
     'Seven Dimension Results',
     'Uncertainty And Coverage',
     'Positive Capabilities',
-    'Gaps And Evidence',
-    'Critical Safety Gates',
     'Priority Actions',
     'Budget And Capacity Fit',
-    'Consultant Review Template',
     'Appendix Answers And Provenance',
-    'Client Consultation',
-    'Next 30, 60 And 90 Days',
   ]) {
     assert.ok(report.includes(title), `Missing readable report section title: ${title}`);
   }

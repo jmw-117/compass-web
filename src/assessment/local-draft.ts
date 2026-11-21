@@ -1,4 +1,4 @@
-const DRAFT_EXPIRY = 30 * 24 * 60 * 60 * 1000;
+import {decodeDraft, draftLifetime} from './draft-format.ts';
 
 async function openDraftStore(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -30,11 +30,29 @@ export async function saveDeviceDraft(draft: string) {
 }
 
 export async function restoreDeviceDraft(): Promise<string | undefined> {
-  const value = await draftOperation('readonly', (store) => store.get('current')) as {draft?: unknown; savedAt?: unknown} | undefined;
-  if (value && typeof value.draft === 'string' && typeof value.savedAt === 'number') {
-    if (Date.now() - value.savedAt < DRAFT_EXPIRY) return value.draft;
-    await clearDeviceDraft();
-  }
+  const database = await openDraftStore();
+  try {
+    return await new Promise<string | undefined>((resolve,reject) => {
+      // Read and remove invalid data in one transaction so another tab's newer save survives.
+      const tx = database.transaction('local-drafts','readwrite');
+      const store = tx.objectStore('local-drafts');
+      const request = store.get('current');
+      let draft: string | undefined;
+      request.onsuccess = () => {
+        const value = request.result;
+        if (!value) return;
+        try {
+          const age = Date.now() - value.savedAt;
+          if (!Number.isFinite(age) || age < 0 || age >= draftLifetime || typeof value.draft !== 'string') throw Error('Invalid draft');
+          decodeDraft(value.draft);
+          draft = value.draft;
+        } catch {store.delete('current');}
+      };
+      tx.oncomplete = () => resolve(draft);
+      tx.onabort = () => reject(tx.error);
+      tx.onerror = () => reject(tx.error);
+    });
+  } finally {database.close();}
 }
 
 export async function clearDeviceDraft() {

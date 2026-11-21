@@ -1,3 +1,4 @@
+import {discoverOpportunity} from './opportunity.ts';
 import bank from '../../docs/domain/question_bank.json' with {type: 'json'};
 import rules from '../../docs/domain/rules.json' with {type: 'json'};
 import {matches} from './predicates.ts';
@@ -27,6 +28,7 @@ export type ReadinessResult = {
   deliveryCapacity: 'Available' | 'Unconfirmed' | 'Unavailable';
   financialEvidence: 'Supported by available evidence' | 'Unverified' | 'Unsupported';
   concerns: string[];
+  opportunity: ReturnType<typeof discoverOpportunity>;
   safetyContextConfirmed: boolean;
   technicalFindings: ReturnType<typeof technicalFindings>;
   specialistReview: boolean;
@@ -229,6 +231,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
       coverageUnits: Math.round(coverageUnits),
     },
     useCaseGuidance, deliveryCapacity, financialEvidence, concerns,
+    opportunity: discoverOpportunity(profile,useCaseGuidance === 'Eligible for controlled pilot planning'),
     safetyContextConfirmed,
     technicalFindings: findings,
     specialistReview,

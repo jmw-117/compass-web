@@ -1,3 +1,4 @@
+import {nairobiDate} from './report-date';
 import {PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage} from 'pdf-lib';
 
 import logoData from '../assets/silverspark-mark-print.png?inline';
@@ -7,7 +8,7 @@ import type {ReadinessResult} from '../domain/evaluate';
 const white = rgb(1, 1, 1);
 const pale = rgb(0.95, 0.96, 0.97);
 const silver = rgb(0.72, 0.77, 0.82);
-const accent = rgb(0.60, 0.46, 0.23);
+const accent = silver;
 const lampColors = {
   red: rgb(1, 0.51, 0.46),
   amber: rgb(1, 0.80, 0.33),
@@ -83,7 +84,7 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   const pdf = await PDFDocument.create();
   pdf.setTitle('Silverspark Compass Assessment Report');
   pdf.setAuthor('Silverspark Consulting');
-  pdf.setSubject('Self-reported AI readiness assessment');
+  pdf.setSubject('Self-reported AI readiness assessment ' + assessmentId);
   const [regular, bold] = await Promise.all([
     pdf.embedFont(StandardFonts.Helvetica),
     pdf.embedFont(StandardFonts.HelveticaBold),
@@ -195,8 +196,14 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   cursor -= 10;
   iconHeading('Recommended next step', 'arrow');
   drawBlock(readText(summary?.querySelector('.report-next-step h5') ?? null), bold, 17, true);
-  drawBlock(readText(summary?.querySelector('.report-next-step p:last-child') ?? null), regular, 11);
-  const firstAction = report.querySelector('#report-practical-recommendation-title')?.closest('details')?.querySelector('.report-section-content p:nth-child(3)');
+  drawBlock(readText(summary?.querySelector('.report-next-step p:nth-child(3)') ?? null), regular, 11);
+  sectionHeading('Use-case guidance and feasibility');
+  for (const item of report.querySelectorAll('.decision-summary p')) {
+    const label = readText(item.querySelector('strong'));
+    drawBlock(label + ': ' + readText(item).slice(label.length).trim(), regular, 11);
+  }
+  for (const item of report.querySelectorAll('.decision-summary li')) drawBlock(readText(item), regular, 11);
+  const firstAction = report.querySelector('.first-action');
   if (firstAction) drawBlock(readText(firstAction), regular, 11);
   cursor -= 10;
   iconHeading('Safety checks', 'safety');
@@ -205,12 +212,6 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   page = addPage();
   cursor = pageHeight - 102;
   const chart = report.querySelector('#report-seven-dimension-results-title')?.closest('details');
-  sectionHeading('Use-case guidance and feasibility');
-  for (const item of report.querySelectorAll('.decision-summary p')) {
-    const label = readText(item.querySelector('strong'));
-    drawBlock(label + ': ' + readText(item).slice(label.length).trim(), regular, 11);
-  }
-  for (const item of report.querySelectorAll('.decision-summary li')) drawBlock(readText(item), regular, 11);
   sectionHeading('Seven dimensions of readiness');
   drawBlock('The dark bar shows the confirmed score. A lighter extension shows how far the score could rise when unknown answers are confirmed.', regular, 10.5);
   for (const row of chart?.querySelectorAll<HTMLElement>('[data-dimension]') ?? []) {
@@ -233,6 +234,15 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   for (const section of report.querySelectorAll('.report-section')) {
     if (section === chart || section.querySelector('.report-overview')) continue;
     sectionHeading(readText(section.querySelector('summary h4')));
+    if (section.querySelector('#report-three-priority-actions-title')) {
+      for (const action of section.querySelectorAll('ol > li')) {
+        const paragraphs = [readText(action.querySelector('strong')), ...Array.from(action.querySelectorAll('p'), p => readText(p))].filter(Boolean);
+        const height = paragraphs.reduce((sum,p) => sum + wrap(encode(p),contentWidth,regular,11).length * 16 + 8,0);
+        ensureSpace(Math.min(height,pageHeight-156));
+        paragraphs.forEach((p,i) => drawBlock(p,i===0?bold:regular,11,i===0));
+      }
+      continue;
+    }
     for (const element of section.querySelectorAll('.report-section-content :is(' + reportBlockSelector + ')')) {
       const text = blockText(element);
       const emphasize = element.matches('h3, h5, dt');
@@ -243,7 +253,7 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   const pages = pdf.getPages();
   pages.forEach((item, index) => {
     item.drawLine({start: {x: margin, y: 39}, end: {x: pageWidth - margin, y: 39}, thickness: 0.8, color: lineColor});
-    item.drawText('Self-reported assessment', {x: margin, y: 24, size: 8.5, font: regular, color: muted});
+    item.drawText('Silverspark Consulting   |   sspark.net   |   +254 762 057 288', {x: margin, y: 24, size: 8.5, font: regular, color: muted});
     const counter = `${index + 1} / ${pages.length}`;
     item.drawText(counter, {x: pageWidth - margin - regular.widthOfTextAtSize(counter, 8.5), y: 24, size: 8.5, font: regular, color: muted});
   });
@@ -252,7 +262,7 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   const url = URL.createObjectURL(new Blob([bytes], {type: 'application/pdf'}));
   const link = document.createElement('a');
   link.href = url;
-  link.download = `Silverspark-Compass-${assessmentId}.pdf`;
+  link.download = `Silverspark_Compass_AI_Readiness_Report_${nairobiDate()}.pdf`;
   document.body.append(link);
   link.click();
   link.remove();
