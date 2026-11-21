@@ -3,7 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const dir=path.join(root,'docs/domain');
-const filenames=['question_bank.json','technical_extension.json','action_catalog.json','decision_predicates.json','report_contract.json','rules.json','golden_cases.json','user_journeys.json','product_requirements.json','probes.json','profile_schema.json','VERSION_MANIFEST.json'];
+const filenames=['question_bank.json','technical_extension.json','action_catalog.json','decision_predicates.json','report_contract.json','rules.json','golden_cases.json','user_journeys.json','product_requirements.json','probes.json','profile_schema.json','prospective_client_discovery.json','VERSION_MANIFEST.json'];
 const documents={};
 for(const name of filenames)documents[name]=JSON.parse(await readFile(path.join(dir,name),'utf8'));
 const qb=documents['question_bank.json'];
@@ -27,7 +27,7 @@ const containsBudgetReference=value=>typeof value==='string'?/budget/i.test(valu
 if(documents['rules.json'].gates.some(g=>g.id.includes('BUDGET')||containsBudgetReference(documents['decision_predicates.json'].predicates[g.predicate_ast_id])))throw Error('Budget must not influence a formal gate.');
 if(!documents['rules.json'].budget.effect_scope?.includes('never changes readiness scores')||!documents['rules.json'].budget.effect_scope.includes('formal gates'))throw Error('Budget non-effect policy is missing.');
 const profile=documents['profile_schema.json'];
-const profileIds=new Set([...profile.early_fields,...profile.later_fields].map(f=>f.id));
+const profileIds=new Set([...profile.early_fields,...profile.later_fields,...documents['prospective_client_discovery.json'].fields].map(f=>f.id));
 const knownMetrics=new Set(['unknownCount','coverageUnits','pilotBlockingGateCount']);
 for(const gate of documents['rules.json'].gates)if(!predicateIds.has(gate.predicate_ast_id))throw Error('Missing gate predicate: '+gate.predicate_ast_id);
 for(const gate of documents['rules.json'].gate_precedence)if(!gateIds.has(gate))throw Error('Unknown gate in precedence: '+gate);

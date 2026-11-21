@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "status": "Proposed, needs human validation",
   "grammar": {
     "all": "all of the expressions",
@@ -19,14 +19,18 @@
     "metrics.*",
     "gate.*"
   ],
-  "fallback": "P0 if no path matches",
+  "fallback": "P0 for unknown core evidence, otherwise identify the next foundation or pilot-feasibility question.",
   "predicates": {
     "G-URGENT-REGULATED": {
       "all": [
         {
-          "eq": [
+          "in": [
             "profile.high_impact_ai_workflow",
-            "yes"
+            [
+              "yes",
+              "decides",
+              "influences"
+            ]
           ]
         },
         {
@@ -35,6 +39,7 @@
               "in": [
                 "profile.current_ai_use",
                 [
+                  "personal",
                   "team_pilot",
                   "operational"
                 ]
@@ -53,65 +58,26 @@
     "G-GOV-DATA": {
       "any": [
         {
-          "all": [
-            {
-              "eq": [
-                "probe.PR-GOV-SHARE",
-                "Yes"
-              ]
-            },
-            {
-              "in": [
-                "profile.data_category",
-                [
-                  "personal",
-                  "restricted"
-                ]
-              ]
-            }
+          "eq": [
+            "probe.PR-GOV-SHARE",
+            "Yes"
           ]
         },
         {
-          "all": [
-            {
-              "lte": [
-                "answer.GOV-01",
-                1
-              ]
-            },
-            {
-              "eq": [
-                "profile.data_category",
-                "restricted"
-              ]
-            },
-            {
-              "eq": [
-                "profile.planned_use_real_data",
-                "yes"
-              ]
-            }
+          "eq": [
+            "probe.PR-GOV-PLANNED",
+            "No"
           ]
         }
       ]
     },
     "G-DATA-UNKNOWN": {
-      "any": [
+      "all": [
         {
-          "all": [
-            {
-              "unknown": "answer.DAT-01"
-            },
-            {
-              "unknown": "answer.DAT-02"
-            }
-          ]
+          "unknown": "answer.DAT-01"
         },
         {
-          "eq": [
-            "answer.DAT-01",
-            0
-          ]
+          "unknown": "answer.DAT-02"
         }
       ]
     },
@@ -119,57 +85,46 @@
       "any": [
         {
           "eq": [
-            "answer.STR-02",
-            0
+            "probe.PR-STR-OWNER",
+            "No one yet"
           ]
         },
         {
           "all": [
             {
-              "in": [
-                "probe.PR-STR-OWNER",
-                [
-                  "No one yet",
-                  "Not sure"
-                ]
+              "eq": [
+                "answer.STR-02",
+                0
               ]
             },
             {
-              "lte": [
-                "answer.STR-02",
-                1
-              ]
+              "not": {
+                "eq": [
+                  "profile.org_type",
+                  "sole_proprietor"
+                ]
+              }
+            },
+            {
+              "unknown": "probe.PR-STR-OWNER"
             }
           ]
         }
       ]
     },
     "G-BASELINE-MISSING": {
-      "all": [
+      "any": [
         {
-          "lte": [
-            "answer.MET-01",
-            1
+          "eq": [
+            "probe.PR-MET-START",
+            "No"
           ]
         },
         {
-          "in": [
-            "profile.primary_goal",
-            [
-              "efficiency",
-              "growth",
-              "service",
-              "risk"
-            ]
+          "eq": [
+            "profile.baseline_known",
+            "no"
           ]
-        },
-        {
-          "not": {
-            "eq": [
-              "probe.PR-MET-START",
-              "Yes"
-            ]
-          }
         }
       ]
     },
@@ -318,6 +273,22 @@
           "eq": [
             "metrics.pilotBlockingGateCount",
             0
+          ]
+        }
+      ]
+    },
+    "G-DATA-POOR": {
+      "any": [
+        {
+          "eq": [
+            "answer.DAT-01",
+            0
+          ]
+        },
+        {
+          "eq": [
+            "probe.PR-DAT-ERROR",
+            "Yes"
           ]
         }
       ]

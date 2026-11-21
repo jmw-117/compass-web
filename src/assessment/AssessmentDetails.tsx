@@ -121,7 +121,7 @@ export default function AssessmentDetails({
 }: AssessmentDetailsProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
-  const probes = activeProbes(profile, (id) => getAnswerScore(id, answers[id]));
+  const probes = activeProbes(profile, (id) => getAnswerScore(id, answers[id])).filter(q => !['PR-GOV-SHARE','PR-GOV-PLANNED','PR-HUMAN-REVIEW'].includes(q.id));
   const questions = applicableTechnicalQuestions(profile);
   const firstStep = {id: 'workflow', title: 'Business workflow', description: 'Tell us how the work happens today and where it gets stuck.'};
   const steps = [

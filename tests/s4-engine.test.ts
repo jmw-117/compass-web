@@ -150,11 +150,13 @@ test('F05 uses the unknown path and keeps the total interval open', () => {
   assert.ok(result.flags.length >= 14);
 });
 
-test('the mapped business goal activates the missing-baseline gate', () => {
+test('an explicit missing baseline activates the financial gate', () => {
   const result = evaluate({
     ...fixtureF01,
+    probeAnswers: {'PR-MET-START':'No'},
     profile: {
       ...fixtureF01.profile,
+      baseline_known: 'no',
       businessGoal: 'efficiency',
       primary_goal: 'efficiency',
     },
@@ -249,6 +251,7 @@ test('safety context completeness distinguishes confirmed profile values from un
 test('report guidance follows the score interval and evaluator-selected safety path', () => {
   const safetyResult = evaluate({
     ...fixtureF01,
+    probeAnswers: {'PR-GOV-SHARE': 'Yes'},
     coreAnswers: {
       ...fixtureF01.coreAnswers,
       'GOV-01': 'GOV-01-L1',
@@ -435,7 +438,7 @@ test('inactive evidence cannot trigger gates and the technical annex leaves core
   };
   const active = evaluate(input);
   assert.ok(active.formalGates.some(({id}) => id === 'GOV-DATA'));
-  const edited = evaluate({...input, coreAnswers: {...item.answers, 'GOV-01': 'GOV-01-L2'}});
+  const edited = evaluate({...input, profile: {...item.profile, current_ai_use: 'none', planned_use_real_data: 'no', data_category: 'routine'}});
   assert.ok(!edited.formalGates.some(({id}) => id === 'GOV-DATA'));
   assert.ok(!edited.probeEvidence.some(({id}) => id === 'PR-GOV-SHARE'));
 

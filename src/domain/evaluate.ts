@@ -23,6 +23,10 @@ export type ReadinessResult = {
     upperEighths: number;
     coverageUnits: number;
   };
+  useCaseGuidance: 'Hold' | 'Review required' | 'Eligible for controlled pilot planning' | 'Not assessed';
+  deliveryCapacity: 'Available' | 'Unconfirmed' | 'Unavailable';
+  financialEvidence: 'Supported by available evidence' | 'Unverified' | 'Unsupported';
+  concerns: string[];
   safetyContextConfirmed: boolean;
   technicalFindings: ReturnType<typeof technicalFindings>;
   specialistReview: boolean;
@@ -46,7 +50,7 @@ const DIMENSION_ORDER = bank.dimensions.map(d => d.id as DimensionId);
 const SAFETY_CONTEXT_VALUES: Record<string, ReadonlySet<string>> = {
   current_ai_use: new Set(['none', 'personal', 'team_pilot', 'operational']),
   data_category: new Set(['routine', 'personal', 'restricted']),
-  high_impact_ai_workflow: new Set(['yes', 'no']),
+  high_impact_ai_workflow: new Set(['yes', 'decides', 'influences', 'assists', 'no']),
   planned_ai_use: new Set(['yes', 'no']),
   planned_use_real_data: new Set(['yes', 'no']),
 };
@@ -135,7 +139,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   const facts = new Map<string, unknown>();
   Object.entries(profile).forEach(([key, value]) => facts.set('profile.' + key, value));
   for (const id of QUESTION_ID_ORDER) facts.set('answer.' + id, getAnswerScore(id, coreAnswers[id]));
-  probeAnswers.forEach((value, key) => facts.set('probe.' + key, value));
+  probeAnswers.forEach((value, key) => facts.set('probe.' + key, value || null));
   for (const id of DIMENSION_ORDER) {
     facts.set('dimension.' + id + '.lower', dimensions[id].lower);
     facts.set('dimension.' + id + '.upper', dimensions[id].upper);
@@ -148,9 +152,10 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
     facts.set('gate.' + gate.id, triggered);
     return triggered ? [{id: gate.id, severity: gate.severity, triggeringIds: [...references]}] : [];
   });
-  facts.set('metrics.pilotBlockingGateCount', formalGates.filter(g => g.severity.startsWith('BLOCK_')).length);
+  facts.set('metrics.pilotBlockingGateCount', formalGates.filter(g => ['BLOCK_PILOT','BLOCK_UNCONTROLLED_AI'].includes(g.severity)).length);
   const enabledPaths = rules.path_priority.filter(path => matches('P-' + path, facts));
-  const primaryPath = enabledPaths[0] ?? 'P0';
+  const strongFoundations = enabledPaths.length === 0 && unknownCount === 0 && lowerEighths >= rules.scoring.band_thresholds_eighths[2]!;
+  const primaryPath = enabledPaths[0] ?? (strongFoundations ? 'FEASIBILITY' : unknownCount ? 'P0' : 'P1');
   const secondaryPaths = enabledPaths.slice(1, 3);
 
   const flags: ReadinessResult['flags'] = [];
@@ -176,10 +181,40 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   else if (budgetBand === 'limited' || budgetBand === 'moderate' || budgetBand === 'flexible') costFit = 'possible_not_priced';
   else costFit = 'unknown';
 
-  const pilotReviewRequired = !safetyContextConfirmed || specialistReview || findings.some(({flag}) =>
-    flag === 'flag.no_human_fallback' || flag === 'flag.no_ai_use_controls' || flag === 'flag.no_safety_tests',
-  );
-  const actionPath = primaryPath === 'P5' && pilotReviewRequired ? 'P0' : primaryPath;
+  const concerns: string[] = [];
+  const hasGate = (id: string) => facts.get('gate.' + id) === true;
+  const current = profile.current_ai_use;
+  const noUse = current === 'none' && profile.planned_ai_use === 'no';
+  const hasFlag = (flag: string) => findings.some(f => f.flag === 'flag.' + flag);
+  const scoreOf = (id: string) => getAnswerScore(id, coreAnswers[id]) ?? -1;
+  if (probeAnswers.get('PR-GOV-PLANNED') === 'No') concerns.push('Restricted data is planned without adequate safeguards. Hold that use until protections are in place.');
+  if (probeAnswers.has('PR-GOV-PLANNED') && !['Yes','No'].includes(probeAnswers.get('PR-GOV-PLANNED') ?? '')) concerns.push('Confirm the protections for planned restricted data.');
+  if (probeAnswers.get('PR-GOV-SHARE') === 'Yes') concerns.push('Real personal information was entered without safeguards. Stop that use and review the affected information.');
+  if (probeAnswers.get('PR-GOV-SHARE') === 'Yes' && scoreOf('GOV-01') >= 3) concerns.push('The reported data disclosure conflicts with your strong governance answer. Check the last tool use against your rules.');
+  if (hasGate('URGENT-REGULATED') || hasFlag('high_impact_review')) concerns.push('AI could affect a significant decision. Obtain specialist review before any pilot.');
+  if (!safetyContextConfirmed) concerns.push('Confirm the unanswered or uncertain safety context.');
+  const sharingUnresolved = probeAnswers.has('PR-GOV-SHARE') && !['Yes','No'].includes(probeAnswers.get('PR-GOV-SHARE') ?? '');
+  if (sharingUnresolved) concerns.push('Confirm whether real personal information entered an AI tool without safeguards.');
+  const ownerUnclear = probeAnswers.has('PR-STR-OWNER') && !['Owner or founder','A named manager'].includes(probeAnswers.get('PR-STR-OWNER') ?? '');
+  if (ownerUnclear) concerns.push('Identify who is accountable for the change. A sole proprietor can take this role.');
+  if (probeAnswers.has('PR-HUMAN-REVIEW') && probeAnswers.get('PR-HUMAN-REVIEW') !== 'An accountable reviewer with authority') concerns.push('Confirm an accountable person independently checks the underlying evidence before deciding.');
+  if (hasFlag('no_human_fallback') || hasFlag('no_ai_use_controls') || hasFlag('no_safety_tests')) concerns.push('Your technical answers identify missing controls. Demonstrate an output check and a working human fallback.');
+  if (hasFlag('high_impact_review') && profile.high_impact_ai_workflow === 'no') concerns.push('Your technical answers describe consequential data while the use-case answer excludes significant decisions. Confirm the role of AI.');
+  if (hasFlag('sensitive_data_review') || hasFlag('data_classification_unknown')) concerns.push('Review the reported data classification and tool safeguards.');
+  if (hasGate('DATA-UNKNOWN') || hasGate('DATA-POOR')) concerns.push(hasGate('DATA-POOR') ? 'Check unreliable records against the source before using them in a pilot.' : 'Check a sample of the intended data to establish its quality.');
+  if (hasFlag('no_ops_owner')) concerns.push('Identify who monitors the tool and responds when it fails.');
+  if (noUse && ['decides','influences','yes','assists'].includes(String(profile.high_impact_ai_workflow))) concerns.push('Your answers describe a decision involving AI but no current or planned use. Clarify the workflow.');
+  if (scoreOf('STR-01') >= 3 && hasFlag('no_use_case')) concerns.push('Compare the stated goal with the technical finding that no use case has been identified.');
+  if (profile.value_stream === 'hire_to_retire' && hasFlag('high_impact_review') && profile.high_impact_ai_workflow === 'no') concerns.push('You described hiring and a consequential technical use while reporting no significant decision. Clarify whether AI ranks or screens candidates.');
+  const hold = hasGate('URGENT-REGULATED') || (hasFlag('high_impact_review') && profile.high_impact_ai_workflow !== 'no') || hasGate('GOV-DATA') || hasGate('OWN-NONE');
+  const useCaseGuidance: ReadinessResult['useCaseGuidance'] = hold ? 'Hold' : concerns.length ? 'Review required' : noUse ? 'Not assessed' : 'Eligible for controlled pilot planning';
+  const deliveryCapacity = profile.staff_capacity === 'none' ? 'Unavailable' : ['available','limited'].includes(String(profile.staff_capacity)) ? 'Available' : 'Unconfirmed';
+  const financialEvidence = hasGate('BASELINE-MISSING') || hasFlag('baseline_missing') ? 'Unsupported' :
+    profile.baseline_known === 'yes' && ['cost','revenue'].includes(String(profile.impact_measure)) ? 'Supported by available evidence' : 'Unverified';
+  if (scoreOf('MET-01') >= 3 && financialEvidence === 'Unsupported') concerns.push('Measurement is rated highly, but no baseline was identified for this workflow. Record its starting value before estimating benefit.');
+  if (scoreOf('STR-01') === 0 && profile.primary_goal && profile.primary_goal !== 'explore') concerns.push('You selected a goal but reported no agreed outcome. Name the workflow and the change you want to see.');
+  const pilotReviewRequired = useCaseGuidance !== 'Eligible for controlled pilot planning';
+  const actionPath = primaryPath === 'FEASIBILITY' || (primaryPath === 'P5' && pilotReviewRequired) ? 'P1' : primaryPath;
   const actionIds = recommendActions(actionPath, secondaryPaths, dimensions, profile,
     specialistReview, findings.flatMap(({actionIds}) => actionIds), pilotReviewRequired);
   const probeEvidence = probes.flatMap(({id, prompt}) => {
@@ -193,6 +228,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
       upperEighths: Math.round(upperEighths),
       coverageUnits: Math.round(coverageUnits),
     },
+    useCaseGuidance, deliveryCapacity, financialEvidence, concerns,
     safetyContextConfirmed,
     technicalFindings: findings,
     specialistReview,

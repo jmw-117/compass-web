@@ -1,3 +1,5 @@
+import {activeProbes} from './domain/diagnostics';
+import DecisionSummary from './assessment/DecisionSummary';
 import CompletionConfetti from './assessment/CompletionConfetti';
 import ActionIcon from './report/ActionIcon';
 import {lazy, Suspense, useEffect, useMemo, useRef, useState} from 'react';
@@ -91,10 +93,13 @@ const SAFETY_CONTEXT_QUESTIONS = [
   },
   {
     id: 'high_impact_ai_workflow',
-    label: 'Will AI help make decisions about healthcare, credit, hiring, access to important services, or a similarly high-impact matter?',
+    label: 'What part would AI play in deciding care, credit, hiring or access to an essential service?',
     options: [
-      {value: 'yes', label: 'Yes'},
-      {value: 'no', label: 'No'},
+      {value: 'decides', label: 'Make the decision, such as approving credit'},
+      {value: 'influences', label: 'Influence the decision, such as ranking applicants or triaging patients'},
+      {value: 'assists', label: 'Only draft or summarise for a person who checks the evidence and decides'},
+      {value: 'yes', label: 'Consequential use, role still to clarify'},
+      {value: 'no', label: 'No such decision is involved'},
       {value: 'unknown', label: 'Not sure'},
     ],
   },
@@ -301,6 +306,7 @@ export default function App() {
   const reportProfile = {
     ...context,
     ...profile,
+    organizationType: getProfileOptionLabel(ORGANISATION_OPTIONS, profile.organizationType),
     industry: getProfileOptionLabel(INDUSTRY_OPTIONS, profile.industry),
     businessGoal: getProfileOptionLabel(BUSINESS_GOAL_OPTIONS, profile.businessGoal),
     current_ai_use: getSafetyContextOptionLabel('current_ai_use', profile.current_ai_use),
@@ -671,6 +677,21 @@ export default function App() {
           ))}
         </fieldset>
 
+        <div className="profile-form safety-evidence">
+          {activeProbes({...context,...profile}, id => coreQuestions.find(q=>q.id===id)?.options.find(o=>o.id===answers[id])?.score ?? null)
+            .filter(q => ['PR-GOV-SHARE','PR-GOV-PLANNED','PR-HUMAN-REVIEW'].includes(q.id))
+            .map(q => <label key={q.id}>{q.prompt}
+              <select value={probeAnswers[q.id] ?? ''} onChange={event => setProbeAnswers({...probeAnswers,[q.id]:event.target.value})}>
+                <option value="">Skip for now</option>{q.choices?.map(choice => <option key={choice}>{choice}</option>)}
+              </select>
+            </label>)}
+        </div>
+        {readinessResult.primaryPath === 'FEASIBILITY' && readinessResult.useCaseGuidance === 'Eligible for controlled pilot planning' &&
+          <label className="profile-form">Can someone make time to plan a small pilot?
+            <select value={String(context.staff_capacity ?? '')} onChange={event => setContext({...context, staff_capacity:event.target.value})}>
+              <option value="">Choose or skip</option><option value="available">Yes</option><option value="limited">Some time</option><option value="none">No time now</option><option value="unknown">Not sure</option>
+            </select>
+          </label>}
         <div className="button-row wizard-decision">
           <button type="button" className="button-secondary nav-back" onClick={() => {
             setQuestionIndex(remainingQuestions.length - 1);
@@ -725,6 +746,7 @@ export default function App() {
         </div>
 
         <ReadinessSignal signal={reportGuidance.signal} />
+        <DecisionSummary result={readinessResult} />
 
         <aside className="pragmatic-recommendation" aria-labelledby="safety-results-title">
           <h3 id="safety-results-title">Safety and evidence checks</h3>

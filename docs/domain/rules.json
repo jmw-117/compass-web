@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "scoring": {
     "weight_source": "question_bank.json dimensions[].weight_pct",
     "core_indicators_per_dimension": 2,
@@ -69,6 +69,14 @@
       "primary_path": null,
       "reason": "No reliable business baseline is available.",
       "predicate_ast_id": "G-BASELINE-MISSING"
+    },
+    {
+      "id": "DATA-POOR",
+      "predicate_ast_id": "G-DATA-POOR",
+      "predicate": "See decision_predicates.json",
+      "severity": "VERIFY",
+      "primary_path": "P1",
+      "reason": "Reported errors can affect decisions. Check a sample against the source."
     }
   ],
   "gate_precedence": [
@@ -76,7 +84,8 @@
     "GOV-DATA",
     "DATA-UNKNOWN",
     "OWN-NONE",
-    "BASELINE-MISSING"
+    "BASELINE-MISSING",
+    "DATA-POOR"
   ],
   "path_priority": [
     "P6",
@@ -87,7 +96,7 @@
     "P3",
     "P5"
   ],
-  "path_selection": "If hard gate URGENT fires choose P6. Else if hard gate GOV-DATA fires choose P2. Else if P0 predicate true choose P0. Else choose first triggered of P1,P4,P3,P5. If none triggered, use P0 with verify remaining differences. Secondary paths at most two; report all gate reasons regardless of path.",
+  "path_selection": "Evaluate in path_priority order. Use a named foundation or feasibility next step when all core answers are known and no path matches.",
   "path_dimension_unknown_handling": "For maturity comparisons use max-possible dimension value to trigger deficiency only if it still meets the low threshold; do not trigger P1/P3 from a single unknown. Pilot eligibility requires known scores at every listed mandatory indicator.",
   "action_ranking": {
     "severity": 35,

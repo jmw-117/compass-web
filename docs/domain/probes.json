@@ -1,6 +1,59 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "rules": [
+    {
+      "id": "PR-HUMAN-REVIEW",
+      "when": {
+        "profile": "high_impact_ai_workflow",
+        "in": [
+          "yes",
+          "decides",
+          "influences",
+          "assists",
+          "unknown"
+        ]
+      },
+      "prompt": "If the output is wrong, who can check the original evidence and stop or reverse the decision?",
+      "choices": [
+        "An accountable reviewer with authority",
+        "A reviewer without authority to change it",
+        "Nobody",
+        "Not sure"
+      ],
+      "changes": [
+        "oversight_evidence"
+      ],
+      "does_not_score": true
+    },
+    {
+      "id": "PR-GOV-PLANNED",
+      "when": {
+        "all": [
+          {
+            "profile": "planned_ai_use",
+            "eq": "yes"
+          },
+          {
+            "profile": "planned_use_real_data",
+            "eq": "yes"
+          },
+          {
+            "profile": "data_category",
+            "eq": "restricted"
+          }
+        ]
+      },
+      "prompt": "Before restricted information enters the proposed tool, are access and disclosure safeguards in place?",
+      "choices": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "changes": [
+        "planned_data_risk"
+      ],
+      "does_not_score": true
+    },
     {
       "id": "PR-TEC-XFER",
       "when": {
@@ -55,18 +108,27 @@
     {
       "id": "PR-GOV-SHARE",
       "when": {
-        "all": [
+        "any": [
           {
-            "profile": "data_category",
+            "profile": "current_ai_use",
             "in": [
               "personal",
-              "restricted",
+              "team_pilot",
+              "operational",
               "unknown"
             ]
           },
           {
-            "q": "GOV-01",
-            "max_score": 1
+            "all": [
+              {
+                "profile": "planned_ai_use",
+                "eq": "yes"
+              },
+              {
+                "profile": "planned_use_real_data",
+                "eq": "yes"
+              }
+            ]
           }
         ]
       },
@@ -114,10 +176,6 @@
       "when": {
         "all": [
           {
-            "q": "MET-01",
-            "max_score": 1
-          },
-          {
             "profile": "primary_goal",
             "in": [
               "efficiency",
@@ -125,6 +183,10 @@
               "service",
               "risk"
             ]
+          },
+          {
+            "q": "MET-01",
+            "max_score": 1
           }
         ]
       },
@@ -142,21 +204,18 @@
     {
       "id": "PR-STR-OWNER",
       "when": {
-        "all": [
+        "any": [
           {
             "q": "STR-02",
             "max_score": 1
           },
           {
-            "profile": "timeline",
-            "in": [
-              "now",
-              "one_to_three_months"
-            ]
+            "q": "STR-02",
+            "unknown": true
           }
         ]
       },
-      "prompt": "Who could approve a small change during the next 90 days?",
+      "prompt": "Who takes responsibility for this change? If you run the business yourself, you can be the owner.",
       "choices": [
         "Owner or founder",
         "A named manager",
@@ -190,6 +249,6 @@
       "does_not_score": true
     }
   ],
-  "cap": 7,
+  "cap": 9,
   "edit_policy": "The engine recomputes all active probes from the complete current answers. Inactive answers are retained only locally, excluded from results, report and submission; changing an anchor back reactivates previous probe answer only if the same rule version and exact options still apply. Conflicts are shown as evidence needs, not silently rescored."
 }

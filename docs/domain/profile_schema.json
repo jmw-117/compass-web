@@ -76,10 +76,13 @@
       "id": "high_impact_ai_workflow",
       "values": [
         "yes",
+        "decides",
+        "influences",
+        "assists",
         "no",
         "unknown"
       ],
-      "question": "Will AI be used to help make decisions about healthcare, credit, hiring, eligibility for important services, or a similarly high-impact matter?"
+      "question": "What part would AI play in a decision about care, credit, hiring or eligibility?"
     },
     {
       "id": "planned_ai_use",
