@@ -29,6 +29,7 @@ jobs:
       - name: Verify contracts, app, and static build
         run: npm run verify
       - name: Browser and PDF smoke test
+        timeout-minutes: 3
         run: node tests/browser-smoke.cjs
       - name: Extended Python contract validation
         run: |
@@ -62,6 +63,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
       - name: Verify the live assessment
+        timeout-minutes: 3
         env:
           COMPASS_SMOKE_URL: ${{ steps.deployment.outputs.page_url }}
         run: node tests/browser-smoke.cjs

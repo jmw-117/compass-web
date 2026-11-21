@@ -1,4 +1,5 @@
 import {lazy, Suspense, useEffect, useMemo, useState} from 'react';
+import questionBank from '../docs/domain/question_bank.json';
 import {evaluate} from './domain/evaluate';
 import {getGateLabel, getReportGuidance, getSafetyChecksMessage} from './domain/report-guidance';
 import ReadinessSignal from './ReadinessSignal';
@@ -8,12 +9,7 @@ import {clearDeviceDraft, restoreDeviceDraft, saveDeviceDraft} from './assessmen
 const ReportModule = lazy(() => import('./report/ReportModule'));
 const STORAGE_KEY = 'silverspark-compass-draft-v1';
 
-type Question = {
-  id: string;
-  dimension: 'STR' | 'PRO' | 'DAT' | 'TEC' | 'PEO' | 'GOV' | 'MET';
-  prompt: string;
-  options: Array<{id: string; label: string; score: number | null}>;
-};
+type Question = typeof questionBank.questions[number];
 
 type Screen = 'start' | 'preview' | 'preview-summary' | 'core' | 'review' | 'results';
 
@@ -38,6 +34,15 @@ const emptyProfile: Profile = {
   planned_ai_use: '',
   planned_use_real_data: '',
 };
+
+const ORGANISATION_OPTIONS = [
+  ['sole_proprietor', 'Sole proprietor'],
+  ['small_sme', 'Small business'],
+  ['established_sme', 'Established business'],
+  ['enterprise', 'Enterprise or department'],
+  ['nonprofit', 'Nonprofit'],
+  ['other', 'Other'],
+] as const;
 
 const INDUSTRY_OPTIONS = [
   ['retail', 'Retail'],
@@ -120,196 +125,32 @@ function getSafetyContextOptionLabel(fieldId: (typeof SAFETY_CONTEXT_QUESTIONS)[
   return field?.options.find((option) => option.value === value)?.label ?? 'Not answered';
 }
 
-const coreQuestions: Question[] = [
-  {
-    id: 'STR-01',
-    dimension: 'STR',
-    prompt: 'Which business outcome would an AI or automation improvement most directly improve?',
-    options: [
-      {id: 'STR-01-L0', label: 'We have not identified a specific business goal.', score: 0},
-      {id: 'STR-01-L1', label: 'We have some ideas but no agreed outcome.', score: 1},
-      {id: 'STR-01-L2', label: 'We have chosen a goal but no way to measure it.', score: 2},
-      {id: 'STR-01-L3', label: 'We have a clear goal and know what improvement would look like.', score: 3},
-      {id: 'STR-01-L4', label: 'We review results against goals and adjust our plans.', score: 4},
-      {id: 'STR-01-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'STR-02',
-    dimension: 'STR',
-    prompt: 'Who has authority to approve a new AI or automation use case and the associated risk checks?',
-    options: [
-      {id: 'STR-02-L0', label: 'No one has a clear responsibility for that decision.', score: 0},
-      {id: 'STR-02-L1', label: 'Decisions happen informally when a problem comes up.', score: 1},
-      {id: 'STR-02-L2', label: 'A person usually decides, but responsibilities are not always clear.', score: 2},
-      {id: 'STR-02-L3', label: 'There is a clear decision owner and a simple approval process.', score: 3},
-      {id: 'STR-02-L4', label: 'Decisions have clear owners and are reviewed for business impact.', score: 4},
-      {id: 'STR-02-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'PRO-01',
-    dimension: 'PRO',
-    prompt: 'How consistently is your highest-value operational workflow performed the same way each time?',
-    options: [
-      {id: 'PRO-01-L0', label: 'We work differently each time; the steps are not clear.', score: 0},
-      {id: 'PRO-01-L1', label: 'We mostly rely on habit or what individuals remember.', score: 1},
-      {id: 'PRO-01-L2', label: 'We use common steps but they are not always followed.', score: 2},
-      {id: 'PRO-01-L3', label: 'We have repeatable steps that people normally follow.', score: 3},
-      {id: 'PRO-01-L4', label: 'We review the steps, measure delays, and improve them.', score: 4},
-      {id: 'PRO-01-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'PRO-02',
-    dimension: 'PRO',
-    prompt: 'When work slows down, repeats, or creates errors, how do you identify the root cause?',
-    options: [
-      {id: 'PRO-02-L0', label: 'We rarely identify recurring problems.', score: 0},
-      {id: 'PRO-02-L1', label: 'We notice problems when a customer or colleague complains.', score: 1},
-      {id: 'PRO-02-L2', label: 'We discuss recurring problems but do not track them.', score: 2},
-      {id: 'PRO-02-L3', label: 'We record the main recurring problems and act on them.', score: 3},
-      {id: 'PRO-02-L4', label: 'We track patterns, investigate causes, and verify improvement.', score: 4},
-      {id: 'PRO-02-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'DAT-01',
-    dimension: 'DAT',
-    prompt: 'How reliable are the records you rely on to run sales, service, operations, or finance each week?',
-    options: [
-      {id: 'DAT-01-L0', label: 'Important records are often missing or unusable.', score: 0},
-      {id: 'DAT-01-L1', label: 'Records exist but are frequently incomplete or out of date.', score: 1},
-      {id: 'DAT-01-L2', label: 'Most records are usable but require occasional correction.', score: 2},
-      {id: 'DAT-01-L3', label: 'Important records are usually accurate and easy to find.', score: 3},
-      {id: 'DAT-01-L4', label: 'We regularly check record quality and fix recurring errors.', score: 4},
-      {id: 'DAT-01-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'DAT-02',
-    dimension: 'DAT',
-    prompt: 'Who owns the upkeep, access, and trustworthiness of the business records used in day-to-day decisions?',
-    options: [
-      {id: 'DAT-02-L0', label: 'Nobody takes responsibility for maintaining our records.', score: 0},
-      {id: 'DAT-02-L1', label: 'People update records when they remember or have time.', score: 1},
-      {id: 'DAT-02-L2', label: 'Someone usually maintains records, but checks are informal.', score: 2},
-      {id: 'DAT-02-L3', label: 'There is a clear owner and a regular review process.', score: 3},
-      {id: 'DAT-02-L4', label: 'We monitor quality, maintain access and fix drift early.', score: 4},
-      {id: 'DAT-02-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'TEC-01',
-    dimension: 'TEC',
-    prompt: 'How well are your current systems and tools supporting the work you want to improve with AI?',
-    options: [
-      {id: 'TEC-01-L0', label: 'Tools are fragmented, brittle, or difficult to use.', score: 0},
-      {id: 'TEC-01-L1', label: 'Systems mostly work, but they create friction or manual work.', score: 1},
-      {id: 'TEC-01-L2', label: 'We can use the main tools, but connections are inconsistent.', score: 2},
-      {id: 'TEC-01-L3', label: 'The main systems are usable and fairly reliable.', score: 3},
-      {id: 'TEC-01-L4', label: 'We understand our technology dependencies and support improvements.', score: 4},
-      {id: 'TEC-01-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'TEC-02',
-    dimension: 'TEC',
-    prompt: 'How prepared are you to pilot new technology, measure impact, and manage change without disrupting core work?',
-    options: [
-      {id: 'TEC-02-L0', label: 'We avoid change because risks and dependencies are unclear.', score: 0},
-      {id: 'TEC-02-L1', label: 'We trial changes informally and do not have a clear review process.', score: 1},
-      {id: 'TEC-02-L2', label: 'We test improvements but documentation and safeguards are uneven.', score: 2},
-      {id: 'TEC-02-L3', label: 'We have a practical process for trials and review.', score: 3},
-      {id: 'TEC-02-L4', label: 'We test changes with evidence, fallback plans, and owners.', score: 4},
-      {id: 'TEC-02-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'PEO-01',
-    dimension: 'PEO',
-    prompt: 'How confident are the people involved in learning new ways of working and checking AI-assisted output?',
-    options: [
-      {id: 'PEO-01-L0', label: 'People are unsure, resistant, or not ready to change.', score: 0},
-      {id: 'PEO-01-L1', label: 'Some people want to try new approaches, but support is uneven.', score: 1},
-      {id: 'PEO-01-L2', label: 'People are curious but need clearer guidance and practice.', score: 2},
-      {id: 'PEO-01-L3', label: 'Most people are open to learning and can use new tools.', score: 3},
-      {id: 'PEO-01-L4', label: 'The team consistently learns, supports each other, and improves adoption.', score: 4},
-      {id: 'PEO-01-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'PEO-02',
-    dimension: 'PEO',
-    prompt: 'Who is accountable for coaching teams through change and helping adoption stick?',
-    options: [
-      {id: 'PEO-02-L0', label: 'There is no clear ownership for skills or adoption.', score: 0},
-      {id: 'PEO-02-L1', label: 'Training is ad hoc and depends on individuals.', score: 1},
-      {id: 'PEO-02-L2', label: 'Someone helps, but responsibilities are not always clear.', score: 2},
-      {id: 'PEO-02-L3', label: 'There is a clear owner and practical support for adoption.', score: 3},
-      {id: 'PEO-02-L4', label: 'There is active support, feedback, and clear success measures.', score: 4},
-      {id: 'PEO-02-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'GOV-01',
-    dimension: 'GOV',
-    prompt: 'How clearly are decisions and responsibilities defined when work involves sensitive information or new tools?',
-    options: [
-      {id: 'GOV-01-L0', label: 'Rules and ownership are unclear or inconsistent.', score: 0},
-      {id: 'GOV-01-L1', label: 'Some responsibilities exist but are not well documented.', score: 1},
-      {id: 'GOV-01-L2', label: 'There is reasonable clarity but no regular review.', score: 2},
-      {id: 'GOV-01-L3', label: 'Authority and decisions are defined for the main risks.', score: 3},
-      {id: 'GOV-01-L4', label: 'Responsibilities and controls are reviewed and updated regularly.', score: 4},
-      {id: 'GOV-01-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'GOV-02',
-    dimension: 'GOV',
-    prompt: 'How well do you understand the risks of using data or AI in your current work?',
-    options: [
-      {id: 'GOV-02-L0', label: 'We are not clear what the main risks or controls are.', score: 0},
-      {id: 'GOV-02-L1', label: 'We know some risks but do not review them systematically.', score: 1},
-      {id: 'GOV-02-L2', label: 'We identify obvious risks but do not always act on them.', score: 2},
-      {id: 'GOV-02-L3', label: 'We know the main risks and have practical controls.', score: 3},
-      {id: 'GOV-02-L4', label: 'We review risks, document controls, and act before issues spread.', score: 4},
-      {id: 'GOV-02-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'MET-01',
-    dimension: 'MET',
-    prompt: 'How well do you measure whether a new tool or change is helping your organisation?',
-    options: [
-      {id: 'MET-01-L0', label: 'We do not have a clear way to tell if it helps.', score: 0},
-      {id: 'MET-01-L1', label: 'We notice outcomes but do not measure them regularly.', score: 1},
-      {id: 'MET-01-L2', label: 'We track some information, but results are uneven.', score: 2},
-      {id: 'MET-01-L3', label: 'We measure the main outcomes and review the trend.', score: 3},
-      {id: 'MET-01-L4', label: 'We measure, reflect, and improve the work based on evidence.', score: 4},
-      {id: 'MET-01-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-  {
-    id: 'MET-02',
-    dimension: 'MET',
-    prompt: 'How confident are you that the organisation would notice if a change did not work as expected?',
-    options: [
-      {id: 'MET-02-L0', label: 'We would likely miss the issue until it created a bigger problem.', score: 0},
-      {id: 'MET-02-L1', label: 'We would notice some issues but not quickly or consistently.', score: 1},
-      {id: 'MET-02-L2', label: 'We have some checks, but they are not trusted or well used.', score: 2},
-      {id: 'MET-02-L3', label: 'We have a practical monitoring and review process.', score: 3},
-      {id: 'MET-02-L4', label: 'We review results, act on problems early, and learn quickly.', score: 4},
-      {id: 'MET-02-UNK', label: 'I am not sure', score: null},
-    ],
-  },
-];
+const coreQuestions = questionBank.questions;
+
+const questionExamples: Record<string, string> = {
+  'STR-01': 'Think of a result you want to improve, such as response time, costs or customer satisfaction.',
+  'STR-02': 'Think of who can approve a change to the way your team works.',
+  'PRO-01': 'Pick one recurring task, such as handling an enquiry or preparing an invoice.',
+  'PRO-02': 'Think of a recurring delay, mistake or task that often has to be done twice.',
+  'DAT-01': 'Examples include order records, customer requests or stock counts you use to make decisions.',
+  'DAT-02': 'Think of who updates those records and makes them available to the people who need them.',
+  'TEC-01': 'Consider the main places you keep business records, including paper, email, spreadsheets or software.',
+  'TEC-02': 'For example, think of how a sale recorded in one tool becomes an invoice in another.',
+  'PEO-01': 'Consider both experience with AI tools and the ability to check their answers.',
+  'PEO-02': 'Think of the last tool or process you introduced and the support people received.',
+  'GOV-01': 'Think of rules on which information people can enter into tools and who can access it.',
+  'GOV-02': 'Consider who checks an AI-assisted recommendation before it affects a customer or colleague.',
+  'MET-01': 'Pick one measure you can compare over time, such as errors per week or time to answer a request.',
+  'MET-02': 'Think of who checks after a change, when they check and what they do with the findings.',
+};
+
+const wizardSteps = ['Profile', 'Questions', 'Review', 'Results'] as const;
 
 const previewQuestions = coreQuestions.slice(0, 5);
 const remainingQuestions = coreQuestions.slice(5);
 
 function getDimensionLabel(dimension: Question['dimension']) {
-  return {
+  const labels: Record<string, string> = {
     STR: 'Strategy',
     PRO: 'Processes',
     DAT: 'Data',
@@ -317,7 +158,8 @@ function getDimensionLabel(dimension: Question['dimension']) {
     PEO: 'People',
     GOV: 'Governance',
     MET: 'Measurement',
-  }[dimension];
+  };
+  return labels[dimension] ?? dimension;
 }
 
 function newAssessmentId() {
@@ -333,6 +175,7 @@ export default function App() {
   const [probeAnswers, setProbeAnswers] = useState<Record<string, string>>({});
   const [extendedAnswers, setExtendedAnswers] = useState<Record<string, string>>({});
   const [questionIndex, setQuestionIndex] = useState(0);
+  const [editingFromReview, setEditingFromReview] = useState(false);
   const [storageError, setStorageError] = useState('');
   const [draftStatus, setDraftStatus] = useState('');
   const [draftBusy, setDraftBusy] = useState(false);
@@ -389,18 +232,14 @@ export default function App() {
   }, [assessmentId, profile, answers, context, probeAnswers, extendedAnswers, draftLoaded]);
 
   useEffect(() => {
-    const target = document.getElementById('react-enhancement');
-    if (target) {
-      target.scrollIntoView({block: 'nearest'});
-      const heading = target.querySelector('h2');
-      heading?.setAttribute('tabindex', '-1');
-      heading?.focus({preventScroll: true});
-    }
+    const heading = document.querySelector<HTMLElement>('#react-enhancement h2');
+    heading?.focus({preventScroll: true});
+    heading?.scrollIntoView({block: 'start', behavior: 'instant'});
   }, [screen, questionIndex]);
 
   useEffect(() => {
     if (isReportModuleOpen) {
-      document.getElementById('report-module-panel')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+      document.getElementById('report-module-panel')?.scrollIntoView({block: 'start'});
     }
   }, [isReportModuleOpen]);
 
@@ -412,7 +251,7 @@ export default function App() {
       evaluate({
         assessmentId: 'assessment-local',
         schemaVersion: '1.3.1',
-        questionBankVersion: '1.1.0',
+        questionBankVersion: questionBank.version,
         profile: {
           ...context,
           ...profile,
@@ -485,6 +324,12 @@ export default function App() {
   }
 
   function handleQuestionBack() {
+    if (editingFromReview) {
+      setEditingFromReview(false);
+      setScreen('review');
+      return;
+    }
+
     if (screen === 'preview' && questionIndex === 0) {
       setScreen('start');
       return;
@@ -500,6 +345,12 @@ export default function App() {
 
   function handleQuestionContinue(question: Question) {
     if (!question.options.some((option) => option.id === answers[question.id])) {
+      return;
+    }
+
+    if (editingFromReview) {
+      setEditingFromReview(false);
+      setScreen('review');
       return;
     }
 
@@ -523,6 +374,13 @@ export default function App() {
     setScreen('review');
   }
 
+  function editQuestion(index: number) {
+    const isPreviewQuestion = index < previewQuestions.length;
+    setEditingFromReview(true);
+    setQuestionIndex(isPreviewQuestion ? index : index - previewQuestions.length);
+    setScreen(isPreviewQuestion ? 'preview' : 'core');
+  }
+
   async function manageDeviceDraft(action: 'save' | 'restore' | 'clear') {
     setDraftBusy(true);
     try {
@@ -542,6 +400,7 @@ export default function App() {
         setProbeAnswers({});
         setExtendedAnswers({});
         setQuestionIndex(0);
+        setEditingFromReview(false);
         setIsReportModuleOpen(false);
         setScreen('start');
         await clearDeviceDraft();
@@ -558,8 +417,8 @@ export default function App() {
     return (
       <section className="assessment-panel start-panel" aria-labelledby="assessment-title">
         <div className="panel-header">
-          <p className="eyebrow">AI Readiness Profile</p>
-          <h2 id="assessment-title" tabIndex={-1}>Tell Us A Little About The Business Case.</h2>
+          <h2 id="assessment-title" tabIndex={-1}>Tell us about your organisation.</h2>
+          <p>Choose a goal to frame your assessment. You’ll answer 14 questions and get a readiness summary with recommended next steps.</p>
         </div>
 
         <form
@@ -572,45 +431,40 @@ export default function App() {
             }
           }}
         >
-          <label>
-            <span>Organisation Type</span>
+          <label htmlFor="profile-organisation">
+            <span>Organisation type</span>
             <select
               value={profile.organizationType}
               onChange={(event) => updateProfile('organizationType', event.target.value)}
-              aria-label="Organisation Type"
+              id="profile-organisation" required
             >
-              <option value="">Select One</option>
-              <option value="sole_proprietor">Sole proprietor</option>
-              <option value="small_sme">Small SME</option>
-              <option value="established_sme">Established SME</option>
-              <option value="enterprise">Enterprise or department</option>
-              <option value="nonprofit">Nonprofit</option>
-              <option value="other">Other</option>
+              <option value="">Choose your organisation type</option>
+              {ORGANISATION_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
           </label>
 
-          <label>
-            <span>Industry / Sector</span>
+          <label htmlFor="profile-industry">
+            <span>Industry or sector</span>
             <select
               value={profile.industry}
               onChange={(event) => updateProfile('industry', event.target.value)}
-              aria-label="Industry / Sector"
+              id="profile-industry" required
             >
-              <option value="">Select An Industry / Sector</option>
+              <option value="">Choose your industry</option>
               {INDUSTRY_OPTIONS.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
           </label>
 
-          <label>
-            <span>Business Goal</span>
+          <label htmlFor="profile-goal">
+            <span>Business goal</span>
             <select
               value={profile.businessGoal}
               onChange={(event) => updateProfile('businessGoal', event.target.value)}
-              aria-label="Business Goal"
+              id="profile-goal" required
             >
-              <option value="">Select A Business Goal</option>
+              <option value="">Choose a goal</option>
               {BUSINESS_GOAL_OPTIONS.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
@@ -637,9 +491,7 @@ export default function App() {
 
   function renderQuestionScreen(
     questions: Question[],
-    title: string,
-    description: string,
-    step: Screen,
+    step: 'preview' | 'core',
     currentIndex: number,
   ) {
     const currentQuestion = questions[currentIndex];
@@ -655,15 +507,11 @@ export default function App() {
 
     return (
       <section className="assessment-panel question-panel" aria-labelledby="question-panel-title">
-        <div className="panel-header compact-header">
-          <p className="eyebrow">{title}</p>
-          <h2 id="question-panel-title">{description}</h2>
-        </div>
-
-        <div className="progress-wrap" aria-live="polite">
-          <span>
-            Question {progressQuestionNumber} of {coreQuestions.length}
-          </span>
+        <div className="progress-wrap">
+          <div className="question-meta">
+            <span>{getDimensionLabel(currentQuestion.dimension)}</span>
+            <span>Question {progressQuestionNumber} of {coreQuestions.length}</span>
+          </div>
           <div
             className="progress-bar"
             role="progressbar"
@@ -684,17 +532,18 @@ export default function App() {
         <fieldset
           key={currentQuestion.id}
           className="question-block"
-          aria-describedby={!hasCurrentAnswer ? 'question-answer-hint' : undefined}
+          aria-describedby="question-example question-answer-hint"
         >
           <legend>
-            <span className="question-number">{currentIndex + 1}</span>
-            {currentQuestion.prompt}
+            <h2 id="question-panel-title" tabIndex={-1}>{currentQuestion.prompt}</h2>
           </legend>
+          <p id="question-example" className="question-example">{questionExamples[currentQuestion.id]}</p>
           <div className="option-list">
             {currentQuestion.options.map((option) => (
-              <label key={option.id} className={`option-card ${answers[currentQuestion.id] === option.id ? 'selected' : ''}`}>
+              <label key={option.id} htmlFor={option.id} className={`option-card ${answers[currentQuestion.id] === option.id ? 'selected' : ''}`}>
                 <input
                   type="radio"
+                  id={option.id}
                   name={currentQuestion.id}
                   checked={answers[currentQuestion.id] === option.id}
                   onChange={() => setAnswer(currentQuestion.id, option.id)}
@@ -705,15 +554,13 @@ export default function App() {
           </div>
         </fieldset>
 
-        {!hasCurrentAnswer && (
-          <p id="question-answer-hint" className="inline-note answer-required-note" role="status" aria-live="polite">
-            Choose one response to continue. “I am not sure” is a valid answer.
-          </p>
-        )}
+        <p id="question-answer-hint" className="inline-note">
+          Choose the answer that best describes how things work today. Choose “I am not sure” if you don’t have enough information.
+        </p>
 
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={handleQuestionBack}>
-            {screen === 'preview' && currentIndex === 0 ? 'Back to profile' : 'Previous'}
+            {editingFromReview ? 'Back to review' : screen === 'preview' && currentIndex === 0 ? 'Back to profile' : 'Previous'}
           </button>
           <button
             type="button"
@@ -721,7 +568,7 @@ export default function App() {
             onClick={() => handleQuestionContinue(currentQuestion)}
             disabled={!hasCurrentAnswer}
           >
-            {isFinalQuestion ? (step === 'preview' ? 'Continue to core assessment' : 'Review your answers') : 'Next question'}
+            {editingFromReview ? 'Save and return' : isFinalQuestion ? (step === 'preview' ? 'See quick preview' : 'Review your answers') : 'Next question'}
           </button>
         </div>
       </section>
@@ -729,12 +576,21 @@ export default function App() {
   }
 
   function renderPreviewSummary() {
+    const known = previewQuestions.filter((question) => {
+      const answer = question.options.find((option) => option.id === answers[question.id]);
+      return answer?.score !== null && answer !== undefined;
+    }).length;
+    const followUp = previewQuestions.length - known;
+
     return (
       <section className="assessment-panel" aria-labelledby="preview-summary-title">
         <div className="panel-header">
-          <h2 id="preview-summary-title">Your quick preview</h2>
-          <p>You answered five questions. {previewQuestions.filter((question) => answers[question.id]?.endsWith('-UNK')).length} are marked for follow-up because the answer is uncertain.</p>
-          <p>The remaining questions cover operating conditions and safeguards. Compass calculates readiness after the full core assessment.</p>
+          <h2 id="preview-summary-title" tabIndex={-1}>Your quick preview</h2>
+          <p>You’ve covered your business goal, ways of working and the reliability of your records.</p>
+          <p>{followUp > 0
+            ? `${followUp} of the first five answers ${followUp === 1 ? 'needs' : 'need'} confirmation. Your report will show how this affects your readiness range.`
+            : 'All five answers describe a current practice. Continue to see how your systems, people and safeguards affect your next step.'}</p>
+          <p>{remainingQuestions.length} questions remain before the final review.</p>
         </div>
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={() => {setQuestionIndex(previewQuestions.length - 1); setScreen('preview');}}>Review last answer</button>
@@ -748,37 +604,52 @@ export default function App() {
     return (
       <section className="assessment-panel" aria-labelledby="review-title">
         <div className="panel-header">
-          <p className="eyebrow">UX-08 · Review</p>
-          <h2 id="review-title">Review And Refine Your Draft.</h2>
+          <h2 id="review-title" tabIndex={-1}>Review your assessment.</h2>
+          <p>Confirm how you plan to use AI. You can revisit any answer and add optional context before seeing your results.</p>
         </div>
 
         <div className="summary-grid">
           <div className="summary-card">
             <h3>Profile</h3>
-            <p><strong>Type:</strong> {profile.organizationType || 'Not entered'}</p>
+            <p><strong>Type:</strong> {getProfileOptionLabel(ORGANISATION_OPTIONS, profile.organizationType) || 'Not entered'}</p>
             <p><strong>Industry:</strong> {getProfileOptionLabel(INDUSTRY_OPTIONS, profile.industry) || 'Not entered'}</p>
             <p><strong>Goal:</strong> {getProfileOptionLabel(BUSINESS_GOAL_OPTIONS, profile.businessGoal) || 'Not entered'}</p>
           </div>
           <div className="summary-card">
-            <h3>Progress</h3>
+            <h3>Evidence</h3>
             <p>{answeredCount} of {coreQuestions.length} questions answered</p>
-            <p>{scoreSummary.answered} scored answers included</p>
+            <p>{scoreSummary.answered} answers describe a known practice</p>
           </div>
         </div>
 
-        <div className="profile-form safety-context-form" role="group" aria-labelledby="safety-context-title">
-          <h3 id="safety-context-title">Safety And Data Context</h3>
+        <details className="answer-review">
+          <summary>Your answers</summary>
+          <ol className="answer-review-list">
+            {coreQuestions.map((question, index) => (
+              <li key={question.id}>
+                <div>
+                  <strong>{question.prompt}</strong>
+                  <p>{question.options.find(({id}) => id === answers[question.id])?.label ?? 'Unanswered'}</p>
+                </div>
+                <button className="button-secondary" type="button" aria-label={`Edit question ${index + 1}`} onClick={() => editQuestion(index)}>Edit</button>
+              </li>
+            ))}
+          </ol>
+        </details>
+
+        <fieldset className="profile-form safety-context-form" aria-describedby="safety-context-note">
+          <legend>Safety and data context</legend>
           <p className="inline-note" id="safety-context-note">
-            These answers help identify relevant checks. Choose “Not sure” when uncertain; that context will be clearly marked as unverified.
+            Answer these five questions so we can show the relevant safety checks. Choose “Not sure” if you need to confirm an answer.
           </p>
           {SAFETY_CONTEXT_QUESTIONS.map((question) => (
-            <label key={question.id}>
+            <label key={question.id} htmlFor={question.id}>
               <span>{question.label}</span>
               <select
                 value={profile[question.id]}
                 onChange={(event) => updateProfile(question.id, event.target.value)}
-                aria-label={question.label}
-                aria-describedby="safety-context-note"
+                id={question.id}
+                required
               >
                 <option value="">Choose One</option>
                 {question.options.map(({value, label}) => (
@@ -787,7 +658,7 @@ export default function App() {
               </select>
             </label>
           ))}
-        </div>
+        </fieldset>
 
         <AssessmentDetails
           profile={{...context, ...profile, primary_goal: profile.businessGoal}}
@@ -801,10 +672,10 @@ export default function App() {
 
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={() => {
-            setQuestionIndex(0);
+            setQuestionIndex(remainingQuestions.length - 1);
             setScreen('core');
           }}>
-            Edit answers
+            Back to questions
           </button>
           <button
             type="button"
@@ -835,8 +706,8 @@ export default function App() {
     return (
       <section className="assessment-panel" aria-labelledby="results-title">
         <div className="panel-header">
-          <p className="eyebrow">UX-09 · Results</p>
-          <h2 id="results-title">Self-Reported Readiness Snapshot</h2>
+          <h2 id="results-title" tabIndex={-1}>Your AI readiness snapshot.</h2>
+          <p>See what your answers support, which safeguards need attention and where to start.</p>
         </div>
 
         <div className="result-summary">
@@ -861,10 +732,13 @@ export default function App() {
         <aside className="pragmatic-recommendation" aria-labelledby="practical-next-step-title">
           <p className="eyebrow">Practical Next Step</p>
           <h3 id="practical-next-step-title">{reportGuidance.title}</h3>
-          <p>{reportGuidance.bandText} {reportGuidance.guidance}</p>
+          <p>{reportGuidance.guidance}</p>
+          {reportGuidance.firstActionLabel && <p><strong>Start here.</strong> {reportGuidance.firstActionLabel}</p>}
+          <p className="recommendation-band">{reportGuidance.bandText}</p>
         </aside>
 
-        <div className="dimension-list" aria-label="Dimension summary">
+        <section className="dimension-list" aria-labelledby="dimension-summary-title">
+          <h3 id="dimension-summary-title">Readiness by area</h3>
           {dimensionSummary.map((dimension) => (
             <div key={dimension.dimension} className="dimension-row">
               <div className="dimension-label-row">
@@ -876,7 +750,7 @@ export default function App() {
               </div>
             </div>
           ))}
-        </div>
+        </section>
 
         <div className="result-notes">
           <p>
@@ -888,10 +762,7 @@ export default function App() {
           </p>
         </div>
 
-        <div className="privacy-banner" aria-live="polite">
-          <p className="eyebrow">Designed With Care</p>
-          <h3>Your Information Stays Yours.</h3>
-        </div>
+        <p className="inline-note result-privacy">Your answers stay in this browser. You choose whether to save or share your report.</p>
 
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={() => setScreen('review')}>
@@ -929,35 +800,22 @@ export default function App() {
     );
   }
 
+  const activeStep = screen === 'start' ? 'Profile' : screen === 'review' ? 'Review' : screen === 'results' ? 'Results' : 'Questions';
+
   return (
     <div className="assessment-shell">
-      <div className="assessment-topbar">
-        <p>Silverspark Compass</p>
-        {screen !== 'start' && (
-          <span>{(screen === 'preview' || screen === 'preview-summary') ? 'Quick Preview' : screen === 'core' ? 'Core Questions' : screen === 'review' ? 'Review' : 'Results'}</span>
-        )}
-      </div>
+      <nav className="assessment-topbar" aria-label="Assessment progress">
+        <ol className="wizard-steps">
+          {wizardSteps.map((step) => <li key={step} aria-current={step === activeStep ? 'step' : undefined}>{step}</li>)}
+        </ol>
+      </nav>
 
       {storageError && <p className="storage-error" role="alert">{storageError}</p>}
 
       {screen === 'start' && renderStartScreen()}
-      {screen === 'preview' &&
-        renderQuestionScreen(
-          previewQuestions,
-          'Quick Preview',
-          'Five-Question Quick Preview',
-          'preview',
-          questionIndex,
-        )}
+      {screen === 'preview' && renderQuestionScreen(previewQuestions, 'preview', questionIndex)}
       {screen === 'preview-summary' && renderPreviewSummary()}
-      {screen === 'core' &&
-        renderQuestionScreen(
-          remainingQuestions,
-          'Core Assessment',
-          'Complete The Remaining Scoring Questions.',
-          'core',
-          questionIndex,
-        )}
+      {screen === 'core' && renderQuestionScreen(remainingQuestions, 'core', questionIndex)}
       {screen === 'review' && renderReviewScreen()}
       {screen === 'results' && renderResultsScreen()}
       <details className="compass-draft-controls">
