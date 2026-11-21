@@ -160,7 +160,7 @@ async function run(reduceMotion = false) {
     await click('.assessment-panel .button-row .button-primary');
     for(let i=5;i<questions.length;i++) await answer(i);
     for (const [index,value] of ['team_pilot','restricted','yes','yes','yes'].entries()) {
-      await until(()=>js("document.querySelector('.question-panel .eyebrow')?.innerText.includes("+JSON.stringify((index+1)+' of 5')+")"),'Safety phase did not advance');
+      await until(()=>js("document.querySelector('.question-panel .eyebrow')?.textContent.includes("+JSON.stringify((index+1)+' of 5')+")"),'Safety phase did not advance');
       assert.equal(await js("document.querySelector('.question-panel .button-primary').disabled"),true);
       await click('.question-panel input[value="'+value+'"]');
       await click('.question-panel .button-primary');
