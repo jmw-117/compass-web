@@ -32,6 +32,8 @@ type ReportModuleProps = {
   readiness: ReadinessResult;
 };
 
+const SILVERSPARK_WHATSAPP_NUMBER = '254762057288';
+
 const DIMENSION_LABELS: Record<string, string> = {
   STR: 'Strategy',
   PRO: 'Processes',
@@ -96,8 +98,6 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
     reportGuidance.scoreLabel + ': ' + reportGuidance.scoreText,
     'I would like to discuss the next steps.',
   ].join('\n');
-  const configuredNumber = import.meta.env.VITE_COMPASS_WHATSAPP_NUMBER ?? '';
-  const contactNumber = /^[1-9]\d{7,14}$/.test(configuredNumber) ? configuredNumber : '';
 
   useEffect(() => {
     if (!printMode) return;
@@ -134,7 +134,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
 
   function handleWhatsAppClick() {
     const message = encodeURIComponent(shareText);
-    window.open('https://wa.me/' + contactNumber + '?text=' + message, '_blank', 'noopener,noreferrer');
+    window.open('https://wa.me/' + SILVERSPARK_WHATSAPP_NUMBER + '?text=' + message, '_blank', 'noopener,noreferrer');
   }
 
   async function copySummary() {
@@ -171,7 +171,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
         <textarea id="compass-share-text" ref={summaryRef} readOnly rows={5} value={shareText} />
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={() => void copySummary()}>Copy summary</button>
-          <button type="button" className="button-primary" onClick={handleWhatsAppClick}>{contactNumber ? 'Open Silverspark in WhatsApp' : 'Open WhatsApp'}</button>
+          <button type="button" className="button-primary" onClick={handleWhatsAppClick}>Open Silverspark in WhatsApp</button>
         </div>
         {copyStatus && <p role="status">{copyStatus}</p>}
       </div>

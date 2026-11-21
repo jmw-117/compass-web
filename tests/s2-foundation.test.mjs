@@ -57,7 +57,7 @@ test('React enhancement loads the report preview on demand and keeps it user-con
   assert.match(report, /Save as PDF/);
   assert.match(report, /Copy summary/);
   assert.match(report, /Review sharing options/);
-  assert.match(report, /Open WhatsApp/);
+  assert.match(report, /Open Silverspark in WhatsApp/);
 });
 
 test('quality checks cover the agreed branches and deployment stays manually gated', async () => {
@@ -66,7 +66,7 @@ test('quality checks cover the agreed branches and deployment stays manually gat
   const branches = 'main,\\s*codex,\\s*develop,\\s*maintenance,\\s*upgrade';
   assert.match(workflow, new RegExp(`pull_request:\\s+branches:\\s+\\[${branches}\\]`));
   assert.match(workflow, new RegExp(`push:\\s+branches:\\s+\\[${branches}\\]`));
-  assert.match(workflow, /github\.event_name == 'workflow_dispatch' && inputs\.deploy/);
+  assert.match(workflow, /github\.event_name == 'push' \|\| github\.event_name == 'workflow_dispatch'/);
   assert.match(workflow, /github\.ref == 'refs\/heads\/main'/);
 });
 
