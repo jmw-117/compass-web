@@ -20,7 +20,8 @@ launchButton.addEventListener('click', () => {
 
   hasLaunched = true;
   launchButton.setAttribute('aria-expanded', 'true');
-  hero.setAttribute('aria-labelledby', 'assessment-title');
+  hero.removeAttribute('aria-labelledby');
+  hero.setAttribute('aria-label', 'AI readiness assessment');
   hero.classList.add('hero--assessment-active');
   root.render(
     <StrictMode>

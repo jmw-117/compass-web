@@ -70,5 +70,5 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(styles, /\.report-module\s*\{[^}]*color:\s*var\(--charcoal\)/);
   assert.match(styles, /\.report-module\s+\.eyebrow\s*\{\s*color:\s*#7a6743/);
   assert.match(styles, /\.report-section-summary h4\s*\{[^}]*font-size:\s*clamp\(1\.1rem/);
-  assert.match(app, /scrollIntoView\(\{behavior: 'smooth', block: 'start'\}\)/);
+  assert.match(app, /scrollIntoView\(\{block: 'start'\}\)/);
 });

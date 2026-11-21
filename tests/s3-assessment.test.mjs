@@ -2,17 +2,19 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 
-test('S3 assessment begins with the required three-field start profile and preview flow', async () => {
+test('The assessment begins with the required three-field start profile and preview flow', async () => {
   const app = await readFile('src/App.tsx', 'utf8');
   const profileSchema = JSON.parse(await readFile('docs/domain/profile_schema.json', 'utf8'));
 
-  assert.match(app, /Organisation Type/);
-  assert.match(app, /Industry \/ Sector/);
-  assert.match(app, /Business Goal/);
-  assert.match(app, /<span>Industry \/ Sector<\/span>[\s\S]*?<select[\s\S]*?<\/select>/);
-  assert.match(app, /<span>Business Goal<\/span>[\s\S]*?<select[\s\S]*?<\/select>/);
-  assert.match(app, /aria-label="Industry \/ Sector"/);
-  assert.match(app, /aria-label="Organisation Type"/);
+  for (const [id, label] of [
+    ['profile-organisation', 'Organisation type'],
+    ['profile-industry', 'Industry or sector'],
+    ['profile-goal', 'Business goal'],
+  ]) {
+    assert.ok(app.includes(`htmlFor="${id}"`));
+    assert.ok(app.includes(`<span>${label}</span>`));
+    assert.ok(app.includes(`id="${id}" required`));
+  }
 
   for (const fieldId of ['industry', 'primary_goal']) {
     const field = profileSchema.early_fields.find(({id}) => id === fieldId);
@@ -24,8 +26,8 @@ test('S3 assessment begins with the required three-field start profile and previ
 
   assert.match(app, /INDUSTRY_OPTIONS\.some/);
   assert.match(app, /BUSINESS_GOAL_OPTIONS\.some/);
-  assert.match(app, /Five-Question Quick Preview/);
-  assert.match(app, /Quick Preview/);
+  assert.match(app, /coreQuestions\.slice\(0, 5\)/);
+  assert.match(app, /Your quick preview/);
 });
 
 test('S3 keeps local draft behavior explicit and self-reported results separate from validation', async () => {
@@ -85,18 +87,20 @@ test('questions and results cannot be advanced to without valid selected answers
   assert.match(app, /disabled=\{!hasCurrentAnswer\}/);
   assert.match(app, /function handleQuestionContinue\(question: Question\)/);
   assert.match(app, /if \(!question\.options\.some/);
-  assert.match(app, /Choose one response to continue\./);
-  assert.match(app, /“I am not sure” is a valid answer\./);
+  assert.match(app, /Choose the answer that best describes how things work today/);
+  assert.match(app, /Choose “I am not sure”/);
   assert.match(app, /disabled=\{!allCoreQuestionsAnswered\s*\|\|\s*!safetyContextAnswered\}/);
   assert.match(app, /if \(allCoreQuestionsAnswered && safetyContextAnswered\) setScreen\('results'\)/);
   assert.match(app, /Answer all \{coreQuestions\.length\} questions before viewing your results\./);
 });
 
-test('question numbers use a centered grid inside the circular badge', async () => {
-  const styles = await readFile('src/styles/global.css', 'utf8');
-  const badgeStyles = styles.match(/\.question-number\s*\{([^}]+)\}/)?.[1];
+test('the wizard uses the approved question bank as its source and labels each radio group', async () => {
+  const app = await readFile('src/App.tsx', 'utf8');
 
-  assert.ok(badgeStyles, 'Missing question number badge styles');
-  assert.match(badgeStyles, /display:\s*inline-grid/);
-  assert.match(badgeStyles, /place-items:\s*center/);
+  assert.match(app, /import questionBank from '\.\.\/docs\/domain\/question_bank\.json'/);
+  assert.match(app, /const coreQuestions = questionBank\.questions/);
+  assert.match(app, /<fieldset[\s\S]*?className="question-block"[\s\S]*?>\s*<legend>/);
+  assert.match(app, /<h2 id="question-panel-title" tabIndex=\{-1\}>\{currentQuestion\.prompt\}/);
+  assert.match(app, /htmlFor=\{option\.id\}/);
+  assert.match(app, /<span>\{option\.label\}<\/span>/);
 });

@@ -91,14 +91,14 @@ const QUESTION_LABELS: Record<string, string> = {
   'PRO-02': 'how recurring work problems are identified',
   'DAT-01': 'reliability of the business records you use',
   'DAT-02': 'who maintains and safeguards business records',
-  'TEC-01': 'whether current systems support the work you want to improve',
-  'TEC-02': 'how prepared you are to test and monitor new technology',
+  'TEC-01': 'where everyday business records are kept',
+  'TEC-02': 'how records from different systems are combined',
   'PEO-01': 'team confidence in learning and checking AI-assisted work',
   'PEO-02': 'who supports the team through change',
-  'GOV-01': 'who is responsible for decisions involving sensitive information',
-  'GOV-02': 'how your organisation identifies and manages data or AI risks',
+  'GOV-01': 'what rules protect sensitive information in digital or AI tools',
+  'GOV-02': 'how important AI-assisted decisions are checked before action',
   'MET-01': 'how you measure whether a change is helping',
-  'MET-02': 'how quickly you would notice if a change was not working',
+  'MET-02': 'how you check whether a business change is working',
 };
 
 const GATE_LABELS: Record<string, string> = {
@@ -175,6 +175,10 @@ export function getReportGuidance(readiness: ReadinessSummary) {
       : `This range also reaches ${upperSignal.label.toLowerCase()} territory. The cautious signal follows the lower bound until uncertain answers are confirmed.`,
   };
 
+  const scoreValue = isExactScore
+    ? `${Math.round(readiness.score.lowerEighths / 8)}`
+    : `${lowerScore} to ${upperScore}`;
+
   return {
     title: recommendation.title,
     primaryPathLabel: recommendation.title,
@@ -183,9 +187,8 @@ export function getReportGuidance(readiness: ReadinessSummary) {
     ),
     signal,
     scoreLabel: isExactScore ? 'Readiness Score' : 'Readiness Range',
-    scoreText: isExactScore
-      ? `${Math.round(readiness.score.lowerEighths / 8)} out of 100`
-      : `${lowerScore} to ${upperScore} out of 100`,
+    scoreValue,
+    scoreText: `${scoreValue} out of 100`,
     scoreNote: isExactScore
       ? ''
       : 'This is a range, not a single score. “I am not sure” answers can change the result; confirming them may narrow the range.',
