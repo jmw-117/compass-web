@@ -11,7 +11,7 @@ const STORAGE_KEY = 'silverspark-compass-draft-v1';
 
 type Question = typeof questionBank.questions[number];
 
-type Screen = 'start' | 'preview' | 'preview-summary' | 'core' | 'review' | 'results';
+type Screen = 'start' | 'preview' | 'preview-summary' | 'core' | 'review' | 'context' | 'results';
 
 type Profile = {
   organizationType: string;
@@ -600,12 +600,16 @@ export default function App() {
     );
   }
 
+  function showResults() {
+    if (allCoreQuestionsAnswered && safetyContextAnswered) setScreen('results');
+  }
+
   function renderReviewScreen() {
     return (
       <section className="assessment-panel" aria-labelledby="review-title">
         <div className="panel-header">
           <h2 id="review-title" tabIndex={-1}>Review your assessment.</h2>
-          <p>Confirm how you plan to use AI. You can revisit any answer and add optional context before seeing your results.</p>
+          <p>Review your answers and confirm how you plan to use AI. Then see your results or add details for more tailored recommendations.</p>
         </div>
 
         <div className="summary-grid">
@@ -660,16 +664,6 @@ export default function App() {
           ))}
         </fieldset>
 
-        <AssessmentDetails
-          profile={{...context, ...profile, primary_goal: profile.businessGoal}}
-          answers={answers}
-          probeAnswers={probeAnswers}
-          extendedAnswers={extendedAnswers}
-          update={(id, value) => setContext((current) => ({...current, [id]: value}))}
-          answerProbe={(id, value) => setProbeAnswers((current) => ({...current, [id]: value}))}
-          answerTechnical={(id, value) => setExtendedAnswers((current) => ({...current, [id]: value}))}
-        />
-
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={() => {
             setQuestionIndex(remainingQuestions.length - 1);
@@ -677,14 +671,12 @@ export default function App() {
           }}>
             Back to questions
           </button>
-          <button
-            type="button"
-            className="button-primary"
-            onClick={() => {
-              if (allCoreQuestionsAnswered && safetyContextAnswered) setScreen('results');
-            }}
-            disabled={!allCoreQuestionsAnswered || !safetyContextAnswered}
-          >
+          <button type="button" className="button-secondary"
+            onClick={() => setScreen('context')} disabled={!allCoreQuestionsAnswered || !safetyContextAnswered}>
+            Add optional details
+          </button>
+          <button type="button" className="button-primary" onClick={showResults}
+            disabled={!allCoreQuestionsAnswered || !safetyContextAnswered}>
             See readiness snapshot
           </button>
         </div>
@@ -801,7 +793,7 @@ export default function App() {
     );
   }
 
-  const activeStep = screen === 'start' ? 'Profile' : screen === 'review' ? 'Review' : screen === 'results' ? 'Results' : 'Questions';
+  const activeStep = screen === 'start' ? 'Profile' : (screen === 'review' || screen === 'context') ? 'Review' : screen === 'results' ? 'Results' : 'Questions';
 
   return (
     <div className="assessment-shell">
@@ -818,6 +810,19 @@ export default function App() {
       {screen === 'preview-summary' && renderPreviewSummary()}
       {screen === 'core' && renderQuestionScreen(remainingQuestions, 'core', questionIndex)}
       {screen === 'review' && renderReviewScreen()}
+      {screen === 'context' && (
+        <AssessmentDetails
+          onBack={() => setScreen('review')}
+          onResults={showResults}
+          profile={{...context, ...profile, primary_goal: profile.businessGoal}}
+          answers={answers}
+          probeAnswers={probeAnswers}
+          extendedAnswers={extendedAnswers}
+          update={(id, value) => setContext((current) => ({...current, [id]: value}))}
+          answerProbe={(id, value) => setProbeAnswers((current) => ({...current, [id]: value}))}
+          answerTechnical={(id, value) => setExtendedAnswers((current) => ({...current, [id]: value}))}
+        />
+      )}
       {screen === 'results' && renderResultsScreen()}
       <details className="compass-draft-controls">
         <summary>Draft controls</summary>

@@ -30,16 +30,16 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   }
   assert.doesNotMatch(report, /slice\(0,\s*24\)/);
   assert.match(styles, /\.report-module\s+:where\(p, li, strong, small, span, code\)\s*\{[^}]*overflow-wrap:\s*anywhere/);
-  assert.match(report, /Save as PDF/);
+  assert.match(report, /Export Report/);
   assert.match(report, /Copy summary/);
   assert.match(report, /Message preview/);
-  assert.match(report, /window\.print\(\)/);
+  assert.match(report, /const \{downloadReport\} = await import\('\.\/export-pdf'\)/);
+  assert.match(report, /Send Report/);
   assert.match(report, /WhatsApp/i);
   assert.match(report, /Self-Reported Assessment — Not Independently Verified/);
   assert.match(report, /className="report-section"/);
   assert.match(report, /new Set\(\['executive-summary'\]\)/);
-  assert.match(report, /printMode \|\| expanded/);
-  assert.match(report, /previousOpenSections\.current = openSections/);
+  assert.match(report, /open=\{expanded\}/);
   assert.match(styles, /\.report-section\s*>\s*\.report-section-content\s*\{\s*display:\s*block !important/);
   assert.match(report, /A Practical Recommendation/);
   assert.match(report, /reportGuidance\.guidance/);
