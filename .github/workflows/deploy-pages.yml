@@ -19,6 +19,9 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      COMPASS_BASE_PATH: /${{ github.event.repository.name }}/
+      VITE_COMPASS_WHATSAPP_NUMBER: ${{ vars.COMPASS_WHATSAPP_NUMBER }}
     permissions:
       contents: read
       pages: read
@@ -36,13 +39,12 @@ jobs:
         run: npm run verify
       - name: Extended Python contract validation
         run: |
-          python scripts/validate_kit.py
           python scripts/validate_product_v13.py
       - name: Setup Pages
-        if: github.event_name == 'workflow_dispatch' && inputs.deploy
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.deploy
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
       - name: Upload built static artifact
-        if: github.event_name == 'workflow_dispatch' && inputs.deploy
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.deploy
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: ./dist

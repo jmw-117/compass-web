@@ -10,6 +10,8 @@ import {
   getSeverityLabel,
 } from '../domain/report-guidance';
 import ReadinessSignal from '../ReadinessSignal';
+import {catalogActions} from '../domain/recommendations';
+import manifest from '../../docs/domain/VERSION_MANIFEST.json';
 
 type ProfileLike = {
   organizationType?: string;
@@ -24,6 +26,7 @@ type ProfileLike = {
 };
 
 type ReportModuleProps = {
+  assessmentId: string;
   profile: ProfileLike;
   answers: Record<string, string>;
   readiness: ReadinessResult;
@@ -68,10 +71,14 @@ function ReportSection({id, title, expanded, printMode, onToggle, children}: Rep
   );
 }
 
-export default function ReportModule({profile, answers, readiness}: ReportModuleProps) {
+export default function ReportModule({assessmentId, profile, answers, readiness}: ReportModuleProps) {
   const [openSections, setOpenSections] = useState(() => new Set(['executive-summary']));
   const [printMode, setPrintMode] = useState(false);
   const [printError, setPrintError] = useState('');
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copyStatus, setCopyStatus] = useState('');
+  const summaryRef = useRef<HTMLTextAreaElement>(null);
+  const [reportDate] = useState(() => new Date().toISOString().slice(0, 10));
   const previousOpenSections = useRef<Set<string> | null>(null);
 
   const unknownQuestions = useMemo(
@@ -79,40 +86,18 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
     [answers],
   );
 
-  const assessmentId = useMemo(() => {
-    const seed = `${profile.organizationType ?? 'unknown'}-${profile.industry ?? 'unknown'}-${Date.now()}`;
-    return `SELF-${seed.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toUpperCase()}`;
-  }, [profile]);
-
   const reportGuidance = getReportGuidance(readiness);
+  const workflow = typeof profile.value_stream === 'string' ? profile.value_stream.replaceAll('_', ' ') : '';
+  const bottleneck = typeof profile.workflow_bottleneck === 'string' ? profile.workflow_bottleneck.replaceAll('_', ' ') : '';
 
-  const shareText = useMemo(
-    () =>
-      [
-        'Silverspark Compass Readiness Summary',
-        `Assessment ID: ${assessmentId}`,
-        `Recommended focus: ${reportGuidance.primaryPathLabel} (reference ${readiness.primaryPath})`,
-        `${reportGuidance.scoreLabel}: ${reportGuidance.scoreText}`,
-        ...(reportGuidance.scoreNote ? [reportGuidance.scoreNote] : []),
-        `Traffic-Light Signal: ${reportGuidance.signal.label} — ${reportGuidance.signal.title}`,
-        reportGuidance.signal.description,
-        ...(reportGuidance.signal.rangeNote ? [reportGuidance.signal.rangeNote] : []),
-        'This signal is not approval to deploy AI; confirm safeguards for the specific use case.',
-        `Safety Checks To Review: ${readiness.formalGates.length ? readiness.formalGates.map((gate) => `${getGateLabel(gate.id)} (reference ${gate.id})`).join('; ') : getSafetyChecksMessage(readiness)}`,
-        'Request to discuss: yes',
-      ].join('\n'),
-    [
-      assessmentId,
-      readiness,
-      reportGuidance.scoreLabel,
-      reportGuidance.scoreNote,
-      reportGuidance.scoreText,
-      reportGuidance.signal.label,
-      reportGuidance.signal.title,
-      reportGuidance.signal.description,
-      reportGuidance.signal.rangeNote,
-    ],
-  );
+  const shareText = [
+    'Silverspark Compass readiness summary',
+    'Reference: ' + assessmentId,
+    reportGuidance.scoreLabel + ': ' + reportGuidance.scoreText,
+    'I would like to discuss the next steps.',
+  ].join('\n');
+  const configuredNumber = import.meta.env.VITE_COMPASS_WHATSAPP_NUMBER ?? '';
+  const contactNumber = /^[1-9]\d{7,14}$/.test(configuredNumber) ? configuredNumber : '';
 
   useEffect(() => {
     if (!printMode) return;
@@ -149,7 +134,18 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
 
   function handleWhatsAppClick() {
     const message = encodeURIComponent(shareText);
-    window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener,noreferrer');
+    window.open('https://wa.me/' + contactNumber + '?text=' + message, '_blank', 'noopener,noreferrer');
+  }
+
+  async function copySummary() {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopyStatus('Summary copied.');
+    } catch {
+      summaryRef.current?.focus();
+      summaryRef.current?.select();
+      setCopyStatus('Select and copy the summary using your browser.');
+    }
   }
 
   return (
@@ -164,11 +160,21 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
           <button type="button" className="button-secondary" onClick={handleSaveAsPdf} disabled={printMode}>
             Save as PDF
           </button>
-          <button type="button" className="button-primary" onClick={handleWhatsAppClick}>
-            Share via WhatsApp
+          <button type="button" className="button-primary" aria-expanded={shareOpen} aria-controls="compass-share-preview" onClick={() => {setShareOpen((open) => !open); setCopyStatus('');}}>
+            Review sharing options
           </button>
         </div>
       </header>
+      <div className="compass-share-preview" id="compass-share-preview" hidden={!shareOpen || printMode}>
+        <p>Review the exact message before sharing. WhatsApp handles the message once you open it. You decide whether and to whom to send it.</p>
+        <label htmlFor="compass-share-text">Message preview</label>
+        <textarea id="compass-share-text" ref={summaryRef} readOnly rows={5} value={shareText} />
+        <div className="button-row">
+          <button type="button" className="button-secondary" onClick={() => void copySummary()}>Copy summary</button>
+          <button type="button" className="button-primary" onClick={handleWhatsAppClick}>{contactNumber ? 'Open Silverspark in WhatsApp' : 'Open WhatsApp'}</button>
+        </div>
+        {copyStatus && <p role="status">{copyStatus}</p>}
+      </div>
 
       <ReportSection
         id="executive-summary"
@@ -181,6 +187,7 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
           <div>
             <p className="report-label">Assessment ID</p>
             <strong>{assessmentId}</strong>
+            <small>{reportDate} · Method {readiness.ruleVersion} · Report {manifest.report_version}</small>
           </div>
           <div>
             <p className="report-label">{reportGuidance.scoreLabel}</p>
@@ -219,6 +226,8 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
           <li>High-Impact AI Workflow: {profile.high_impact_ai_workflow || 'Not answered'}</li>
           <li>Planned AI Use: {profile.planned_ai_use || 'Not answered'}</li>
           <li>Planned Use of Real Data: {profile.planned_use_real_data || 'Not answered'}</li>
+          {workflow && <li>Workflow: {workflow}</li>}
+          {bottleneck && <li>Main bottleneck: {bottleneck}</li>}
           <li>Budget Fit: {getCostFitLabel(readiness.costFit)}</li>
         </ul>
       </ReportSection>
@@ -278,16 +287,12 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
 
       <ReportSection id="positive-capabilities" title="Positive Capabilities" expanded={openSections.has('positive-capabilities')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
-          {readiness.actionIds.length ? (
-            readiness.actionIds.map((actionId) => (
-              <li key={actionId}>
-                {getActionLabel(actionId)}.
-                <small> (Action reference: {actionId})</small>
-              </li>
-            ))
-          ) : (
-            <li>No action ID was triggered in this draft; the result remains exploratory.</li>
-          )}
+          {Object.entries(readiness.dimensions).filter(([, result]) => result.known === 2).length === 0 ? (
+            <li>Provide more evidence to identify relative strengths.</li>
+          ) : Object.entries(readiness.dimensions).filter(([, result]) => result.known === 2)
+            .sort(([, first], [, second]) => second.lower - first.lower).slice(0, 2).map(([id, result]) => (
+              <li key={id}>{DIMENSION_LABELS[id] ?? id} reported {Math.round(result.lower * 25)} out of 100.</li>
+            ))}
         </ul>
       </ReportSection>
 
@@ -323,6 +328,12 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         {readiness.formalGates.length > 0 && <p>{getSafetyChecksMessage(readiness)}</p>}
       </ReportSection>
 
+      {readiness.probeEvidence.length > 0 && (
+        <ReportSection id="follow-up-evidence" title="Follow-up Evidence" expanded={openSections.has('follow-up-evidence')} printMode={printMode} onToggle={toggleSection}>
+          <dl>{readiness.probeEvidence.map(({id, prompt, answer}) => <div key={id}><dt>{prompt}</dt><dd>{answer}</dd></div>)}</dl>
+        </ReportSection>
+      )}
+
       <ReportSection id="primary-path" title="Primary Path" expanded={openSections.has('primary-path')} printMode={printMode} onToggle={toggleSection}>
         <p>
           Recommended focus: <strong>{reportGuidance.primaryPathLabel}</strong>
@@ -333,32 +344,60 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
         </p>
       </ReportSection>
 
-      <ReportSection id="three-priority-actions" title="Three Priority Actions" expanded={openSections.has('three-priority-actions')} printMode={printMode} onToggle={toggleSection}>
+      <ReportSection id="three-priority-actions" title="Priority Actions" expanded={openSections.has('three-priority-actions')} printMode={printMode} onToggle={toggleSection}>
         <ol className="report-list ordered">
-          {reportGuidance.actions.slice(0, 3).map(({id, label}) => (
-            <li key={id}>
-              {label}
-              <small> (Action reference: {id})</small>
-            </li>
-          ))}
+          {reportGuidance.actions.slice(0, 3).map(({id, label}) => {
+            const action = catalogActions.get(id);
+            return (
+              <li key={id}>
+                <strong>{label}</strong> <small>({id})</small>
+                {action && (
+                  <div>
+                    <p>Owner: {action.owner_role}. Effort: {action.effort.toLowerCase()}. Cost class: {action.cost_class}.</p>
+                    <p>Evidence to review: {action.evidence_question_ids.map(getQuestionLabel).join(', ')}.</p>
+                    {action.prerequisite_ids.length > 0 && <p>Complete first: {action.prerequisite_ids.map(getActionLabel).join(', ')}.</p>}
+                    <p>Done when: {action.validation}</p>
+                    <p>{action.cash_note}</p>
+                  </div>
+                )}
+              </li>
+            );
+          })}
           {readiness.actionIds.length === 0 && <li>No action is recommended in the current local draft.</li>}
         </ol>
       </ReportSection>
 
       <ReportSection id="budget-and-capacity-fit" title="Budget And Capacity Fit" expanded={openSections.has('budget-and-capacity-fit')} printMode={printMode} onToggle={toggleSection}>
-        <p>Budget capacity fit: {getCostFitLabel(readiness.costFit)} This is not a fixed quote or a guarantee of affordability.</p>
+                  <p>{getCostFitLabel(readiness.costFit)} Cost classes are qualitative. Staff time is required even for actions without external cash spend.</p>
+          {typeof profile.budget_ceiling === 'number' && <p>One-off ceiling over 90 days: KES {profile.budget_ceiling.toLocaleString('en-KE')}.</p>}
+          {typeof profile.monthly_budget_ceiling === 'number' && <p>Separate monthly ceiling: KES {profile.monthly_budget_ceiling.toLocaleString('en-KE')}.</p>}
+          {typeof profile.staff_capacity === 'string' && profile.staff_capacity && <p>Reported staff capacity: {profile.staff_capacity}.</p>}
       </ReportSection>
 
       <ReportSection id="next-30-60-90-days" title="Next 30, 60 And 90 Days" expanded={openSections.has('next-30-60-90-days')} printMode={printMode} onToggle={toggleSection}>
         <ul className="report-list">
           <li>Next 30 days: confirm the current evidence trail and resolve any unknown answers.</li>
-          <li>Next 60 days: test one or two low-risk workflows using the primary path recommendations.</li>
-          <li>Next 90 days: review progress, confirm owners, and decide whether to continue or pause.</li>
+          <li>Next 60 days: use the priority actions to address the gaps and any safety checks. Get specialist review when indicated.</li>
+          <li>Next 90 days: review the evidence with the decision owner and agree which steps are appropriate.</li>
         </ul>
       </ReportSection>
 
+      {readiness.technicalFindings.length > 0 && (
+        <ReportSection id="technical-annex" title="Technical Findings" expanded={openSections.has('technical-annex')} printMode={printMode} onToggle={toggleSection}>
+          <p>These self-reported observations inform the review and leave the readiness score unchanged.</p>
+          <ul className="report-list">
+            {readiness.technicalFindings.map((finding) => (
+              <li key={finding.questionId}>
+                <strong>{finding.prompt}</strong> {finding.response}
+                {finding.flag && <small> Review: {finding.flag.replace(/^flag\./, '').replaceAll('_', ' ')}.</small>}
+              </li>
+            ))}
+          </ul>
+        </ReportSection>
+      )}
+
       <ReportSection id="client-consultation-cta" title="Client Consultation" expanded={openSections.has('client-consultation-cta')} printMode={printMode} onToggle={toggleSection}>
-        <p>Ask the client whether they want a short consult to discuss the readiness profile and next practical step.</p>
+                  <p>You can discuss this assessment with a consultant. Share the summary or complete report only if you choose.</p>
       </ReportSection>
 
       <ReportSection id="appendix-answers-and-provenance" title="Appendix Answers And Provenance" expanded={openSections.has('appendix-answers-and-provenance')} printMode={printMode} onToggle={toggleSection}>
@@ -375,7 +414,9 @@ export default function ReportModule({profile, answers, readiness}: ReportModule
           <li>Receipt method: user-controlled WhatsApp preview</li>
           <li>Manual verification status: pending</li>
           <li>Reviewed by: [consultant name]</li>
-          <li>Approval state: draft</li>
+          <li>Evidence to confirm: business goal, workflow, data category, accountable owner and budget authority</li>
+          <li>Decision: confirm, revise or request more evidence</li>
+          <li>Next action, responsible owner and follow-up date: [complete after review]</li>
         </ul>
       </ReportSection>
     </article>

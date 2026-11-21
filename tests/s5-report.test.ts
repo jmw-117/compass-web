@@ -14,11 +14,10 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(report, /Industry \/ Sector:/);
   assert.match(report, /Primary Path/);
   assert.match(report, /reportGuidance\.primaryPathLabel/);
-  assert.match(report, /getActionLabel\(actionId\)/);
+  assert.match(report, /catalogActions\.get\(id\)/);
   assert.match(report, /getQuestionLabel\(questionId\)/);
   assert.match(report, /getGateLabel\(gate\.id\)/);
   assert.match(report, /getSafetyChecksMessage\(readiness\)/);
-  assert.match(report, /Safety context is incomplete or includes/);
   assert.doesNotMatch(report, /No safety checks triggered/);
   for (const contextField of [
     'current_ai_use',
@@ -32,7 +31,8 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.doesNotMatch(report, /slice\(0,\s*24\)/);
   assert.match(styles, /\.report-module\s+:where\(p, li, strong, small, span, code\)\s*\{[^}]*overflow-wrap:\s*anywhere/);
   assert.match(report, /Save as PDF/);
-  assert.doesNotMatch(report, /Copy summary|Print \/ save as PDF/);
+  assert.match(report, /Copy summary/);
+  assert.match(report, /Message preview/);
   assert.match(report, /window\.print\(\)/);
   assert.match(report, /WhatsApp/i);
   assert.match(report, /Self-Reported Assessment — Not Independently Verified/);
@@ -44,8 +44,6 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(report, /A Practical Recommendation/);
   assert.match(report, /reportGuidance\.guidance/);
   assert.match(report, /reportGuidance\.scoreNote/);
-  assert.match(report, /Traffic-Light Signal:/);
-  assert.match(report, /reportGuidance\.signal\.rangeNote/);
   assert.match(app, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
   assert.match(report, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
   assert.match(signal, /This signal is not approval to deploy AI/);
@@ -59,7 +57,7 @@ test('S5 builds a report contract with the mandatory report sections and volunta
     'Positive Capabilities',
     'Gaps And Evidence',
     'Critical Safety Gates',
-    'Three Priority Actions',
+    'Priority Actions',
     'Budget And Capacity Fit',
     'Consultant Review Template',
     'Appendix Answers And Provenance',

@@ -55,8 +55,9 @@ test('React enhancement loads the report preview on demand and keeps it user-con
   assert.match(app, /<ReportModule\s+profile=\{reportProfile\}/);
   assert.match(report, /Self-Reported Assessment — Not Independently Verified/);
   assert.match(report, /Save as PDF/);
-  assert.doesNotMatch(report, /Copy summary/);
-  assert.match(report, /Share via WhatsApp/);
+  assert.match(report, /Copy summary/);
+  assert.match(report, /Review sharing options/);
+  assert.match(report, /Open WhatsApp/);
 });
 
 test('quality checks cover the agreed branches and deployment stays manually gated', async () => {

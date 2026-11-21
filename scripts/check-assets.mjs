@@ -7,7 +7,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const dist=path.join(root,'dist');
 const assets=path.join(dist,'assets');
 const html=await readFile(path.join(dist,'index.html'),'utf8');
-const base='/silverspark-compass/';
+const base=process.env.COMPASS_BASE_PATH || '/silverspark-compass/';
 
 for(const attribute of html.matchAll(/(?:src|href)="([^"]+)"/g)){
   const url=attribute[1];

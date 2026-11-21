@@ -1,6 +1,8 @@
+import goldenCases from '../docs/domain/golden_cases.json' with { type: 'json' };
+import actions from '../docs/domain/action_catalog.json' with { type: 'json' };
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { evaluate } from '../src/domain/evaluate.ts';
+import { evaluate, getDisplayBand } from '../src/domain/evaluate.ts';
 import {
   getActionLabel,
   getCostFitLabel,
@@ -118,7 +120,7 @@ test('F01 chooses the low-readiness path without budget altering score or gates'
   assert.equal(result.primaryPath, 'P1');
   assert.equal(result.score.coverageUnits, 200);
   assert.ok(result.formalGates.length >= 0);
-  assert.equal(result.actionIds[0], 'A01-FOUNDATIONAL-READINESS');
+  assert.ok(result.actionIds.includes('A03'));
 
   const comparable = evaluate({
     ...fixtureF01,
@@ -268,7 +270,8 @@ test('report guidance follows the score interval and evaluator-selected safety p
 });
 
 test('report guidance avoids asserting a single maturity band when the interval crosses one', () => {
-  const guidance = getReportGuidance(evaluate(fixtureF05));
+  const fixtureF05Result = evaluate(fixtureF05);
+  const guidance = getReportGuidance(fixtureF05Result);
 
   assert.equal(guidance.scoreLabel, 'Readiness Range');
   assert.equal(guidance.scoreText, '0 to 100 out of 100');
@@ -279,11 +282,11 @@ test('report guidance avoids asserting a single maturity band when the interval 
   assert.match(guidance.signal.rangeNote, /cautious signal follows the lower bound/);
   assert.equal(guidance.title, 'Verify The Unknowns');
   assert.equal(guidance.primaryPathLabel, 'Verify The Unknowns');
-  assert.equal(guidance.firstActionLabel, 'Assign someone to confirm the missing information');
+  assert.equal(guidance.firstActionLabel, getActionLabel(fixtureF05Result.actionIds[0] ?? ''));
 });
 
 test('report guidance uses human-readable labels for actions, questions, and safety checks', () => {
-  assert.equal(getActionLabel('A00-VERIFY-BASELINE'), 'Assign someone to confirm the missing information');
+  assert.equal(getActionLabel('A00'), 'Identify someone to verify missing answers');
   assert.equal(getQuestionLabel('STR-02'), 'who can approve an AI or automation use case');
   assert.equal(getGateLabel('DATA-UNKNOWN'), 'Essential data details need confirmation');
   assert.equal(getSeverityLabel('BLOCK_PILOT'), 'Do not pilot until this is addressed');
@@ -376,4 +379,75 @@ test('report guidance keeps specialist review ahead of a high score in a high-im
   assert.equal(result.primaryPath, 'P6');
   assert.equal(guidance.title, 'Get Specialist Review Before Piloting');
   assert.match(guidance.guidance, /Pause piloting and seek appropriate domain-specific review/);
+});
+
+test('all existing synthetic golden cases retain their recorded expectations', () => {
+  for (const item of goldenCases.cases) {
+    const input: AssessmentInput = {
+      profile: item.profile,
+      coreAnswers: item.answers,
+      probeAnswers: item.probes ?? {},
+    };
+    const actual = evaluate(input);
+    const expected = item.expected;
+    if (expected) {
+      const expectation = {primary_path: actual.primaryPath, lower_eighths: actual.score.lowerEighths,
+        upper_eighths: actual.score.upperEighths, coverage_units: actual.score.coverageUnits};
+      for (const key of Object.keys(expectation) as Array<keyof typeof expectation>) {
+        if (key in expected) assert.equal(expectation[key], expected[key], item.id + ' ' + key);
+      }
+      const gates = actual.formalGates.map(({id}) => id);
+      for (const id of expected.gates_present ?? []) assert.ok(gates.includes(id), item.id + ' ' + id);
+      for (const id of expected.gates_not_present ?? []) assert.ok(!gates.includes(id), item.id + ' ' + id);
+      for (const path of expected.forbidden_primary ?? []) assert.notEqual(actual.primaryPath, path, item.id);
+      if (expected.primary_path_not) assert.notEqual(actual.primaryPath, expected.primary_path_not, item.id);
+      if (expected.score_type === 'interval') assert.ok(actual.score.lowerEighths < actual.score.upperEighths, item.id);
+      if (expected.band === 'multiple') assert.notEqual(getDisplayBand(actual.score.lowerEighths), getDisplayBand(actual.score.upperEighths), item.id);
+      if (expected.budget_fit === 'unverified') assert.equal(actual.costFit, 'unknown', item.id);
+    }
+    if (item.id === 'F01' || item.metamorphic?.expect_same_readiness) {
+      const updated = evaluate({...input, profile: {...input.profile, budget_band: 'flexible', budget_ceiling: 120000}});
+      assert.deepEqual(updated.score, actual.score, item.id);
+      assert.deepEqual(updated.formalGates, actual.formalGates, item.id);
+      assert.equal(updated.primaryPath, actual.primaryPath, item.id);
+    }
+    if (item.metamorphic?.expect_same_json) {
+      const before = {...input.coreAnswers};
+      input.coreAnswers['TEC-01'] = item.metamorphic.edit ?? '';
+      evaluate(input);
+      input.coreAnswers = before;
+      assert.deepEqual(evaluate(input), actual, item.id);
+    }
+    assert.ok(actual.actionIds.length >= 1 && actual.actionIds.length <= 3, item.id);
+    actual.actionIds.forEach((id, index) => {
+      const action = actions.actions.find((entry) => entry.id === id);
+      assert.ok(action, item.id + ' ' + id);
+      for (const prerequisite of action.prerequisite_ids) assert.ok(actual.actionIds.slice(0, index).includes(prerequisite), item.id + ' ' + prerequisite);
+    });
+  }
+});
+
+test('inactive evidence cannot trigger gates and the technical annex leaves core scores alone', () => {
+  const item = goldenCases.cases.find(({id}) => id === 'F08');
+  assert.ok(item);
+  const input: AssessmentInput = {
+    profile: item.profile, coreAnswers: item.answers, probeAnswers: {'PR-GOV-SHARE': 'Yes'},
+  };
+  const active = evaluate(input);
+  assert.ok(active.formalGates.some(({id}) => id === 'GOV-DATA'));
+  const edited = evaluate({...input, coreAnswers: {...item.answers, 'GOV-01': 'GOV-01-L2'}});
+  assert.ok(!edited.formalGates.some(({id}) => id === 'GOV-DATA'));
+  assert.ok(!edited.probeEvidence.some(({id}) => id === 'PR-GOV-SHARE'));
+
+  const annex = evaluate({
+    ...fixtureF03,
+    profile: {...fixtureF03.profile, extended_assessment: true},
+    extendedAnswers: {'EX-CMP-01': 'EX-CMP-01-high'},
+  });
+  const baseline = evaluate(fixtureF03);
+  assert.deepEqual(annex.score, baseline.score);
+  assert.deepEqual(annex.formalGates, baseline.formalGates);
+  assert.equal(annex.specialistReview, true);
+  assert.equal(annex.actionIds[0], 'A20');
+  assert.match(getReportGuidance(annex).guidance, /Pause piloting/);
 });

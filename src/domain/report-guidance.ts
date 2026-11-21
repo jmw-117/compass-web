@@ -1,6 +1,7 @@
+import {catalogActions} from './recommendations.ts';
 import {getDisplayBand, type ReadinessResult} from './evaluate.ts';
 
-type ReadinessSummary = Pick<ReadinessResult, 'score' | 'primaryPath' | 'secondaryPaths' | 'actionIds'>;
+type ReadinessSummary = Pick<ReadinessResult, 'score' | 'primaryPath' | 'secondaryPaths' | 'actionIds'> & Partial<Pick<ReadinessResult, 'pilotReviewRequired' | 'specialistReview'>>;
 
 export type TrafficLightSignal = {
   color: 'red' | 'amber' | 'green';
@@ -83,16 +84,6 @@ const DEFAULT_RECOMMENDATION = {
   guidance: 'Confirm the unanswered details that could change this decision. Start by checking one important information source, its quality, and who is accountable for it.',
 };
 
-const ACTION_LABELS: Record<string, string> = {
-  'A06-HUMAN-REVIEW': 'Get specialist review before piloting',
-  'A02-DATA-GOVERNANCE': 'Set clear rules for handling business information',
-  'A00-VERIFY-BASELINE': 'Assign someone to confirm the missing information',
-  'A01-FOUNDATIONAL-READINESS': 'Strengthen core data and operating foundations',
-  'A04-TECH-READINESS': 'Check whether current systems support the planned improvement',
-  'A03-TEAM-READINESS': 'Prepare the team to adopt new ways of working',
-  'A05-PILOT-READY': 'Plan a small, measurable pilot with safeguards',
-};
-
 const QUESTION_LABELS: Record<string, string> = {
   'STR-01': 'business goal and desired outcome',
   'STR-02': 'who can approve an AI or automation use case',
@@ -126,7 +117,7 @@ const SEVERITY_LABELS: Record<string, string> = {
 };
 
 export function getActionLabel(actionId: string): string {
-  return ACTION_LABELS[actionId] ?? 'Review the recommended next step';
+  return catalogActions.get(actionId)?.title ?? 'Review the recommended next step';
 }
 
 export function getQuestionLabel(questionId: string): string {
@@ -165,7 +156,11 @@ export function getSafetyChecksMessage(
 }
 
 export function getReportGuidance(readiness: ReadinessSummary) {
-  const recommendation = PATH_RECOMMENDATIONS[readiness.primaryPath] ?? DEFAULT_RECOMMENDATION;
+  const recommendation = readiness.specialistReview ? PATH_RECOMMENDATIONS.P6 ?? DEFAULT_RECOMMENDATION
+    : readiness.pilotReviewRequired && readiness.primaryPath === 'P5' ? {
+      title: 'Review safeguards before planning a pilot',
+      guidance: 'Complete the missing context and review the evidence with the responsible owner before planning any pilot.',
+    } : PATH_RECOMMENDATIONS[readiness.primaryPath] ?? DEFAULT_RECOMMENDATION;
   const isExactScore = readiness.score.lowerEighths === readiness.score.upperEighths;
   const lowerScore = Math.floor(readiness.score.lowerEighths / 8);
   const upperScore = Math.ceil(readiness.score.upperEighths / 8);

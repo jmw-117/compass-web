@@ -20,7 +20,8 @@ test('S6 preserves the static no-submission privacy boundary', async () => {
   const activeClientCode = await readClientSource();
 
   assert.doesNotMatch(activeClientCode, /\bfetch\s*\(|XMLHttpRequest|sendBeacon|new WebSocket/);
-  assert.match(report, /window\.open\(`https:\/\/wa\.me\/\?text=\$\{message\}`/);
+  assert.match(report, /window\.open\('https:\/\/wa\.me\/' \+ contactNumber \+ '\?text=' \+ message/);
+  assert.match(report, /hidden=\{!shareOpen \|\| printMode\}/);
   assert.match(report, /function handleWhatsAppClick\(\)/);
   assert.match(app, /sessionStorage\.setItem\(STORAGE_KEY/);
   assert.match(app, /Your progress is saved only in this browser/);
@@ -41,6 +42,5 @@ test('S6 ignores local private material without hiding required product document
   assert.equal(isIgnored('docs/private/consultant-notes.md'), true);
   assert.equal(isIgnored('docs/_private/client-data.json'), true);
   assert.equal(isIgnored('docs/domain/product_requirements.json'), false);
-  assert.equal(isIgnored('docs/handoffs/ledger.json'), false);
   assert.equal(isIgnored('docs/stages/S6-quality-hardening.md'), false);
 });

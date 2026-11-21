@@ -1,3 +1,6 @@
+import { activeProbes, technicalFindings } from './diagnostics.ts';
+import { recommendActions } from './recommendations.ts';
+
 export type DimensionId = 'STR' | 'PRO' | 'DAT' | 'TEC' | 'PEO' | 'GOV' | 'MET';
 export type BudgetBand = 'none' | 'limited' | 'moderate' | 'flexible' | 'unknown';
 
@@ -18,6 +21,10 @@ export type ReadinessResult = {
     coverageUnits: number;
   };
   safetyContextConfirmed: boolean;
+  technicalFindings: ReturnType<typeof technicalFindings>;
+  specialistReview: boolean;
+  pilotReviewRequired: boolean;
+  probeEvidence: Array<{id: string; prompt: string; answer: string}>;
   dimensions: Record<DimensionId, { lower: number; upper: number; known: number }>;
   formalGates: Array<{ id: string; triggeringIds: string[]; severity: string }>;
   flags: Array<{ id: string; sourceQuestionIds: string[]; status: 'self_reported' | 'clarified' | 'example_unverified' }>;
@@ -76,7 +83,7 @@ function getQuestionDimension(questionId: string): DimensionId {
   return 'MET';
 }
 
-function getAnswerScore(questionId: string, optionId: string | undefined): number | null {
+export function getAnswerScore(questionId: string, optionId: string | undefined): number | null {
   if (!optionId) return null;
   return QUESTION_SCORE_MAP[questionId]?.[optionId] ?? null;
 }
@@ -197,7 +204,12 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
     (profileHighImpact && plannedAiUse === 'yes');
   gateMap['URGENT-REGULATED'] = urgentGate;
 
-  const shareProbe = getProfileString(profile, 'PR-GOV-SHARE');
+  const probes = activeProbes(profile, (id) => getAnswerScore(id, coreAnswers[id]));
+  const probeAnswers = new Map(probes.map(({id, choices}) => {
+    const answer = input.probeAnswers?.[id] ?? '';
+    return [id, choices?.includes(answer) ? answer : ''];
+  }));
+  const shareProbe = probeAnswers.get('PR-GOV-SHARE');
   const dataCategory = getProfileString(profile, 'data_category');
   const gov01Score = getAnswerScore('GOV-01', coreAnswers['GOV-01']);
   const plannedUseRealData = getProfileString(profile, 'planned_use_real_data');
@@ -215,7 +227,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   gateMap['DATA-UNKNOWN'] = dataUnknownGate;
 
   const str02Score = getAnswerScore('STR-02', coreAnswers['STR-02']);
-  const strOwnerProbe = getProfileString(profile, 'PR-STR-OWNER');
+  const strOwnerProbe = probeAnswers.get('PR-STR-OWNER') ?? '';
   const ownNoneGate = gateMap['OWN-NONE'] ?? { triggered: false, ids: [], severity: 'BLOCK_PILOT' };
   ownNoneGate.triggered =
     str02Score === 0 || (['No one yet', 'Not sure'].includes(strOwnerProbe) && str02Score !== null && str02Score <= 1);
@@ -223,7 +235,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
 
   const met01Score = getAnswerScore('MET-01', coreAnswers['MET-01']);
   const primaryGoal = getProfileString(profile, 'primary_goal');
-  const metStartProbe = getProfileString(profile, 'PR-MET-START');
+  const metStartProbe = probeAnswers.get('PR-MET-START');
   const baselineGate = gateMap['BASELINE-MISSING'] ?? { triggered: false, ids: [], severity: 'BLOCK_FINANCIAL_CLAIMS' };
   baselineGate.triggered =
     met01Score !== null && met01Score <= 1 && ['efficiency', 'growth', 'service', 'risk'].includes(primaryGoal) && metStartProbe !== 'Yes';
@@ -280,24 +292,32 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
     }
   }
 
-  const budgetBand = getProfileString(profile, 'budget_band') as BudgetBand;
+  const budgetBand = (profile.budget_window === 'no_external_spend' || profile.budget_ceiling === 0
+    ? 'none' : getProfileString(profile, 'budget_band')) as BudgetBand;
+  const findings = technicalFindings(profile, input.extendedAnswers ?? {});
+  const specialistReview = urgentGate.triggered || findings.some(({flag}) =>
+    flag === 'flag.high_impact_review' || flag === 'flag.sensitive_data_review',
+  );
   const safetyContextConfirmed = Object.entries(SAFETY_CONTEXT_VALUES).every(([field, values]) =>
     values.has(getProfileString(profile, field)),
   );
   let costFit: ReadinessResult['costFit'];
-  if (budgetBand === 'unknown') costFit = 'unknown';
+  if (specialistReview) costFit = 'specialist_review';
+  else if (budgetBand === 'unknown') costFit = 'unknown';
   else if (budgetBand === 'none') costFit = 'no_cash_option';
   else if (budgetBand === 'limited' || budgetBand === 'moderate' || budgetBand === 'flexible') costFit = 'possible_not_priced';
   else costFit = 'unknown';
 
-  const actionIds: string[] = [];
-  if (primaryPath === 'P6') actionIds.push('A06-HUMAN-REVIEW');
-  if (primaryPath === 'P2') actionIds.push('A02-DATA-GOVERNANCE');
-  if (primaryPath === 'P0') actionIds.push('A00-VERIFY-BASELINE');
-  if (primaryPath === 'P1') actionIds.push('A01-FOUNDATIONAL-READINESS');
-  if (primaryPath === 'P4') actionIds.push('A04-TECH-READINESS');
-  if (primaryPath === 'P3') actionIds.push('A03-TEAM-READINESS');
-  if (primaryPath === 'P5') actionIds.push('A05-PILOT-READY');
+  const pilotReviewRequired = !safetyContextConfirmed || specialistReview || findings.some(({flag}) =>
+    flag === 'flag.no_human_fallback' || flag === 'flag.no_ai_use_controls' || flag === 'flag.no_safety_tests',
+  );
+  const actionPath = primaryPath === 'P5' && pilotReviewRequired ? 'P0' : primaryPath;
+  const actionIds = recommendActions(actionPath, secondaryPaths, dimensions, profile,
+    specialistReview, findings.flatMap(({actionIds}) => actionIds), pilotReviewRequired);
+  const probeEvidence = probes.flatMap(({id, prompt}) => {
+    const answer = probeAnswers.get(id);
+    return answer ? [{id, prompt, answer}] : [];
+  });
 
   return {
     score: {
@@ -306,6 +326,10 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
       coverageUnits: Math.round(coverageUnits),
     },
     safetyContextConfirmed,
+    technicalFindings: findings,
+    specialistReview,
+    pilotReviewRequired,
+    probeEvidence,
     dimensions: {
       STR: { lower: Number(dimensions.STR.lower.toFixed(2)), upper: Number(dimensions.STR.upper.toFixed(2)), known: dimensions.STR.known },
       PRO: { lower: Number(dimensions.PRO.lower.toFixed(2)), upper: Number(dimensions.PRO.upper.toFixed(2)), known: dimensions.PRO.known },
