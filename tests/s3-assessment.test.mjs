@@ -76,8 +76,8 @@ test('S3 retains the lazy report preview contract required by the foundation she
   const app = await readFile('src/App.tsx', 'utf8');
 
   assert.match(app, /lazy\(\(\) => import\('\.\/report\/ReportModule'\)\)/);
-  assert.match(app, /View report preview/);
-  assert.match(app, /report-module-panel/);
+  assert.match(app, /results-toolbar/);
+  assert.doesNotMatch(app, /View report preview|Hide report preview/);
 });
 
 test('questions and results cannot be advanced to without valid selected answers', async () => {

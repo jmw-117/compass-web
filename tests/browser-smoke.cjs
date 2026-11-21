@@ -61,10 +61,10 @@ async function run() {
       }
       if(message.method==='Network.requestWillBeSent') destinations.add(message.params.request.url);
     });
-    const call=(method,params={})=>new Promise((resolve,reject)=>{
+    const call=(method,params={},sessionId)=>new Promise((resolve,reject)=>{
       const key=++id;
       pending.set(key,{resolve,reject});
-      socket.send(JSON.stringify({id:key,method,params}));
+      socket.send(JSON.stringify({id:key,method,params,sessionId}));
     });
     const js=async(expression)=>{
       const result=await call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});
@@ -165,7 +165,7 @@ async function run() {
     })()`),'Missing enabled button '+text);
     await pressButton('See readiness snapshot');
     await until(()=>js("document.activeElement.id==='results-title'"),'Review did not lead directly to results');
-    await pressButton('Back to review');
+    await pressButton('Back');
     await pressButton('Add optional details');
     await until(()=>js("document.activeElement.textContent==='Business workflow'"),'Business workflow step missing');
     await checkTextContrast('.compass-context .eyebrow','.assessment-panel');
@@ -249,24 +249,41 @@ async function run() {
     assert.equal(await noHorizontalOverflow(),true,'Results overflow at 200% text size');
     await js("document.documentElement.style.fontSize=''");
     await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true});
-    await until(()=>js(`(()=>{const button=Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('View report preview')); if(!button) return false; button.click(); return true;})()`),'Report control missing');
-    await until(()=>js("document.querySelector('.report-module') !== null"),'Report did not render');
-    assert.deepEqual((await activeLight('.report-module')).active,[true]);
-    assert.equal(await noHorizontalOverflow(),true,'Report overflows at 320px');
-    assert.equal(await js("document.querySelector('.report-next-step').innerText.includes('Recommended next step')"),true);
-    assert.equal(await js("document.querySelector('.report-safety').innerText.includes('specialist review')"),true);
-    assert.equal(await js("document.querySelector('.report-score-value').textContent.includes('out of 100')"),true);
-    assert.equal(await js(`(()=>{
+    const previewLink='.report-actions a[target="_blank"]';
+    await until(()=>js("Boolean(document.querySelector('.report-actions a[href]'))"),'Preview link missing');
+    assert.equal(await noHorizontalOverflow(),true,'Result actions overflow at 320px');
+    assert.equal(await js("document.querySelector('.report-module').getClientRects().length"),0,'Report should stay off the results page');
+    assert.deepEqual(await js("[...document.querySelectorAll('.results-toolbar > .results-back, .report-actions > *')].map(el=>[el.textContent.trim(),!!el.querySelector('svg[aria-hidden=true]')])"),
+      [['Back',true],['Preview Report',true],['Export Report',true],['Send Report',true]]);
+    const previewUrl=await js("document.querySelector('.report-actions a').href");
+    await call('Runtime.evaluate',{expression:"document.querySelector("+JSON.stringify(previewLink)+").click()",userGesture:true});
+    const target=await until(async()=>(await call('Target.getTargets')).targetInfos.find(item=>item.type==='page' && item.url===previewUrl),'Report did not open in a new tab');
+    const {sessionId}=await call('Target.attachToTarget',{targetId:target.targetId,flatten:true});
+    const previewJs=async(expression)=>{
+      const response=await call('Runtime.evaluate',{expression,returnByValue:true},sessionId);
+      if(response.exceptionDetails) throw Error(response.exceptionDetails.exception?.description??response.exceptionDetails.text);
+      return response.result.value;
+    };
+    await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true},sessionId);
+    await until(()=>previewJs("document.readyState==='complete' && document.querySelector('.report-module') && getComputedStyle(document.querySelector('.traffic-light')).display==='inline-grid'"),'Preview content or styles missing');
+    assert.equal(await previewJs("window.opener===null && !document.querySelector('.report-actions')"),true);
+    assert.equal(await previewJs("document.documentElement.scrollWidth<=document.documentElement.clientWidth"),true,'Report overflows at 320px');
+    assert.equal(await previewJs("document.querySelectorAll('.traffic-light__bulb--amber[data-active]').length"),1);
+    assert.equal(await previewJs("document.querySelector('.report-next-step').innerText.includes('Recommended next step')"),true);
+    assert.equal(await previewJs("document.querySelector('.report-safety').innerText.includes('specialist review')"),true);
+    assert.equal(await previewJs("document.querySelector('.report-score-value').textContent.includes('out of 100')"),true);
+    assert.equal(await previewJs(`(()=>{
       const metadata=document.querySelector('.report-metadata');
       const appendix=metadata.closest('details');
       return !appendix.open && appendix.querySelector('summary').textContent.includes('Provenance');
     })()`),true);
-    await click('#report-appendix-answers-and-provenance-title');
-    await until(()=>js("document.querySelector('.report-metadata').closest('details').open && document.querySelector('.report-metadata code').innerText.startsWith('SELF-')"),'Opening the appendix did not show the assessment reference');
-    assert.equal(await js("document.querySelectorAll('.report-answers dd').length"),questions.length);
-    assert.equal(await js("document.querySelector('.report-answers dd').textContent"),questions[0].options.at(-1).label);
-    assert.equal(await js("document.querySelector('.report-score').textContent.includes('13 of 14 core answers are known')"),true);
-    await click('#report-appendix-answers-and-provenance-title');
+    await previewJs("document.querySelector('#report-appendix-answers-and-provenance-title').click()");
+    await until(()=>previewJs("document.querySelector('.report-metadata').closest('details').open && document.querySelector('.report-metadata code').innerText.startsWith('SELF-')"),'Opening the appendix did not show the assessment reference');
+    assert.equal(await previewJs("document.querySelectorAll('.report-answers dd').length"),questions.length);
+    assert.equal(await previewJs("document.querySelector('.report-answers dd').textContent"),questions[0].options.at(-1).label);
+    assert.equal(await previewJs("document.querySelector('.report-score').textContent.includes('13 of 14 core answers are known')"),true);
+    await previewJs("document.querySelector('#report-appendix-answers-and-provenance-title').click()");
+    await call('Target.closeTarget',{targetId:target.targetId});
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
     await js(`window.open=(url)=>{window.testShareDestination=url;}; true`);
     await click('[aria-controls="compass-share-preview"]');
