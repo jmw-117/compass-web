@@ -1,3 +1,4 @@
+import DecisionSummary from '../assessment/DecisionSummary';
 import ActionIcon from './ActionIcon';
 import {createPreviewUrl} from './preview-document';
 import {useEffect, useMemo, useRef, useState, type ReactNode} from 'react';
@@ -102,6 +103,12 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
     'Silverspark Compass readiness summary',
     'Reference: ' + assessmentId,
     reportGuidance.scoreLabel + ': ' + reportGuidance.scoreText,
+    [profile.organizationType, profile.industry, profile.businessGoal].filter(Boolean).join(' · '),
+    'AI Use-Case Guidance: ' + readiness.useCaseGuidance,
+    'Delivery Capacity: ' + readiness.deliveryCapacity,
+    'Financial Benefit Evidence: ' + readiness.financialEvidence,
+    ...readiness.concerns.slice(0, 2),
+    'Next step: ' + (reportGuidance.firstActionLabel ?? reportGuidance.title),
     'I would like to discuss the next steps.',
   ].join('\n');
 
@@ -162,7 +169,8 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
       </div>
       {exportError && <p className="storage-error" role="alert">{exportError}</p>}
       <div className="compass-share-preview" id="compass-share-preview" hidden={!shareOpen}>
-        <p>Review the summary for Silverspark Consulting. WhatsApp opens with this message ready for you to send.</p>
+        <p>Send Report prepares a summary. To share the complete PDF, export it and attach it yourself. WhatsApp opens with this message ready for you to send.</p>
+        <p>Other ways to reach us are on the <a href="https://sspark.net/" target="_blank" rel="noopener noreferrer">Silverspark Consulting website</a>.</p>
         <label htmlFor="compass-share-text">Message preview</label>
         <textarea id="compass-share-text" ref={summaryRef} readOnly rows={5} value={shareText} />
         <div className="button-row">
@@ -200,6 +208,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
               </div>
             </div>
             <ReadinessSignal signal={reportGuidance.signal} />
+            <DecisionSummary result={readiness} />
             <div className="report-safety">
               <h5>Safety checks</h5>
               {readiness.formalGates.length > 0 && (
@@ -282,7 +291,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
 
           <ReportSection id="positive-capabilities" title="Positive Capabilities" expanded={openSections.has('positive-capabilities')} onToggle={toggleSection}>
             <ul className="report-list">
-              {Object.entries(readiness.dimensions).filter(([, result]) => result.known === 2).length === 0 ? (
+              {Object.entries(readiness.dimensions).filter(([, result]) => result.known === 2 && result.lower > 0).length === 0 ? (
                 <li>Provide more evidence to identify relative strengths.</li>
               ) : Object.entries(readiness.dimensions).filter(([, result]) => result.known === 2)
                 .sort(([, first], [, second]) => second.lower - first.lower).slice(0, 2).map(([id, result]) => (

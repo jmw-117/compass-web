@@ -205,6 +205,12 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   page = addPage();
   cursor = pageHeight - 102;
   const chart = report.querySelector('#report-seven-dimension-results-title')?.closest('details');
+  sectionHeading('Use-case guidance and feasibility');
+  for (const item of report.querySelectorAll('.decision-summary p')) {
+    const label = readText(item.querySelector('strong'));
+    drawBlock(label + ': ' + readText(item).slice(label.length).trim(), regular, 11);
+  }
+  for (const item of report.querySelectorAll('.decision-summary li')) drawBlock(readText(item), regular, 11);
   sectionHeading('Seven dimensions of readiness');
   drawBlock('The dark bar shows the confirmed score. A lighter extension shows how far the score could rise when unknown answers are confirmed.', regular, 10.5);
   for (const row of chart?.querySelectorAll<HTMLElement>('[data-dimension]') ?? []) {

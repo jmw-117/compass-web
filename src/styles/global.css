@@ -1660,3 +1660,6 @@ h3 {
   .completion-confetti { display: none; }
   .completion-confetti, .completion-confetti i { animation: none; }
 }
+
+.decision-summary {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr));gap:1rem;padding:1rem 1.25rem;border:1px solid #bec6d0;border-radius:1rem;background:#f5f7fa;color:#182538}
+.decision-summary p,.decision-summary ul {margin:0}.decision-summary ul {grid-column:1/-1;padding-inline-start:1.25rem}.decision-summary strong {color:#0e1828}

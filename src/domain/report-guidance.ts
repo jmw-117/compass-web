@@ -1,7 +1,7 @@
 import {catalogActions} from './recommendations.ts';
 import {getDisplayBand, type ReadinessResult} from './evaluate.ts';
 
-type ReadinessSummary = Pick<ReadinessResult, 'score' | 'primaryPath' | 'secondaryPaths' | 'actionIds'> & Partial<Pick<ReadinessResult, 'pilotReviewRequired' | 'specialistReview'>>;
+type ReadinessSummary = Pick<ReadinessResult, 'score' | 'primaryPath' | 'secondaryPaths' | 'actionIds'> & Partial<Pick<ReadinessResult, 'pilotReviewRequired' | 'specialistReview' | 'deliveryCapacity' | 'useCaseGuidance'>>;
 
 export type TrafficLightSignal = {
   color: 'red' | 'amber' | 'green';
@@ -104,6 +104,7 @@ const QUESTION_LABELS: Record<string, string> = {
 const GATE_LABELS: Record<string, string> = {
   'URGENT-REGULATED': 'High-impact AI use needs specialist review',
   'GOV-DATA': 'Data protection and AI safeguards need review',
+  'DATA-POOR': 'Records contain reported errors or gaps',
   'DATA-UNKNOWN': 'Essential data details need confirmation',
   'OWN-NONE': 'An accountable decision owner has not been identified',
   'BASELINE-MISSING': 'A reliable business baseline is not yet available',
@@ -157,7 +158,11 @@ export function getSafetyChecksMessage(
 
 export function getReportGuidance(readiness: ReadinessSummary) {
   const recommendation = readiness.specialistReview ? PATH_RECOMMENDATIONS.P6 ?? DEFAULT_RECOMMENDATION
-    : readiness.pilotReviewRequired && readiness.primaryPath === 'P5' ? {
+    : readiness.primaryPath === 'FEASIBILITY' ? {
+      title: 'Confirm the next practical step',
+      guidance: readiness.deliveryCapacity === 'Unconfirmed' ? 'All core answers are known. Confirm who can set aside time for the proposed work.' :
+        readiness.deliveryCapacity === 'Unavailable' ? 'All core answers are known. Revisit timing when someone can commit time.' : 'Review the workflow and the safeguards that still need evidence.',
+    } : readiness.pilotReviewRequired && readiness.primaryPath === 'P5' ? {
       title: 'Review safeguards before planning a pilot',
       guidance: 'Complete the missing context and review the evidence with the responsible owner before planning any pilot.',
     } : PATH_RECOMMENDATIONS[readiness.primaryPath] ?? DEFAULT_RECOMMENDATION;

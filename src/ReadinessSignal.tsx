@@ -19,7 +19,7 @@ export default function ReadinessSignal({signal}: ReadinessSignalProps) {
         ))}
       </div>
       <div className="readiness-signal__copy">
-        <p className="eyebrow">Readiness Signal</p>
+        <p className="eyebrow">Organisational Readiness</p>
         <h3>{signal.label}: {signal.title}</h3>
         <p>{signal.description}</p>
         {signal.rangeNote && <p className="readiness-signal__range-note">{signal.rangeNote}</p>}
