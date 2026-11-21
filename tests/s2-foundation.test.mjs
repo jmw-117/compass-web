@@ -54,9 +54,9 @@ test('React enhancement loads the report preview on demand and keeps it user-con
   assert.match(app, /aria-expanded=\{isReportModuleOpen\}/);
   assert.match(app, /<ReportModule\s+profile=\{reportProfile\}/);
   assert.match(report, /Self-Reported Assessment — Not Independently Verified/);
-  assert.match(report, /Save as PDF/);
+  assert.match(report, /Export Report/);
   assert.match(report, /Copy summary/);
-  assert.match(report, /Review sharing options/);
+  assert.match(report, /Send Report/);
   assert.match(report, /Open Silverspark in WhatsApp/);
 });
 
