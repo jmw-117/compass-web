@@ -146,6 +146,36 @@ async function run() {
     await checkTextContrast('.compass-context summary','.assessment-panel');
     await checkTextContrast('.compass-context summary small','.assessment-panel');
     assert.equal(await js("document.querySelector('.compass-context summary').getBoundingClientRect().height>=48"),true);
+    await click('.compass-context details:first-child summary');
+    const toolLayout=()=>js(`(()=>{
+      const grid=document.querySelector('.compass-option-grid');
+      const labels=[...grid.querySelectorAll('label')];
+      return {
+        columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+        count:labels.length,
+        aligned:labels.every(label=>{
+          const row=label.getBoundingClientRect();
+          const box=label.querySelector('input').getBoundingClientRect();
+          const caption=label.querySelector('span').getBoundingClientRect();
+          return box.width===18 && box.height===18 && row.height>=48 &&
+            box.left-row.left<16 && caption.left-box.right<16 && caption.left>box.right;
+        }),
+      };
+    })()`);
+    assert.deepEqual(await toolLayout(),{columns:1,count:10,aligned:true});
+    assert.equal(await noHorizontalOverflow(),true,'Tool options overflow at 320px');
+    await click('.compass-option-grid label:first-child');
+    assert.equal(await js("document.querySelector('.compass-option-grid input').checked"),true);
+    await click('.compass-option-grid label:first-child');
+    assert.equal(await js("document.querySelector('.compass-option-grid input').checked"),false);
+    await call('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
+    const desktopTools=await until(async()=>{
+      const layout=await toolLayout();
+      return layout.columns>1 ? layout : null;
+    },'Tool options did not switch to multiple columns');
+    assert.equal(desktopTools.aligned,true);
+    await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true});
+    await click('.compass-context details:first-child summary');
     await click('.answer-review summary');
     await click('[aria-label="Edit question 6"]');
     await until(()=>js("document.activeElement.id==='question-panel-title' && document.activeElement.textContent==="+JSON.stringify(questions[5].prompt)),
@@ -207,7 +237,7 @@ async function run() {
     assert.ok(bytes.length>3000);
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);
-    console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and PDF ('+bytes.length+' bytes). No external requests.');
+    console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, aligned tool checkboxes, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and PDF ('+bytes.length+' bytes). No external requests.');
   } catch(error) { if(messages) console.error(messages.split('\n').slice(0,5).join('\n')); throw error; }
   finally { socket?.close(); child.kill(); preview?.kill(); }
 }

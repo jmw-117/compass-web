@@ -71,14 +71,16 @@ function OptionalField({field, value, update}: {field: Field; value: unknown; up
     return (
       <fieldset className="compass-multi-options">
         <legend>{label}</legend>
-        {field.values?.map((option) => (
-          <label key={option}>
-            <input type="checkbox" value={option} checked={selected.includes(option)}
-              disabled={option !== 'unknown' && selected.length >= (field.max_items ?? Infinity) && !selected.includes(option)}
-              onChange={change} />
-            {labelValue(option)}
-          </label>
-        ))}
+        <div className="compass-option-grid">
+          {field.values?.map((option) => (
+            <label className="compass-checkbox" key={option}>
+              <input type="checkbox" value={option} checked={selected.includes(option)}
+                disabled={option !== 'unknown' && selected.length >= (field.max_items ?? Infinity) && !selected.includes(option)}
+                onChange={change} />
+              <span>{labelValue(option)}</span>
+            </label>
+          ))}
+        </div>
       </fieldset>
     );
   }
