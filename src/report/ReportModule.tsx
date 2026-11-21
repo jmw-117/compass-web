@@ -149,7 +149,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
     <>
       <div className="report-actions" role="group" aria-label="Report actions">
         <a className="button-primary" href={previewUrl || undefined} target="_blank" rel="noopener noreferrer"
-          aria-label="Preview Report (opens in a new tab)" aria-disabled={!previewUrl}>
+          aria-description="Opens in a new tab" aria-disabled={!previewUrl}>
           <ActionIcon name="preview" /> Preview Report
         </a>
         <button type="button" className="button-secondary" onClick={() => void handleExportReport()} disabled={exporting}>
@@ -167,7 +167,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
         <textarea id="compass-share-text" ref={summaryRef} readOnly rows={5} value={shareText} />
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={() => void copySummary()}>Copy summary</button>
-          <button type="button" className="button-primary" onClick={handleWhatsAppClick}>Open Silverspark in WhatsApp</button>
+          <button type="button" className="button-primary" onClick={handleWhatsAppClick}>Open WhatsApp</button>
         </div>
         {copyStatus && <p role="status">{copyStatus}</p>}
       </div>

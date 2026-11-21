@@ -16,7 +16,7 @@ async function until(action,message,timeout=8500) {
   throw Error(message,{cause:last});
 }
 
-async function run() {
+async function run(reduceMotion = false) {
   const basePath = process.env.COMPASS_BASE_PATH || '/silverspark-compass/';
   const externalUrl = process.env.COMPASS_SMOKE_URL;
   const app = new URL(externalUrl || 'http://127.0.0.1:4187' + basePath);
@@ -100,6 +100,23 @@ async function run() {
       assert.ok(ratio>=4.5,selector+' contrast '+ratio.toFixed(2)+':1');
     };
     assert.equal(await noHorizontalOverflow(),true,'Landing page overflows at 320px');
+    await js(`(()=>{
+      window.longButtons=[];
+      window.celebrations=0;
+      const scan=()=>{
+        for(const button of document.querySelectorAll('button,a.button-primary,a.button-secondary')){
+          const copy=button.cloneNode(true);
+          copy.querySelectorAll('[aria-hidden=true]').forEach(node=>node.remove());
+          const label=copy.textContent.trim();
+          if(label.split(/\\s+/).length>2 && !window.longButtons.includes(label))window.longButtons.push(label);
+        }
+        const burst=document.querySelector('.completion-confetti');
+        if(burst && burst!==window.lastBurst){window.lastBurst=burst;window.celebrations++;}
+      };
+      scan();
+      new MutationObserver(scan).observe(document.body,{subtree:true,childList:true,characterData:true});
+      return true;
+    })()`);
     await click('#take-assessment');
     try {
       await until(()=>js("document.querySelectorAll('.profile-form select').length === 3"),'Profile not rendered');
@@ -147,7 +164,7 @@ async function run() {
     assert.equal(await js("document.querySelector('.compass-field-grid')===null"),true);
     await checkTextContrast('.answer-review summary','.assessment-panel');
     await click('.answer-review summary');
-    await click('[aria-label="Edit question 6"]');
+    await click('[aria-label="Edit Q6"]');
     await until(()=>js("document.activeElement.id==='question-panel-title' && document.activeElement.textContent==="+JSON.stringify(questions[5].prompt)),
       'Editing answer did not return to question 6');
     await click('input[id="'+questions[5].options[3].id+'"]');
@@ -163,10 +180,17 @@ async function run() {
       button.click();
       return true;
     })()`),'Missing enabled button '+text);
-    await pressButton('See readiness snapshot');
+    await call('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:reduceMotion ? 'reduce' : 'no-preference'}]});
+    await pressButton('View Result');
     await until(()=>js("document.activeElement.id==='results-title'"),'Review did not lead directly to results');
+    if(reduceMotion) {
+      assert.equal(await js("window.matchMedia('(prefers-reduced-motion: reduce)').matches"),true);
+      assert.equal(await js('window.celebrations'),0,'Reduced motion should suppress confetti');
+      return;
+    }
+    assert.equal(await js('window.celebrations'),1,'Results should celebrate completion once');
     await pressButton('Back');
-    await pressButton('Add optional details');
+    await pressButton('More Details');
     await until(()=>js("document.activeElement.textContent==='Business workflow'"),'Business workflow step missing');
     await checkTextContrast('.compass-context .eyebrow','.assessment-panel');
     const toolLayout=()=>js(`(()=>{
@@ -201,7 +225,7 @@ async function run() {
     },'Tool options did not switch to multiple columns');
     assert.equal(desktopTools.aligned,true);
     assert.equal(await fieldPairs(),true,'Business workflow fields should sit side by side');
-    await pressButton('Next section');
+    await pressButton('Next Section');
     await until(()=>js("document.activeElement.textContent==='Staff capacity, timing and budget'"),'Staff and budget step missing');
     assert.equal(await fieldPairs(),true,'Staff and budget fields should sit side by side');
     assert.equal(await js(`(()=>{
@@ -211,15 +235,15 @@ async function run() {
     })()`),true);
     await call('Emulation.setDeviceMetricsOverride',{width:320,height:780,deviceScaleFactor:1,mobile:true});
     await until(async()=>!(await fieldPairs()),'Staff and budget columns did not stack at 320px');
-    await pressButton('Previous section');
+    await pressButton('Previous');
     await until(()=>js("document.activeElement.textContent==='Business workflow'"),'Previous did not return to business workflow');
     assert.equal(await js("document.querySelector('.compass-option-grid input').checked"),true);
-    await pressButton('Next section');
-    await pressButton('Next section');
+    await pressButton('Next Section');
+    await pressButton('Next Section');
     await until(()=>js("document.activeElement.textContent==='Evidence checks'"),'Applicable evidence step missing');
-    await pressButton('Next section');
+    await pressButton('Next Section');
     await until(()=>js("document.activeElement.textContent==='Technical assessment'"),'Technical assessment step missing');
-    await pressButton('See readiness snapshot');
+    await pressButton('View Result');
     await until(()=>js("document.body.innerText.includes('readiness snapshot') || document.body.innerText.includes('Readiness Snapshot')"),'Results not rendered');
     assert.equal(await js("/specialist review/i.test(document.body.innerText)"),true);
     assert.equal(await noHorizontalOverflow(),true,'Results overflow at 320px');
@@ -319,10 +343,12 @@ async function run() {
     assert.equal(await previewJs("document.querySelector('.report-score').textContent.includes('13 of 14 core answers are known')"),true);
     await previewJs("document.querySelector('#report-appendix-answers-and-provenance-title').click()");
     await call('Target.closeTarget',{targetId:target.targetId});
+    assert.deepEqual(await js('window.longButtons'),[],'All button labels must fit within two words');
+    assert.equal(await js('window.celebrations'),1,'Revisiting Results must not replay confetti');
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);
     console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, direct results, optional step navigation, responsive field pairs and checkboxes, report hierarchy, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and direct PDF download ('+bytes.length+' bytes). No external requests.');
   } catch(error) { if(messages) console.error(messages.split('\n').slice(0,5).join('\n')); throw error; }
   finally { socket?.close(); child.kill(); preview?.kill(); }
 }
-run().catch(error=>{console.error(error);process.exitCode=1;});
+run().then(()=>run(true)).catch(error=>{console.error(error);process.exitCode=1;});

@@ -1,5 +1,6 @@
+import CompletionConfetti from './assessment/CompletionConfetti';
 import ActionIcon from './report/ActionIcon';
-import {lazy, Suspense, useEffect, useMemo, useState} from 'react';
+import {lazy, Suspense, useEffect, useMemo, useRef, useState} from 'react';
 import questionBank from '../docs/domain/question_bank.json';
 import {evaluate} from './domain/evaluate';
 import {getGateLabel, getReportGuidance, getSafetyChecksMessage} from './domain/report-guidance';
@@ -169,6 +170,8 @@ function newAssessmentId() {
 
 export default function App() {
   const [assessmentId, setAssessmentId] = useState(newAssessmentId);
+  const celebratedAssessment = useRef('');
+  const [showConfetti, setShowConfetti] = useState(false);
   const [screen, setScreen] = useState<Screen>('start');
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -474,7 +477,7 @@ export default function App() {
 
           <div className="button-row">
             <button type="submit" className="button-primary" disabled={!profileComplete}>
-              Continue to assessment
+              Start Questions
             </button>
           </div>
         </form>
@@ -552,8 +555,8 @@ export default function App() {
         </p>
 
         <div className="button-row">
-          <button type="button" className="button-secondary" onClick={handleQuestionBack}>
-            {editingFromReview ? 'Back to review' : screen === 'preview' && currentIndex === 0 ? 'Back to profile' : 'Previous'}
+          <button type="button" className="button-secondary nav-back" onClick={handleQuestionBack}>
+            <ActionIcon name="back" /> {editingFromReview || (screen === 'preview' && currentIndex === 0) ? 'Back' : 'Previous'}
           </button>
           <button
             type="button"
@@ -561,7 +564,8 @@ export default function App() {
             onClick={() => handleQuestionContinue(currentQuestion)}
             disabled={!hasCurrentAnswer}
           >
-            {editingFromReview ? 'Save and return' : isFinalQuestion ? (step === 'preview' ? 'See quick preview' : 'Review your answers') : 'Next question'}
+            <ActionIcon name={editingFromReview || (isFinalQuestion && step === 'core') ? 'review' : 'next'} />
+            {editingFromReview ? 'Save Answer' : isFinalQuestion ? (step === 'preview' ? 'Quick Preview' : 'Review Answers') : 'Next Question'}
           </button>
         </div>
       </section>
@@ -586,15 +590,25 @@ export default function App() {
           <p>{remainingQuestions.length} questions remain before the final review.</p>
         </div>
         <div className="button-row">
-          <button type="button" className="button-secondary" onClick={() => {setQuestionIndex(previewQuestions.length - 1); setScreen('preview');}}>Review last answer</button>
-          <button type="button" className="button-primary" onClick={() => {setQuestionIndex(0); setScreen('core');}}>Continue assessment</button>
+          <button type="button" className="button-secondary nav-back" onClick={() => {setQuestionIndex(previewQuestions.length - 1); setScreen('preview');}}><ActionIcon name="back" /> Back</button>
+          <button type="button" className="button-primary" onClick={() => {setQuestionIndex(0); setScreen('core');}}><ActionIcon name="next" /> Continue</button>
         </div>
       </section>
     );
   }
 
   function showResults() {
-    if (allCoreQuestionsAnswered && safetyContextAnswered) setScreen('results');
+    if (!allCoreQuestionsAnswered || !safetyContextAnswered) return;
+    let firstVisit = celebratedAssessment.current !== assessmentId;
+    try {
+      if (sessionStorage.getItem('compass.lastCelebrated') === assessmentId) firstVisit = false;
+      sessionStorage.setItem('compass.lastCelebrated', assessmentId);
+    } catch {
+      // The in-memory reference also covers browsers with storage disabled.
+    }
+    celebratedAssessment.current = assessmentId;
+    setShowConfetti(firstVisit && !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    setScreen('results');
   }
 
   function renderReviewScreen() {
@@ -628,7 +642,7 @@ export default function App() {
                   <strong>{question.prompt}</strong>
                   <p>{question.options.find(({id}) => id === answers[question.id])?.label ?? 'Unanswered'}</p>
                 </div>
-                <button className="button-secondary" type="button" aria-label={`Edit question ${index + 1}`} onClick={() => editQuestion(index)}>Edit</button>
+                <button className="button-secondary" type="button" aria-label={`Edit Q${index + 1}`} onClick={() => editQuestion(index)}>Edit</button>
               </li>
             ))}
           </ol>
@@ -657,21 +671,23 @@ export default function App() {
           ))}
         </fieldset>
 
-        <div className="button-row">
-          <button type="button" className="button-secondary" onClick={() => {
+        <div className="button-row wizard-decision">
+          <button type="button" className="button-secondary nav-back" onClick={() => {
             setQuestionIndex(remainingQuestions.length - 1);
             setScreen('core');
           }}>
-            Back to questions
+            <ActionIcon name="back" /> Back
           </button>
-          <button type="button" className="button-secondary"
-            onClick={() => setScreen('context')} disabled={!allCoreQuestionsAnswered || !safetyContextAnswered}>
-            Add optional details
-          </button>
-          <button type="button" className="button-primary" onClick={showResults}
-            disabled={!allCoreQuestionsAnswered || !safetyContextAnswered}>
-            See readiness snapshot
-          </button>
+          <div className="wizard-forward">
+            <button type="button" className="button-secondary"
+              onClick={() => setScreen('context')} disabled={!allCoreQuestionsAnswered || !safetyContextAnswered}>
+              <ActionIcon name="details" /> More Details
+            </button>
+            <button type="button" className="button-primary result-cta" onClick={showResults}
+              disabled={!allCoreQuestionsAnswered || !safetyContextAnswered}>
+              <ActionIcon name="result" /> View Result
+            </button>
+          </div>
         </div>
         {!allCoreQuestionsAnswered && (
           <p className="inline-note answer-required-note" role="status">
@@ -690,6 +706,7 @@ export default function App() {
   function renderResultsScreen() {
     return (
       <section className="assessment-panel" aria-labelledby="results-title">
+        {showConfetti && <CompletionConfetti onFinish={() => setShowConfetti(false)} />}
         <div className="panel-header">
           <h2 id="results-title" tabIndex={-1}>Your AI readiness snapshot.</h2>
           <p>See what your answers support, which safeguards need attention and where to start.</p>
@@ -799,8 +816,8 @@ export default function App() {
         <summary>Draft controls</summary>
         <p>Your progress is saved for this browser tab. You can explicitly save a copy on this device to restore later. Copies expire after 30 days and are removed when you next try to restore them.</p>
         <div className="button-row">
-          <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('save')}>Save on device</button>
-          {screen === 'start' && <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('restore')}>Restore device draft</button>}
+          <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('save')}>Save Draft</button>
+          {screen === 'start' && <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('restore')}>Restore Draft</button>}
           <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('clear')}>Clear draft</button>
         </div>
         {draftStatus && <p role="status">{draftStatus}</p>}

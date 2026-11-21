@@ -1585,3 +1585,78 @@ h3 {
   .results-toolbar { grid-template-columns: minmax(0, 1fr); }
   .results-toolbar .report-actions { justify-content: flex-start; }
 }
+
+.button-row :is(.button-primary, .button-secondary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+.button-row svg { flex: none; }
+.assessment-panel .button-row > .nav-back {
+  flex: 0 0 auto;
+  margin-inline-end: auto;
+}
+.wizard-forward {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+.result-cta:enabled {
+  border-color: #c4a367;
+  box-shadow: 0 0 0 2px #c8a86040, 0 3px 14px #b08c4936;
+}
+@media (hover: hover) {
+  :is(.button-primary, .primary-link):not(:disabled, [aria-disabled="true"]):hover {
+    background: #263b54;
+    color: white;
+    box-shadow: 0 2px 8px #0e182830;
+  }
+  :is(.button-secondary, .text-button):not(:disabled):hover {
+    color: #0e1828;
+    background: #eaf0f5;
+    border-color: #8194a8;
+  }
+  .button-primary.result-cta:enabled:hover {
+    box-shadow: 0 0 0 3px #c8a86055, 0 3px 16px #b08c4966;
+  }
+  summary:hover { color: #284969; }
+}
+:is(button, a.button-primary, a.button-secondary, summary):focus-visible {
+  outline: 3px solid #276398;
+  outline-offset: 3px;
+}
+@media (max-width: 34rem) {
+  .wizard-decision { flex-direction: column; align-items: stretch; }
+  .wizard-decision > .nav-back { align-self: flex-start; }
+  .wizard-forward > button { flex: 1 1 auto; }
+}
+.assessment-panel[aria-labelledby="results-title"] { position: relative; }
+.completion-confetti {
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+  inset: 0 0 auto;
+  height: 9rem;
+  overflow: hidden;
+  animation: confetti-finish 1100ms linear both;
+}
+.completion-confetti i {
+  position: absolute;
+  top: 0;
+  width: 5px;
+  height: 9px;
+  border-radius: 2px;
+  animation: confetti-drop 850ms ease-out both;
+}
+@keyframes confetti-drop {
+  from { opacity: 0; transform: translateY(-8px); }
+  12% { opacity: 0.9; }
+  to { opacity: 0; transform: translate(var(--drift), var(--drop)) rotate(var(--spin)); }
+}
+@keyframes confetti-finish { from { opacity: 1; } to { opacity: 0.96; } }
+@media (prefers-reduced-motion: reduce) {
+  .completion-confetti { display: none; }
+  .completion-confetti, .completion-confetti i { animation: none; }
+}

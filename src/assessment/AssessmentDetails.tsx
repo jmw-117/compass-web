@@ -1,3 +1,4 @@
+import ActionIcon from '../report/ActionIcon';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import discovery from '../../docs/domain/prospective_client_discovery.json';
 import schema from '../../docs/domain/profile_schema.json';
@@ -194,19 +195,21 @@ export default function AssessmentDetails({
         </div>
       )}
 
-      <div className="button-row">
-        <button type="button" className="button-secondary"
+      <div className="button-row wizard-decision">
+        <button type="button" className="button-secondary nav-back"
           onClick={stepIndex === 0 ? onBack : () => setStepIndex((current) => current - 1)}>
-          {stepIndex === 0 ? 'Back to review' : 'Previous section'}
+          <ActionIcon name="back" /> {stepIndex === 0 ? 'Back' : 'Previous'}
         </button>
-        <button type="button" className={isLastStep ? 'button-primary' : 'button-secondary'} onClick={onResults}>
-          See readiness snapshot
-        </button>
-        {!isLastStep && (
-          <button type="button" className="button-primary" onClick={() => setStepIndex((current) => current + 1)}>
-            Next section
+        <div className="wizard-forward">
+          <button type="button" className={isLastStep ? 'button-primary result-cta' : 'button-secondary'} onClick={onResults}>
+            <ActionIcon name="result" /> View Result
           </button>
-        )}
+          {!isLastStep && (
+            <button type="button" className="button-primary" onClick={() => setStepIndex((current) => current + 1)}>
+              <ActionIcon name="next" /> Next Section
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );

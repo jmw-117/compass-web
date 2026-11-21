@@ -90,7 +90,7 @@ test('questions and results cannot be advanced to without valid selected answers
   assert.match(app, /Choose the answer that best describes how things work today/);
   assert.match(app, /Choose “I am not sure”/);
   assert.match(app, /disabled=\{!allCoreQuestionsAnswered\s*\|\|\s*!safetyContextAnswered\}/);
-  assert.match(app, /if \(allCoreQuestionsAnswered && safetyContextAnswered\) setScreen\('results'\)/);
+  assert.match(app, /if \(!allCoreQuestionsAnswered \|\| !safetyContextAnswered\) return;/);
   assert.match(app, /Answer all \{coreQuestions\.length\} questions before viewing your results\./);
 });
 
