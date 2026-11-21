@@ -24,7 +24,7 @@ References
 
 ## Flow and interpretation
 
-Users choose a business goal, answer one question at a time, and get a quick read on which of the first five answers need confirmation. The second part proceeds from data and systems to people, safeguards and measurement. Review lets users revisit one answer directly, then return to five required safety-context questions and optional diagnostics. 
+Users choose a business goal, answer one question at a time, and get a quick read on which of the first five answers need confirmation. The second part proceeds from data and systems to people, safeguards and measurement. Review lets users revisit one answer directly, then return to five required safety-context questions. From there, users can go straight to their results or add context one optional section at a time. 
 
 The snapshot leads from the score or range to a labeled readiness signal, safety checks and a practical next step. The first action comes from the existing recommendation catalog. The report retains the areas of readiness, unknowns and supporting actions, with self-reported status and optional sharing. The product has no live customer benchmarking data.
 
@@ -34,8 +34,8 @@ The snapshot leads from the score or range to a labeled readiness signal, safety
 | --- | --- |
 | Landing | Language and title, main landmark, keyboard skip link, clear call to action, narrow layout, no-JavaScript explanation and assessment loading on demand. |
 | Profile and questions | Visible labels associated with native controls, radio groups with legends, programmatic heading focus on transitions, labeled progress, explicit text guidance, readable font sizes and large answer targets. |
-| Review | Correct names for safety fields, visible accordion labels, answer edits, safety fields required before results, diagnostics disclosed as optional. |
-| Results and report | Text labels for readiness colors, foreground and background contrast on key panels, 320px layout and 200% results text checks, prioritized action, browser PDF and optional WhatsApp preview. |
+| Review | Correct names for safety fields, answer edits, safety fields required before results, optional wizard navigation, aligned tool checkboxes and responsive field pairs. |
+| Results and report | Text labels for readiness colors, foreground and background contrast on key panels, 320px layout and 200% results text checks, prioritized action, appendix disclosure, direct PDF download and exact WhatsApp summary preview. |
 | Static delivery | Relative base for project Pages, lazy assessment and report chunks, system fonts, no external requests during the tested journey, SHA-pinned deployment and live checks. |
 
 The audit applies [Chrome’s form guidance](https://github.com/GoogleChrome/modern-web-guidance/blob/main/skills/modern-web-guidance/guides/forms/forms.md), [Chrome’s accessibility guidance](https://github.com/GoogleChrome/modern-web-guidance-src/blob/main/guides/accessibility/accessibility/guide.md), [Chrome’s HTML guidance](https://github.com/GoogleChrome/modern-web-guidance/blob/main/skills/modern-web-guidance/guides/html/html.md) and [WCAG 2.2 text resize guidance](https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html). The evidence consists of source inspection and the checks in `tests/browser-smoke.cjs`. Broader assistive-technology testing, formal accessibility certification and validation with prospective clients require separate evidence.
