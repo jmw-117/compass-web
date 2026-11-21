@@ -875,6 +875,11 @@ h3 {
   font-size: 1.0625rem;
 }
 
+.profile-form select,
+.profile-form select option {
+  font-weight: 400;
+}
+
 .profile-form input:where(:not([type="checkbox"])):focus,
 .profile-form select:focus,
 .profile-form textarea:focus {
@@ -1180,61 +1185,61 @@ h3 {
 }
 
 .traffic-light {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.375rem;
+  display: inline-grid;
+  grid-template-columns: repeat(3, 2.25rem);
+  align-items: center;
   justify-self: start;
-  inline-size: min(100%, 8.5rem);
-  padding: 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: 0.875rem;
-  background: #fff;
+  gap: 0.25rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #334155;
+  border-radius: 2rem;
+  background: linear-gradient(165deg, #26374b, #101b2a);
+  box-shadow: inset 0 1px 0 #ffffff25, 0 3px 8px #0e182816;
 }
 
 .traffic-light__bulb {
   display: grid;
   place-items: center;
-  min-inline-size: 0;
-  aspect-ratio: 1;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
   border: 2px solid transparent;
   border-radius: 50%;
 }
 
 .traffic-light__bulb::before {
   content: "";
-  inline-size: 68%;
-  aspect-ratio: 1;
-  border: 1px solid #8995a3;
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  border: 1px solid #ffffff45;
   border-radius: 50%;
   background: var(--lamp-rest);
 }
 
 .traffic-light__bulb--red {
-  --lamp-rest: #fbe8e6;
-  --lamp-light: #d9473c;
-  --lamp-edge: #a02c23;
+  --lamp-rest: #684952;
+  --lamp-light: #ff8276;
 }
 
 .traffic-light__bulb--amber {
-  --lamp-rest: #fff1ce;
-  --lamp-light: #f5b837;
-  --lamp-edge: #8e6008;
+  --lamp-rest: #6a604d;
+  --lamp-light: #ffcb53;
 }
 
 .traffic-light__bulb--green {
-  --lamp-rest: #e1f3e9;
-  --lamp-light: #238d61;
-  --lamp-edge: #146c47;
+  --lamp-rest: #365e58;
+  --lamp-light: #67deae;
 }
 
 .traffic-light__bulb[data-active] {
-  border-color: var(--lamp-edge);
+  border-color: #f4f6f8;
 }
 
 .traffic-light__bulb[data-active]::before {
-  inline-size: 82%;
-  border-color: var(--lamp-edge);
-  background: var(--lamp-light);
+  inline-size: 1.55rem;
+  block-size: 1.55rem;
+  border-color: var(--lamp-light);
+  background: radial-gradient(circle at 32% 24%, #ffffffb0, transparent 53%), var(--lamp-light);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--lamp-light) 28%, transparent);
 }
 
 @media (forced-colors: active) {

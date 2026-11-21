@@ -1,5 +1,20 @@
 import {PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage} from 'pdf-lib';
 
+import logoData from '../assets/silverspark-mark-print.png?inline';
+import type {TrafficLightSignal} from '../domain/report-guidance';
+import type {ReadinessResult} from '../domain/evaluate';
+
+const white = rgb(1, 1, 1);
+const pale = rgb(0.95, 0.96, 0.97);
+const silver = rgb(0.72, 0.77, 0.82);
+const accent = rgb(0.60, 0.46, 0.23);
+const lampColors = {
+  red: rgb(1, 0.51, 0.46),
+  amber: rgb(1, 0.80, 0.33),
+  green: rgb(0.40, 0.87, 0.68),
+};
+const lampOrder = ['red', 'amber', 'green'] as const;
+
 const pageWidth = 595.28;
 const pageHeight = 841.89;
 const margin = 48;
@@ -57,12 +72,6 @@ function drawJustifiedLine(page: PDFPage, line: string, y: number, font: PDFFont
   }
   const widths = words.map((word) => font.widthOfTextAtSize(word, size));
   const gap = (contentWidth - widths.reduce((sum, width) => sum + width, 0)) / (words.length - 1);
-  const normalSpace = font.widthOfTextAtSize(' ', size);
-  if (gap > normalSpace * 2.5) {
-    page.drawText(line, {x: margin, y, font, size, color: charcoal});
-    return;
-  }
-
   let x = margin;
   words.forEach((word, index) => {
     page.drawText(word, {x, y, font, size, color: charcoal});
@@ -70,7 +79,7 @@ function drawJustifiedLine(page: PDFPage, line: string, y: number, font: PDFFont
   });
 }
 
-export async function downloadReport(report: HTMLElement, assessmentId: string) {
+export async function downloadReport(report: HTMLElement, assessmentId: string, signalColor: TrafficLightSignal['color'], dimensions: ReadinessResult['dimensions']) {
   const pdf = await PDFDocument.create();
   pdf.setTitle('Silverspark Compass Assessment Report');
   pdf.setAuthor('Silverspark Consulting');
@@ -79,6 +88,7 @@ export async function downloadReport(report: HTMLElement, assessmentId: string) 
     pdf.embedFont(StandardFonts.Helvetica),
     pdf.embedFont(StandardFonts.HelveticaBold),
   ]);
+  const logo = await pdf.embedPng(logoData);
   const characters = new Set(regular.getCharacterSet());
   const encode = (raw: string) => Array.from(raw, (letter) => {
     if (characters.has(letter.codePointAt(0) ?? 0)) return letter;
@@ -89,17 +99,25 @@ export async function downloadReport(report: HTMLElement, assessmentId: string) 
 
   function addPage() {
     const page = pdf.addPage([pageWidth, pageHeight]);
-    page.drawText('SILVERSPARK COMPASS', {x: margin, y: pageHeight - 39, size: 10, font: bold, color: navy});
-    page.drawLine({start: {x: margin, y: pageHeight - 49}, end: {x: pageWidth - margin, y: pageHeight - 49}, thickness: 0.8, color: lineColor});
+    const headerY = pageHeight - 67;
+    page.drawRectangle({x: 0, y: headerY, width: pageWidth, height: 67, color: navy});
+    page.drawRectangle({x: margin, y: headerY + 11, width: 42, height: 44, color: white});
+    const mark = logo.scaleToFit(30, 34);
+    page.drawImage(logo, {x: margin + (42 - mark.width) / 2, y: headerY + (66 - mark.height) / 2, ...mark});
+    page.drawText('Silverspark Consulting', {x: margin + 55, y: headerY + 35, size: 15, font: bold, color: white});
+    page.drawText('Strategy in Action', {x: margin + 55, y: headerY + 19, size: 10, font: regular, color: silver});
+    const name = 'COMPASS   /   AI READINESS';
+    page.drawText(name, {x: pageWidth - margin - bold.widthOfTextAtSize(name, 9), y: headerY + 28, size: 9, font: bold, color: white});
+    page.drawRectangle({x: 0, y: headerY - 2, width: pageWidth, height: 2, color: accent});
     return page;
   }
 
   let page = addPage();
-  let cursor = pageHeight - 80;
+  let cursor = pageHeight - 102;
   function ensureSpace(height: number) {
     if (cursor - height >= 54) return;
     page = addPage();
-    cursor = pageHeight - 73;
+    cursor = pageHeight - 102;
   }
 
   function drawBlock(raw: string, font: PDFFont, size: number, heading = false) {
@@ -119,15 +137,99 @@ export async function downloadReport(report: HTMLElement, assessmentId: string) 
     cursor -= heading ? 4 : 5;
   }
 
-  drawBlock('AI readiness assessment', bold, 23, true);
+  function sectionHeading(title: string) {
+    ensureSpace(62);
+    cursor -= 9;
+    page.drawLine({start: {x: margin, y: cursor + 9}, end: {x: margin + contentWidth, y: cursor + 9}, thickness: 0.8, color: lineColor});
+    cursor -= 9;
+    drawBlock(title, bold, 15, true);
+  }
+
+  function iconHeading(label: string, kind: 'arrow' | 'safety') {
+    ensureSpace(52);
+    const x = margin + 9;
+    const y = cursor + 3;
+    page.drawCircle({x, y, size: 9, color: pale});
+    const line = (ax: number, ay: number, bx: number, by: number) =>
+      page.drawLine({start: {x: x + ax, y: y + ay}, end: {x: x + bx, y: y + by}, thickness: 1.2, color: navy});
+    if (kind === 'arrow') {
+      line(-4, 0, 4, 0);
+      line(1, 3, 4, 0);
+      line(1, -3, 4, 0);
+    } else {
+      line(-5, -3, 0, 5);
+      line(0, 5, 5, -3);
+      line(5, -3, -5, -3);
+      line(0, 0, 0, 2);
+    }
+    page.drawText(label, {x: margin + 24, y: cursor, font: bold, size: 11, color: navy});
+    cursor -= 25;
+  }
+
+  const summary = report.querySelector('.report-overview');
+  const signal = report.querySelector('.readiness-signal');
+  drawBlock('AI readiness assessment', bold, 28, true);
   drawBlock(readText(report.querySelector('.report-disclaimer')), regular, 10);
+  cursor -= 10;
+  const cardY = cursor - 72;
+  page.drawRectangle({x: margin, y: cardY, width: contentWidth, height: 76, color: pale});
+  page.drawText(readText(summary?.querySelector('.result-label') ?? null).toUpperCase(), {x: margin + 16, y: cardY + 52, size: 9, font: bold, color: muted});
+  page.drawText(encode(readText(summary?.querySelector('.report-score-value') ?? null)), {x: margin + 16, y: cardY + 18, size: 23, font: bold, color: navy});
+
+  const lampX = pageWidth - margin - 101;
+  const lampY = cardY + 39;
+  page.drawRectangle({x: lampX, y: lampY - 16, width: 60, height: 32, color: navy});
+  for (const x of [lampX, lampX + 60]) page.drawCircle({x, y: lampY, size: 16, color: navy});
+  lampOrder.forEach((color, index) => {
+    const x = lampX + 4 + 26 * index;
+    const active = color === signalColor;
+    if (active) page.drawCircle({x, y: lampY, size: 12, borderWidth: 1, borderColor: white});
+    page.drawCircle({x, y: lampY, size: active ? 8.9 : 6, color: active ? lampColors[color] : silver, opacity: active ? 1 : 0.36});
+    if (active) page.drawCircle({x: x - 2, y: lampY + 2.8, size: 2, color: white, opacity: 0.65});
+  });
+  cursor = cardY - 24;
+  drawBlock(readText(signal?.querySelector('h3') ?? null), bold, 15, true);
+  for (const item of signal?.querySelectorAll('p:not(.eyebrow)') ?? []) drawBlock(readText(item), regular, 10.5);
+  for (const item of summary?.querySelectorAll('.report-score p:not(.result-label, .report-score-value)') ?? []) drawBlock(readText(item), regular, 10.5);
+
+  cursor -= 10;
+  iconHeading('Recommended next step', 'arrow');
+  drawBlock(readText(summary?.querySelector('.report-next-step h5') ?? null), bold, 17, true);
+  drawBlock(readText(summary?.querySelector('.report-next-step p:last-child') ?? null), regular, 11);
+  const firstAction = report.querySelector('#report-practical-recommendation-title')?.closest('details')?.querySelector('.report-section-content p:nth-child(3)');
+  if (firstAction) drawBlock(readText(firstAction), regular, 11);
+  cursor -= 10;
+  iconHeading('Safety checks', 'safety');
+  for (const item of report.querySelectorAll('.report-safety li, .report-safety p')) drawBlock(blockText(item), regular, 10.5);
+
+  page = addPage();
+  cursor = pageHeight - 102;
+  const chart = report.querySelector('#report-seven-dimension-results-title')?.closest('details');
+  sectionHeading('Seven dimensions of readiness');
+  drawBlock('The dark bar shows the confirmed score. A lighter extension shows how far the score could rise when unknown answers are confirmed.', regular, 10.5);
+  for (const row of chart?.querySelectorAll<HTMLElement>('[data-dimension]') ?? []) {
+    const metric = dimensions[row.dataset.dimension as keyof typeof dimensions];
+    const label = readText(row.querySelector('.report-dimension-header span'));
+    const value = readText(row.querySelector('.report-dimension-header span:last-child'));
+    ensureSpace(34);
+    page.drawText(encode(label), {x: margin, y: cursor, size: 11, font: bold, color: navy});
+    const detail = encode(value);
+    page.drawText(detail, {x: pageWidth - margin - regular.widthOfTextAtSize(detail, 10), y: cursor, size: 10, font: regular, color: muted});
+    const bar = (width: number, color: typeof navy) => {
+      if (width > 0) page.drawRectangle({x: margin, y: cursor - 12, width, height: 5, color});
+    };
+    bar(contentWidth, pale);
+    bar(contentWidth * metric.upper / 4, silver);
+    bar(contentWidth * metric.lower / 4, navy);
+    cursor -= 32;
+  }
+
   for (const section of report.querySelectorAll('.report-section')) {
-    cursor -= 7;
-    drawBlock(readText(section.querySelector('summary h4')), bold, 14, true);
-    const content = section.querySelector('.report-section-content');
-    for (const element of content?.querySelectorAll(reportBlockSelector) ?? []) {
+    if (section === chart || section.querySelector('.report-overview')) continue;
+    sectionHeading(readText(section.querySelector('summary h4')));
+    for (const element of section.querySelectorAll('.report-section-content :is(' + reportBlockSelector + ')')) {
       const text = blockText(element);
-      const emphasize = element.matches('h3, h5, dt, .report-score-value');
+      const emphasize = element.matches('h3, h5, dt');
       if (text) drawBlock(text, emphasize ? bold : regular, 10.5, emphasize);
     }
   }

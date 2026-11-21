@@ -111,7 +111,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
     setExporting(true);
     try {
       const {downloadReport} = await import('./export-pdf');
-      await downloadReport(report, assessmentId);
+      await downloadReport(report, assessmentId, reportGuidance.signal.color, readiness.dimensions);
     } catch {
       setExportError('The PDF could not be downloaded. Please try Export Report again.');
     } finally {
@@ -230,7 +230,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
       <ReportSection id="seven-dimension-results" title="Seven Dimension Results" expanded={openSections.has('seven-dimension-results')} onToggle={toggleSection}>
         <div className="dimension-report-list">
           {Object.entries(readiness.dimensions).map(([dimensionId, metric]) => (
-            <div key={dimensionId} className="report-dimension-item">
+            <div key={dimensionId} data-dimension={dimensionId} className="report-dimension-item">
               <div className="report-dimension-header">
                 <span>{DIMENSION_LABELS[dimensionId] ?? dimensionId}</span>
                 <span>
