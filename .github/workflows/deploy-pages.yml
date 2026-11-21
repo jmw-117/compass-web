@@ -36,6 +36,10 @@ jobs:
       - name: Check exported PDF text and render pages
         working-directory: ${{ runner.temp }}/compass-proof
         run: |
+          if ! command -v pdftotext >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils
+          fi
           pdftotext -layout synthetic-report.pdf extracted.txt
           grep -F 'AI Use-Case Guidance: Hold' extracted.txt
           grep -F 'sspark.net' extracted.txt
