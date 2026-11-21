@@ -1,15 +1,7 @@
 {
   "version": "1.2.0",
   "scoring": {
-    "weights_pct": {
-      "STR": 15,
-      "PRO": 15,
-      "DAT": 15,
-      "TEC": 15,
-      "PEO": 15,
-      "GOV": 15,
-      "MET": 10
-    },
+    "weight_source": "question_bank.json dimensions[].weight_pct",
     "core_indicators_per_dimension": 2,
     "answer_score_range": [
       0,
