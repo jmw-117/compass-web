@@ -677,7 +677,7 @@ export default function App() {
           ))}
         </fieldset>
 
-        <div className="profile-form compass-field-grid">
+        <div className="profile-form safety-evidence">
           {activeProbes({...context,...profile}, id => coreQuestions.find(q=>q.id===id)?.options.find(o=>o.id===answers[id])?.score ?? null)
             .filter(q => ['PR-GOV-SHARE','PR-GOV-PLANNED','PR-HUMAN-REVIEW'].includes(q.id))
             .map(q => <label key={q.id}>{q.prompt}
