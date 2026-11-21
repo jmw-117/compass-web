@@ -145,7 +145,7 @@ const questionExamples: Record<string, string> = {
   'MET-02': 'Think of who checks after a change, when they check and what they do with the findings.',
 };
 
-const wizardSteps = ['Profile', 'Questions', 'Review', 'Results'] as const;
+const wizardSteps = ['Profile', 'Questions', 'Safety', 'Review', 'Results'] as const;
 
 const previewQuestions = coreQuestions.slice(0, 5);
 const remainingQuestions = coreQuestions.slice(5);
@@ -207,6 +207,7 @@ export default function App() {
       ? fields.context as Record<string, unknown> : {});
     setProbeAnswers(knownStrings(fields.probeAnswers));
     setExtendedAnswers(knownStrings(fields.extendedAnswers));
+    return migrated;
   }
 
   useEffect(() => {
@@ -386,10 +387,10 @@ export default function App() {
         setDraftStatus('Draft saved on this device.');
       } else if (action === 'restore') {
         const saved = await restoreDeviceDraft();
-        if (saved) applyDraft(saved);
-        setDraftStatus(saved ? 'Saved draft restored to this session.' : 'There is no current saved draft.');
+        if (!saved) setDraftStatus('There is no current saved draft.');
+        else if (!applyDraft(saved)) setDraftStatus('Saved draft restored to this session.');
       } else {
-        sessionStorage.removeItem(STORAGE_KEY);
+        try {sessionStorage.removeItem(STORAGE_KEY);} catch { /* Continue clearing the independent device store. */ }
         setAssessmentId(newAssessmentId());
         setProfile(emptyProfile);
         setAnswers({});
@@ -534,7 +535,7 @@ export default function App() {
           <legend>
             <h2 id="question-panel-title" tabIndex={-1}>{currentQuestion.prompt}</h2>
           </legend>
-          <p id="question-example" className="question-example">{currentQuestion.id === 'STR-02' ? ownership[profile.organizationType] + ' can take this role.' : questionExamples[currentQuestion.id]}
+          <p id="question-example" className="question-example">{currentQuestion.id === 'STR-02' ? (ownership[profile.organizationType] ?? 'The person responsible for this workflow') + ' can take this role.' : questionExamples[currentQuestion.id]}
           {currentQuestion.id === 'DAT-01' && ' ' + markets.KE.records}
           {currentQuestion.id === 'TEC-02' && ' ' + markets.KE.continuity}
           {currentQuestion.id === 'PRO-01' && ' Think of ' + (industryExamples[profile.industry] ?? 'a typical request') + '.'}</p>
@@ -683,7 +684,7 @@ export default function App() {
               </select>
             </label>)}
         </div>
-        {readinessResult.primaryPath === 'FEASIBILITY' && readinessResult.useCaseGuidance === 'Eligible for controlled pilot planning' &&
+        {(readinessResult.primaryPath === 'FEASIBILITY' || readinessResult.primaryPath === 'P5') && readinessResult.useCaseGuidance === 'Eligible for controlled pilot planning' &&
           <label className="profile-form">Can someone make time to plan a small pilot?
             <select value={String(context.staff_capacity ?? '')} onChange={event => setContext({...context, staff_capacity:event.target.value})}>
               <option value="">Choose or skip</option><option value="available">Yes</option><option value="limited">Some time</option><option value="none">No time now</option><option value="unknown">Not sure</option>
@@ -802,7 +803,7 @@ export default function App() {
     );
   }
 
-  const activeStep = screen === 'start' ? 'Profile' : (screen === 'review' || screen === 'context') ? 'Review' : screen === 'results' ? 'Results' : 'Questions';
+  const activeStep = screen === 'start' ? 'Profile' : screen === 'safety' ? 'Safety' : (screen === 'review' || screen === 'context') ? 'Review' : screen === 'results' ? 'Results' : 'Questions';
 
   return (
     <div className="assessment-shell">
@@ -836,7 +837,7 @@ export default function App() {
       {screen === 'results' && renderResultsScreen()}
       <details className="compass-draft-controls">
         <summary>Draft controls</summary>
-        <p>Your progress is saved for this browser tab. You can explicitly save a copy on this device to restore later. Copies expire after 30 days and are removed when you next try to restore them.</p>
+        <p>Your progress is saved for this browser tab. You can explicitly save a copy on this device to restore later. Copies expire after 30 days. Opening Compass removes expired copies. On a shared device, clear your draft before leaving.</p>
         <div className="button-row">
           <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('save')}>Save Draft</button>
           {screen === 'start' && <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('restore')}>Restore Draft</button>}

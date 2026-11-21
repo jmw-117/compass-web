@@ -247,8 +247,36 @@
         "workflow_example"
       ],
       "does_not_score": true
+    },
+    {
+      "id": "PR-FIN-COMPARE",
+      "when": {
+        "all": [
+          {
+            "profile": "baseline_known",
+            "eq": "yes"
+          },
+          {
+            "profile": "impact_measure",
+            "in": [
+              "cost",
+              "revenue"
+            ]
+          }
+        ]
+      },
+      "prompt": "Do comparable records show an actual financial change after allowing for implementation and running costs?",
+      "choices": [
+        "Yes",
+        "No",
+        "Not sure"
+      ],
+      "changes": [
+        "financial_evidence"
+      ],
+      "does_not_score": true
     }
   ],
-  "cap": 9,
+  "cap": 10,
   "edit_policy": "The engine recomputes all active probes from the complete current answers. Inactive answers are retained only locally, excluded from results, report and submission; changing an anchor back reactivates previous probe answer only if the same rule version and exact options still apply. Conflicts are shown as evidence needs, not silently rescored."
 }

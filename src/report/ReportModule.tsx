@@ -169,7 +169,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
       {exportError && <p className="storage-error" role="alert">{exportError}</p>}
       <div className="compass-share-preview" id="compass-share-preview" hidden={!shareOpen}>
         <p>Send Report prepares a summary. To share the complete PDF, export it and attach it yourself. WhatsApp opens with this message ready for you to send.</p>
-        <p>Other ways to reach us are on the <a href="https://sspark.net/" target="_blank" rel="noopener noreferrer">Silverspark Consulting website</a>.</p>
+        <p>To discuss these findings, call <a href="tel:+254762057288">+254 762 057 288</a> or visit the <a href="https://sspark.net/" target="_blank" rel="noopener noreferrer">Silverspark Consulting website</a>.</p>
         <label htmlFor="compass-share-text">Message preview</label>
         <textarea id="compass-share-text" ref={summaryRef} readOnly rows={5} value={shareText} />
         <div className="button-row">
@@ -222,15 +222,16 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
 
           <ReportSection id="three-priority-actions" title="Priority Actions" expanded={openSections.has('three-priority-actions')} onToggle={toggleSection}>
             <ol className="report-list ordered">
-              {reportGuidance.actions.slice(0, 3).map(({id, label}) => {
+              {readiness.actionPlan.map(({id, title: label, step, outcome, owner, effort, category}) => {
                 const action = catalogActions.get(id);
                 return (
                   <li key={id}>
                     <strong>{label}</strong> 
                     {action && (
                       <div>
-                        <p>Owner: {profile.organizationType === 'Sole proprietor' ? 'Business owner' : action.owner_role}. Effort: {action.effort.toLowerCase()}. Cost: {id === 'A20' ? 'specialist review' : action.cost_class === 'C0' ? 'no external cash' : action.cost_class === 'C1' ? 'low-cost or no-code' : 'implementation support'}.</p>
+                        <p>Owner: {owner}. Effort: {effort}. Cost: {category}.</p>
                         <p>{workflow ? 'Apply this to ' + workflow + (bottleneck ? ' to address ' + bottleneck : '') + '.' : 'Choose a recent example from the business.'}</p>
+                        <p>{step} {outcome}</p>
                         <p>Evidence to review: {action.evidence_question_ids.map(getQuestionLabel).join(', ')}.</p>
                         {action.prerequisite_ids.length > 0 && <p>Complete first: {action.prerequisite_ids.map(getActionLabel).join(', ')}.</p>}
                         <p>Done when: {action.validation}</p>

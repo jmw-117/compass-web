@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "status": "PROPOSED_REQUIRES_S1_SIGNOFF",
   "scope": "optional extended consultant diagnostic",
   "scoring": "No score added to overall readiness; no penalty for skipped/unknown",
@@ -752,6 +752,17 @@
     },
     "data_stewardship_gap": {
       "none": "flag.no_data_authority"
+    },
+    "vendor_check": {
+      "unverified": "flag.vendor_unverified",
+      "unknown": "flag.vendor_unverified"
+    },
+    "continuity_check": {
+      "wait": "flag.no_continuity_plan",
+      "unknown": "flag.continuity_unverified"
+    },
+    "experience_check": {
+      "none": "flag.ai_walkthrough"
     }
   },
   "flag_to_existing_action_ids": {
@@ -825,7 +836,99 @@
     ],
     "no_data_authority": [
       "A04"
+    ],
+    "vendor_unverified": [
+      "A07"
+    ],
+    "continuity_unverified": [
+      "A03"
+    ],
+    "ai_walkthrough": [
+      "A11"
     ]
   },
-  "gate_merge_policy": "High impact or missing controls from extension yield advisory human-review flags. They DO NOT silently redefine the existing seven formal gates; an S1-approved contract change must modify decision_predicates.json, rules.json and golden cases together. A deep question cannot authorize a pilot."
+  "gate_merge_policy": "High impact or missing controls from extension yield advisory human-review flags. They DO NOT silently redefine the existing seven formal gates; an S1-approved contract change must modify decision_predicates.json, rules.json and golden cases together. A deep question cannot authorize a pilot.",
+  "quick_checks": [
+    {
+      "id": "EX-QUICK-VENDOR",
+      "module": "QUICK",
+      "prompt": "How would you decide whether a tool can handle your information?",
+      "flag": "vendor_check",
+      "choices": [
+        {
+          "id": "EX-QUICK-VENDOR-reviewed",
+          "value": "reviewed",
+          "label": "Check its data-use terms and test it on safe examples"
+        },
+        {
+          "id": "EX-QUICK-VENDOR-unverified",
+          "value": "unverified",
+          "label": "Choose it without reviewing data use"
+        },
+        {
+          "id": "EX-QUICK-VENDOR-unknown",
+          "value": "unknown",
+          "label": "I need help checking this"
+        }
+      ],
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "TEC",
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-QUICK-CONTINUITY",
+      "module": "QUICK",
+      "prompt": "What happens to this task when connectivity or power fails?",
+      "flag": "continuity_check",
+      "choices": [
+        {
+          "id": "EX-QUICK-CONTINUITY-offline",
+          "value": "offline",
+          "label": "There is a tested offline or manual method"
+        },
+        {
+          "id": "EX-QUICK-CONTINUITY-wait",
+          "value": "wait",
+          "label": "Work stops until service returns"
+        },
+        {
+          "id": "EX-QUICK-CONTINUITY-unknown",
+          "value": "unknown",
+          "label": "This has not been checked"
+        }
+      ],
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "TEC",
+      "unknown_value": "unknown"
+    },
+    {
+      "id": "EX-QUICK-FIRST",
+      "module": "QUICK",
+      "prompt": "What have you personally tried with an AI tool?",
+      "flag": "experience_check",
+      "choices": [
+        {
+          "id": "EX-QUICK-FIRST-none",
+          "value": "none",
+          "label": "Nothing yet"
+        },
+        {
+          "id": "EX-QUICK-FIRST-demo",
+          "value": "demo",
+          "label": "Tried a demonstration with made-up information"
+        },
+        {
+          "id": "EX-QUICK-FIRST-verified",
+          "value": "verified",
+          "label": "Checked a result against a trusted source"
+        }
+      ],
+      "applies_when": "ALL",
+      "score_role": "DIAGNOSTIC_ONLY",
+      "related_core_dimension": "TEC",
+      "unknown_value": "unknown"
+    }
+  ]
 }

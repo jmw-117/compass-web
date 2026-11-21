@@ -1,3 +1,4 @@
+import {buildActionPlan} from './action-plan.ts';
 import {discoverOpportunity} from './opportunity.ts';
 import bank from '../../docs/domain/question_bank.json' with {type: 'json'};
 import rules from '../../docs/domain/rules.json' with {type: 'json'};
@@ -40,6 +41,7 @@ export type ReadinessResult = {
   primaryPath: string;
   secondaryPaths: string[];
   actionIds: string[];
+  actionPlan: ReturnType<typeof buildActionPlan>;
   costFit: 'no_cash_option' | 'within_verified_ceiling' | 'possible_not_priced' | 'unknown' | 'specialist_review';
   ruleVersion: string;
 };
@@ -204,6 +206,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   if (hasFlag('high_impact_review') && profile.high_impact_ai_workflow === 'no') concerns.push('Your technical answers describe consequential data while the use-case answer excludes significant decisions. Confirm the role of AI.');
   if (hasFlag('sensitive_data_review') || hasFlag('data_classification_unknown')) concerns.push('Review the reported data classification and tool safeguards.');
   if (hasGate('DATA-UNKNOWN') || hasGate('DATA-POOR')) concerns.push(hasGate('DATA-POOR') ? 'Check unreliable records against the source before using them in a pilot.' : 'Check a sample of the intended data to establish its quality.');
+  if (hasFlag('vendor_unverified')) concerns.push('Review the tool’s data-use terms before providing real information.');
   if (hasFlag('no_ops_owner')) concerns.push('Identify who monitors the tool and responds when it fails.');
   if (noUse && ['decides','influences','yes','assists'].includes(String(profile.high_impact_ai_workflow))) concerns.push('Your answers describe a decision involving AI but no current or planned use. Clarify the workflow.');
   if (scoreOf('STR-01') >= 3 && hasFlag('no_use_case')) concerns.push('Compare the stated goal with the technical finding that no use case has been identified.');
@@ -211,8 +214,8 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   const hold = hasGate('URGENT-REGULATED') || (hasFlag('high_impact_review') && profile.high_impact_ai_workflow !== 'no') || hasGate('GOV-DATA') || hasGate('OWN-NONE');
   const useCaseGuidance: ReadinessResult['useCaseGuidance'] = hold ? 'Hold' : concerns.length ? 'Review required' : noUse ? 'Not assessed' : 'Eligible for controlled pilot planning';
   const deliveryCapacity = profile.staff_capacity === 'none' ? 'Unavailable' : ['available','limited'].includes(String(profile.staff_capacity)) ? 'Available' : 'Unconfirmed';
-  const financialEvidence = hasGate('BASELINE-MISSING') || hasFlag('baseline_missing') ? 'Unsupported' :
-    profile.baseline_known === 'yes' && ['cost','revenue'].includes(String(profile.impact_measure)) ? 'Supported by available evidence' : 'Unverified';
+  const financialEvidence = hasGate('BASELINE-MISSING') || hasFlag('baseline_missing') || probeAnswers.get('PR-FIN-COMPARE') === 'No' ? 'Unsupported' :
+    probeAnswers.get('PR-FIN-COMPARE') === 'Yes' ? 'Supported by available evidence' : 'Unverified';
   if (scoreOf('MET-01') >= 3 && financialEvidence === 'Unsupported') concerns.push('Measurement is rated highly, but no baseline was identified for this workflow. Record its starting value before estimating benefit.');
   if (scoreOf('STR-01') === 0 && profile.primary_goal && profile.primary_goal !== 'explore') concerns.push('You selected a goal but reported no agreed outcome. Name the workflow and the change you want to see.');
   const pilotReviewRequired = useCaseGuidance !== 'Eligible for controlled pilot planning';
@@ -251,6 +254,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
     primaryPath,
     secondaryPaths,
     actionIds,
+    actionPlan: buildActionPlan(actionIds,profile),
     costFit,
     ruleVersion: rules.version,
   };

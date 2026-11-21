@@ -211,7 +211,8 @@ test('unknown core answers do not satisfy numeric safety or path predicates', ()
   });
 
   const gateIds = result.formalGates.map(({id}) => id);
-  for (const gateId of ['DATA-UNKNOWN', 'GOV-DATA', 'OWN-NONE', 'BASELINE-MISSING']) {
+  assert.ok(gateIds.includes('DATA-UNKNOWN'), 'Unknown data quality needs verification');
+  for (const gateId of ['GOV-DATA', 'OWN-NONE', 'BASELINE-MISSING']) {
     assert.ok(!gateIds.includes(gateId), `Unknown answers must not trigger ${gateId}`);
   }
   assert.notEqual(result.primaryPath, 'P4');

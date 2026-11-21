@@ -15,3 +15,5 @@ Compass reaches 100% when the agreed product works and the merged build is runni
 | **Total** | **100** | |
 
 This measures delivery of the test deployment. Real-world validation and authorization for public commercial use are separate decisions.
+
+[The Compass progress ledger](COMPASS_V3_PROGRESS.md) tracks the 23 new requirements and their release evidence separately from the running-release percentage.
