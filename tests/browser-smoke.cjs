@@ -121,6 +121,8 @@ async function run() {
         'Question '+(index+1)+' was not shown and focused');
       assert.equal(await js("document.querySelector('.progress-bar').getAttribute('aria-valuenow')"),String(index+1));
       assert.equal(await noHorizontalOverflow(),true,'Question '+(index+1)+' overflows at 320px');
+      assert.equal(await js("document.querySelector('.progress-wrap').getBoundingClientRect().top>=0"),true,
+        'Question progress is above the viewport');
       assert.equal(await js("Array.from(document.querySelectorAll('.option-card span')).map(el=>el.textContent).join('|')"),options.map(option=>option.label).join('|'));
       if(index===0) {
         assert.equal(await js("document.querySelector('.question-panel .button-primary').disabled"),true);

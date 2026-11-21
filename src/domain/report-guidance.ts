@@ -175,6 +175,10 @@ export function getReportGuidance(readiness: ReadinessSummary) {
       : `This range also reaches ${upperSignal.label.toLowerCase()} territory. The cautious signal follows the lower bound until uncertain answers are confirmed.`,
   };
 
+  const scoreValue = isExactScore
+    ? `${Math.round(readiness.score.lowerEighths / 8)}`
+    : `${lowerScore} to ${upperScore}`;
+
   return {
     title: recommendation.title,
     primaryPathLabel: recommendation.title,
@@ -183,9 +187,8 @@ export function getReportGuidance(readiness: ReadinessSummary) {
     ),
     signal,
     scoreLabel: isExactScore ? 'Readiness Score' : 'Readiness Range',
-    scoreText: isExactScore
-      ? `${Math.round(readiness.score.lowerEighths / 8)} out of 100`
-      : `${lowerScore} to ${upperScore} out of 100`,
+    scoreValue,
+    scoreText: `${scoreValue} out of 100`,
     scoreNote: isExactScore
       ? ''
       : 'This is a range, not a single score. “I am not sure” answers can change the result; confirming them may narrow the range.',

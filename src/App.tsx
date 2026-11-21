@@ -232,9 +232,9 @@ export default function App() {
   }, [assessmentId, profile, answers, context, probeAnswers, extendedAnswers, draftLoaded]);
 
   useEffect(() => {
-    const heading = document.querySelector<HTMLElement>('#react-enhancement h2');
-    heading?.focus({preventScroll: true});
-    heading?.scrollIntoView({block: 'start', behavior: 'instant'});
+    const shell = document.querySelector<HTMLElement>('.assessment-shell');
+    shell?.querySelector('h2')?.focus({preventScroll: true});
+    shell?.scrollIntoView({block: 'start', behavior: 'instant'});
   }, [screen, questionIndex]);
 
   useEffect(() => {
@@ -713,7 +713,7 @@ export default function App() {
         <div className="result-summary">
           <div>
             <p className="result-label">{reportGuidance.scoreLabel}</p>
-            <h3>{reportGuidance.scoreText}</h3>
+            <h3>{reportGuidance.scoreValue} <span>out of 100</span></h3>
             {reportGuidance.scoreNote && <p className="result-score-note">{reportGuidance.scoreNote}</p>}
           </div>
           <div>
@@ -722,12 +722,13 @@ export default function App() {
           </div>
         </div>
 
+        <ReadinessSignal signal={reportGuidance.signal} />
+
         <aside className="pragmatic-recommendation" aria-labelledby="safety-results-title">
           <h3 id="safety-results-title">Safety and evidence checks</h3>
           <p>{getSafetyChecksMessage(readinessResult)}</p>
           {readinessResult.formalGates.length > 0 && <ul>{readinessResult.formalGates.map((gate) => <li key={gate.id}>{getGateLabel(gate.id)}</li>)}</ul>}
         </aside>
-        <ReadinessSignal signal={reportGuidance.signal} />
 
         <aside className="pragmatic-recommendation" aria-labelledby="practical-next-step-title">
           <p className="eyebrow">Practical Next Step</p>
