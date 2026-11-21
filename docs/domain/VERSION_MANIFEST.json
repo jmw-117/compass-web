@@ -2,7 +2,7 @@
   "version": "1.4.0",
   "date": "2026-11-03",
   "product_spec": "docs/PRODUCT_TECHNICAL_SPECIFICATION.md",
-  "core_question_bank_version": "1.1.0",
+  "core_question_bank_version": "2.0.0",
   "extension_version": "1.3.0",
   "discovery_version": "1.3.0",
   "requirements_version": "1.3.0",

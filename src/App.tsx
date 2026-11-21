@@ -1,3 +1,7 @@
+import {encodeDraft,decodeDraft} from './assessment/draft-format';
+import profileSchema from '../docs/domain/profile_schema.json';
+import MethodNote from './assessment/MethodNote';
+import {markets, ownership, industryExamples} from './domain/market';
 import {activeProbes} from './domain/diagnostics';
 import DecisionSummary from './assessment/DecisionSummary';
 import CompletionConfetti from './assessment/CompletionConfetti';
@@ -15,7 +19,7 @@ const STORAGE_KEY = 'silverspark-compass-draft-v1';
 
 type Question = typeof questionBank.questions[number];
 
-type Screen = 'start' | 'preview' | 'preview-summary' | 'core' | 'review' | 'context' | 'results';
+type Screen = 'start' | 'preview' | 'preview-summary' | 'core' | 'review' | 'context' | 'safety' | 'results';
 
 type Profile = {
   organizationType: string;
@@ -48,18 +52,8 @@ const ORGANISATION_OPTIONS = [
   ['other', 'Other'],
 ] as const;
 
-const INDUSTRY_OPTIONS = [
-  ['retail', 'Retail'],
-  ['professional_services', 'Professional services'],
-  ['hospitality', 'Hospitality'],
-  ['health', 'Health'],
-  ['education', 'Education'],
-  ['financial_services', 'Financial services'],
-  ['manufacturing', 'Manufacturing'],
-  ['logistics', 'Logistics'],
-  ['technology', 'Technology'],
-  ['other', 'Other'],
-] as const;
+const INDUSTRY_OPTIONS = profileSchema.early_fields.find(field => field.id === 'industry')!.values.map(value =>
+  [value, value.replaceAll('_',' ').replace(/^./, c=>c.toUpperCase())] as const);
 
 const BUSINESS_GOAL_OPTIONS = [
   ['efficiency', 'Improve efficiency'],
@@ -191,10 +185,8 @@ export default function App() {
   const [draftLoaded, setDraftLoaded] = useState(false);
 
   function applyDraft(raw: string) {
-    if (raw.length > 32_768) throw new Error('Draft is too large.');
-    const draft: unknown = JSON.parse(raw);
-    if (!draft || typeof draft !== 'object' || Array.isArray(draft)) throw new Error('Invalid draft.');
-    const fields = draft as Record<string, unknown>;
+    const {fields,migrated} = decodeDraft(raw);
+    if (migrated) setDraftStatus('Business details restored. Answer the revised readiness questions again.');
     if (typeof fields.assessmentId === 'string' && /^SELF-[A-Z0-9-]{6,48}$/.test(fields.assessmentId)) setAssessmentId(fields.assessmentId);
     function knownStrings(value: unknown) {
       if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -219,9 +211,11 @@ export default function App() {
 
   useEffect(() => {
     try {
+      void restoreDeviceDraft().catch(() => undefined);
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) applyDraft(raw);
     } catch {
+      try {sessionStorage.removeItem(STORAGE_KEY);} catch { /* Storage may be blocked. */ }
       setStorageError('The session draft could not be restored. You can start a new assessment.');
     } finally {
       setDraftLoaded(true);
@@ -232,7 +226,7 @@ export default function App() {
     if (!draftLoaded) return;
     try {
       const hasProgress = Object.values(profile).some(Boolean) || Object.keys(answers).length > 0;
-      if (hasProgress) sessionStorage.setItem(STORAGE_KEY, JSON.stringify({assessmentId, profile, answers, context, probeAnswers, extendedAnswers}));
+      if (hasProgress) sessionStorage.setItem(STORAGE_KEY, encodeDraft({assessmentId, profile, answers, context, probeAnswers, extendedAnswers}));
       else sessionStorage.removeItem(STORAGE_KEY);
     } catch {
       setStorageError('Draft storage is blocked, so you can continue in this session without saving.');
@@ -374,7 +368,7 @@ export default function App() {
     }
 
     setQuestionIndex(0);
-    setScreen('review');
+    setScreen('safety');
   }
 
   function editQuestion(index: number) {
@@ -388,7 +382,7 @@ export default function App() {
     setDraftBusy(true);
     try {
       if (action === 'save') {
-        await saveDeviceDraft(JSON.stringify({assessmentId, profile, answers, context, probeAnswers, extendedAnswers}));
+        await saveDeviceDraft(encodeDraft({assessmentId, profile, answers, context, probeAnswers, extendedAnswers}));
         setDraftStatus('Draft saved on this device.');
       } else if (action === 'restore') {
         const saved = await restoreDeviceDraft();
@@ -420,6 +414,7 @@ export default function App() {
       <section className="assessment-panel start-panel" aria-labelledby="assessment-title">
         <div className="panel-header">
           <h2 id="assessment-title" tabIndex={-1}>Tell us about your organisation.</h2>
+          <p>Start with three business details, then answer 14 readiness questions and five safety questions. Optional details tailor your recommendations.</p>
           <p>Choose a goal to frame your assessment. You’ll answer 14 questions and get a readiness summary with recommended next steps.</p>
         </div>
 
@@ -473,7 +468,7 @@ export default function App() {
             </select>
           </label>
 
-          <p className="inline-note">Your progress is saved only in this browser.</p>
+          <p className="inline-note">On a shared device, clear your draft before leaving. Your progress is saved only in this browser.</p>
 
           {!profileComplete && (
             <p className="inline-note" aria-live="polite">
@@ -539,7 +534,10 @@ export default function App() {
           <legend>
             <h2 id="question-panel-title" tabIndex={-1}>{currentQuestion.prompt}</h2>
           </legend>
-          <p id="question-example" className="question-example">{questionExamples[currentQuestion.id]}</p>
+          <p id="question-example" className="question-example">{currentQuestion.id === 'STR-02' ? ownership[profile.organizationType] + ' can take this role.' : questionExamples[currentQuestion.id]}
+          {currentQuestion.id === 'DAT-01' && ' ' + markets.KE.records}
+          {currentQuestion.id === 'TEC-02' && ' ' + markets.KE.continuity}
+          {currentQuestion.id === 'PRO-01' && ' Think of ' + (industryExamples[profile.industry] ?? 'a typical request') + '.'}</p>
           <div className="option-list">
             {currentQuestion.options.map((option) => (
               <label key={option.id} htmlFor={option.id} className={`option-card ${answers[currentQuestion.id] === option.id ? 'selected' : ''}`}>
@@ -571,7 +569,7 @@ export default function App() {
             disabled={!hasCurrentAnswer}
           >
             <ActionIcon name={editingFromReview || (isFinalQuestion && step === 'core') ? 'review' : 'next'} />
-            {editingFromReview ? 'Save Answer' : isFinalQuestion ? (step === 'preview' ? 'Quick Preview' : 'Review Answers') : 'Next Question'}
+            {editingFromReview ? 'Save Answer' : isFinalQuestion ? (step === 'preview' ? 'Quick Preview' : 'Safety Context') : 'Next Question'}
           </button>
         </div>
       </section>
@@ -584,6 +582,9 @@ export default function App() {
       return answer?.score !== null && answer !== undefined;
     }).length;
     const followUp = previewQuestions.length - known;
+    const example = previewQuestions.find(q => (q.options.find(o => o.id === answers[q.id])?.score ?? 5) <= 1);
+    const observation = example ? 'Start by checking ' + getDimensionLabel(example.dimension).toLowerCase() + ' against a recent example. ' + questionExamples[example.id] :
+      known ? 'Use one of the workflows you described as the starting point for a small, measurable improvement.' : 'Collect one recent order or work record to answer these questions with evidence.';
 
     return (
       <section className="assessment-panel" aria-labelledby="preview-summary-title">
@@ -593,6 +594,7 @@ export default function App() {
           <p>{followUp > 0
             ? `${followUp} of the first five answers ${followUp === 1 ? 'needs' : 'need'} confirmation. Your report will show how this affects your readiness range.`
             : 'All five answers describe a current practice. Continue to see how your systems, people and safeguards affect your next step.'}</p>
+          <p>{observation}</p>
           <p>{remainingQuestions.length} questions remain before the final review.</p>
         </div>
         <div className="button-row">
@@ -617,6 +619,19 @@ export default function App() {
     setScreen('results');
   }
 
+  function renderSafetyScreen() {
+    const question = SAFETY_CONTEXT_QUESTIONS[questionIndex]!;
+    const last = questionIndex === SAFETY_CONTEXT_QUESTIONS.length-1;
+    return <section className="assessment-panel question-panel">
+      <p className="eyebrow">Safety context · {questionIndex+1} of {SAFETY_CONTEXT_QUESTIONS.length}</p>
+      <fieldset className="question-block"><legend><h2 tabIndex={-1}>{question.label}</h2></legend>
+      <p className="question-example">Think about a specific use. Examples of real data include customer phone numbers, ID copies and M-PESA statements.</p>
+      <div className="option-list">{question.options.map(o=><label className="option-card" key={o.value}><input type="radio" name={question.id} value={o.value}
+        checked={profile[question.id]===o.value} onChange={()=>updateProfile(question.id,o.value)}/><span>{o.label}</span></label>)}</div></fieldset>
+      <div className="button-row"><button className="button-secondary nav-back" onClick={()=>{if(questionIndex)setQuestionIndex(questionIndex-1);else {setQuestionIndex(remainingQuestions.length-1);setScreen('core');}}}><ActionIcon name="back"/> Back</button>
+      <button className="button-primary" disabled={!profile[question.id]} onClick={()=>{if(last)setScreen('review');else setQuestionIndex(questionIndex+1);}}><ActionIcon name="next"/> {last?'Review Answers':'Next Question'}</button></div>
+    </section>;
+  }
   function renderReviewScreen() {
     return (
       <section className="assessment-panel" aria-labelledby="review-title">
@@ -654,28 +669,10 @@ export default function App() {
           </ol>
         </details>
 
-        <fieldset className="profile-form safety-context-form" aria-describedby="safety-context-note">
-          <legend>Safety and data context</legend>
-          <p className="inline-note" id="safety-context-note">
-            Answer these five questions so we can show the relevant safety checks. Choose “Not sure” if you need to confirm an answer.
-          </p>
-          {SAFETY_CONTEXT_QUESTIONS.map((question) => (
-            <label key={question.id} htmlFor={question.id}>
-              <span>{question.label}</span>
-              <select
-                value={profile[question.id]}
-                onChange={(event) => updateProfile(question.id, event.target.value)}
-                id={question.id}
-                required
-              >
-                <option value="">Choose One</option>
-                {question.options.map(({value, label}) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </label>
-          ))}
-        </fieldset>
+        <details className="answer-review"><summary>Safety context</summary>
+          <dl>{SAFETY_CONTEXT_QUESTIONS.map(q=><div key={q.id}><dt>{q.label}</dt><dd>{getSafetyContextOptionLabel(q.id,profile[q.id])}</dd></div>)}</dl>
+          <button className="button-secondary" onClick={()=>{setQuestionIndex(0);setScreen('safety');}}>Edit Context</button>
+        </details>
 
         <div className="profile-form safety-evidence">
           {activeProbes({...context,...profile}, id => coreQuestions.find(q=>q.id===id)?.options.find(o=>o.id===answers[id])?.score ?? null)
@@ -694,8 +691,8 @@ export default function App() {
           </label>}
         <div className="button-row wizard-decision">
           <button type="button" className="button-secondary nav-back" onClick={() => {
-            setQuestionIndex(remainingQuestions.length - 1);
-            setScreen('core');
+            setQuestionIndex(SAFETY_CONTEXT_QUESTIONS.length - 1);
+            setScreen('safety');
           }}>
             <ActionIcon name="back" /> Back
           </button>
@@ -745,8 +742,10 @@ export default function App() {
           </div>
         </div>
 
+        <MethodNote />
         <ReadinessSignal signal={reportGuidance.signal} />
         <DecisionSummary result={readinessResult} />
+        <aside className="pragmatic-recommendation"><h3>{readinessResult.opportunity.kind}</h3><p>{readinessResult.opportunity.next}</p><p>{readinessResult.opportunity.measure}</p></aside>
 
         <aside className="pragmatic-recommendation" aria-labelledby="safety-results-title">
           <h3 id="safety-results-title">Safety and evidence checks</h3>
@@ -820,6 +819,7 @@ export default function App() {
       {screen === 'preview-summary' && renderPreviewSummary()}
       {screen === 'core' && renderQuestionScreen(remainingQuestions, 'core', questionIndex)}
       {screen === 'review' && renderReviewScreen()}
+      {screen === 'safety' && renderSafetyScreen()}
       {screen === 'context' && (
         <AssessmentDetails
           onBack={() => setScreen('review')}

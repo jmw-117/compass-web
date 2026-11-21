@@ -30,7 +30,23 @@ jobs:
         run: npm run verify
       - name: Browser and PDF smoke test
         timeout-minutes: 3
+        env:
+          COMPASS_PDF_PROOF: ${{ runner.temp }}/compass-proof
         run: node tests/browser-smoke.cjs
+      - name: Check exported PDF text and render pages
+        working-directory: ${{ runner.temp }}/compass-proof
+        run: |
+          pdftotext -layout synthetic-report.pdf extracted.txt
+          grep -F 'AI Use-Case Guidance: Hold' extracted.txt
+          grep -F 'sspark.net' extracted.txt
+          if grep -E 'Consultant Review Template|small_sme|Cost class: C[0-9]' extracted.txt; then exit 1; fi
+          pdftoppm -scale-to 860 -jpeg synthetic-report.pdf page
+      - name: Retain synthetic report for visual inspection
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: synthetic-report-proof
+          path: ${{ runner.temp }}/compass-proof
+          retention-days: 7
       - name: Extended Python contract validation
         run: |
           python scripts/validate_product_v13.py

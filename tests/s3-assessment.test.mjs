@@ -19,6 +19,11 @@ test('The assessment begins with the required three-field start profile and prev
   for (const fieldId of ['industry', 'primary_goal']) {
     const field = profileSchema.early_fields.find(({id}) => id === fieldId);
     assert.ok(field, `Missing ${fieldId} in the profile schema`);
+    if (fieldId === 'industry') {
+      assert.match(app, /profileSchema\.early_fields\.find/);
+      for (const added of ['agriculture','trades','creators']) assert.ok(field.values.includes(added));
+      continue;
+    }
     for (const value of field.values) {
       assert.ok(app.includes(`['${value}',`), `Missing dropdown option ${value}`);
     }
