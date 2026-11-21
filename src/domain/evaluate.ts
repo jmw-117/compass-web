@@ -1,3 +1,6 @@
+import bank from '../../docs/domain/question_bank.json' with {type: 'json'};
+import rules from '../../docs/domain/rules.json' with {type: 'json'};
+import {matches} from './predicates.ts';
 import { activeProbes, technicalFindings } from './diagnostics.ts';
 import { recommendActions } from './recommendations.ts';
 
@@ -35,35 +38,10 @@ export type ReadinessResult = {
   ruleVersion: string;
 };
 
-const DIMENSION_WEIGHTS: Record<DimensionId, number> = {
-  STR: 15,
-  PRO: 15,
-  DAT: 15,
-  TEC: 15,
-  PEO: 15,
-  GOV: 15,
-  MET: 10,
-};
-
-const QUESTION_SCORE_MAP: Record<string, Record<string, number | null>> = {
-  'STR-01': { 'STR-01-L0': 0, 'STR-01-L1': 1, 'STR-01-L2': 2, 'STR-01-L3': 3, 'STR-01-L4': 4, 'STR-01-UNK': null },
-  'STR-02': { 'STR-02-L0': 0, 'STR-02-L1': 1, 'STR-02-L2': 2, 'STR-02-L3': 3, 'STR-02-L4': 4, 'STR-02-UNK': null },
-  'PRO-01': { 'PRO-01-L0': 0, 'PRO-01-L1': 1, 'PRO-01-L2': 2, 'PRO-01-L3': 3, 'PRO-01-L4': 4, 'PRO-01-UNK': null },
-  'PRO-02': { 'PRO-02-L0': 0, 'PRO-02-L1': 1, 'PRO-02-L2': 2, 'PRO-02-L3': 3, 'PRO-02-L4': 4, 'PRO-02-UNK': null },
-  'DAT-01': { 'DAT-01-L0': 0, 'DAT-01-L1': 1, 'DAT-01-L2': 2, 'DAT-01-L3': 3, 'DAT-01-L4': 4, 'DAT-01-UNK': null },
-  'DAT-02': { 'DAT-02-L0': 0, 'DAT-02-L1': 1, 'DAT-02-L2': 2, 'DAT-02-L3': 3, 'DAT-02-L4': 4, 'DAT-02-UNK': null },
-  'TEC-01': { 'TEC-01-L0': 0, 'TEC-01-L1': 1, 'TEC-01-L2': 2, 'TEC-01-L3': 3, 'TEC-01-L4': 4, 'TEC-01-UNK': null },
-  'TEC-02': { 'TEC-02-L0': 0, 'TEC-02-L1': 1, 'TEC-02-L2': 2, 'TEC-02-L3': 3, 'TEC-02-L4': 4, 'TEC-02-UNK': null },
-  'PEO-01': { 'PEO-01-L0': 0, 'PEO-01-L1': 1, 'PEO-01-L2': 2, 'PEO-01-L3': 3, 'PEO-01-L4': 4, 'PEO-01-UNK': null },
-  'PEO-02': { 'PEO-02-L0': 0, 'PEO-02-L1': 1, 'PEO-02-L2': 2, 'PEO-02-L3': 3, 'PEO-02-L4': 4, 'PEO-02-UNK': null },
-  'GOV-01': { 'GOV-01-L0': 0, 'GOV-01-L1': 1, 'GOV-01-L2': 2, 'GOV-01-L3': 3, 'GOV-01-L4': 4, 'GOV-01-UNK': null },
-  'GOV-02': { 'GOV-02-L0': 0, 'GOV-02-L1': 1, 'GOV-02-L2': 2, 'GOV-02-L3': 3, 'GOV-02-L4': 4, 'GOV-02-UNK': null },
-  'MET-01': { 'MET-01-L0': 0, 'MET-01-L1': 1, 'MET-01-L2': 2, 'MET-01-L3': 3, 'MET-01-L4': 4, 'MET-01-UNK': null },
-  'MET-02': { 'MET-02-L0': 0, 'MET-02-L1': 1, 'MET-02-L2': 2, 'MET-02-L3': 3, 'MET-02-L4': 4, 'MET-02-UNK': null },
-};
-
-const QUESTION_ID_ORDER = Object.keys(QUESTION_SCORE_MAP) as Array<keyof typeof QUESTION_SCORE_MAP>;
-const DIMENSION_ORDER: DimensionId[] = ['STR', 'PRO', 'DAT', 'TEC', 'PEO', 'GOV', 'MET'];
+const DIMENSION_WEIGHTS = Object.fromEntries(bank.dimensions.map(d => [d.id, d.weight_pct])) as Record<DimensionId, number>;
+const byQuestion = new Map(bank.questions.map(q => [q.id, q]));
+const QUESTION_ID_ORDER = bank.questions.map(q => q.id);
+const DIMENSION_ORDER = bank.dimensions.map(d => d.id as DimensionId);
 
 const SAFETY_CONTEXT_VALUES: Record<string, ReadonlySet<string>> = {
   current_ai_use: new Set(['none', 'personal', 'team_pilot', 'operational']),
@@ -74,18 +52,12 @@ const SAFETY_CONTEXT_VALUES: Record<string, ReadonlySet<string>> = {
 };
 
 function getQuestionDimension(questionId: string): DimensionId {
-  if (questionId.startsWith('STR')) return 'STR';
-  if (questionId.startsWith('PRO')) return 'PRO';
-  if (questionId.startsWith('DAT')) return 'DAT';
-  if (questionId.startsWith('TEC')) return 'TEC';
-  if (questionId.startsWith('PEO')) return 'PEO';
-  if (questionId.startsWith('GOV')) return 'GOV';
-  return 'MET';
+  return byQuestion.get(questionId)!.dimension as DimensionId;
 }
 
 export function getAnswerScore(questionId: string, optionId: string | undefined): number | null {
   if (!optionId) return null;
-  return QUESTION_SCORE_MAP[questionId]?.[optionId] ?? null;
+  return byQuestion.get(questionId)?.options.find(option => option.id === optionId)?.score ?? null;
 }
 
 function asString(value: unknown): string {
@@ -97,21 +69,9 @@ function getProfileString(profile: Record<string, unknown>, key: string): string
   return asString(profile[key]);
 }
 
-function scoreAtMost(questionId: string, optionId: string | undefined, maximum: number): boolean {
-  const score = getAnswerScore(questionId, optionId);
-  return score !== null && score <= maximum;
-}
-
-function scoreAtLeast(questionId: string, optionId: string | undefined, minimum: number): boolean {
-  const score = getAnswerScore(questionId, optionId);
-  return score !== null && score >= minimum;
-}
-
 function toBand(score: number): string {
-  if (score >= 600) return 'Established';
-  if (score >= 400) return 'Developing';
-  if (score >= 200) return 'Emerging';
-  return 'Foundational';
+  const {band_names: names, band_thresholds_eighths: thresholds} = rules.scoring;
+  return names.reduce((band, name, i) => score >= thresholds[i]! ? name : band, names[0]!);
 }
 
 export function evaluate(input: AssessmentInput): ReadinessResult {
@@ -167,123 +127,31 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
     current.upper = denominator === 0 ? 0 : current.upper / denominator;
   }
 
-  const gateMap: Record<string, { triggered: boolean; ids: string[]; severity: string }> = {
-    'URGENT-REGULATED': {
-      triggered: false,
-      ids: ['profile.high_impact_ai_workflow', 'profile.current_ai_use', 'profile.planned_ai_use'],
-      severity: 'BLOCK_PILOT',
-    },
-    'GOV-DATA': {
-      triggered: false,
-      ids: ['probe.PR-GOV-SHARE', 'profile.data_category', 'answer.GOV-01', 'profile.planned_use_real_data'],
-      severity: 'BLOCK_UNCONTROLLED_AI',
-    },
-    'DATA-UNKNOWN': {
-      triggered: false,
-      ids: ['answer.DAT-01', 'answer.DAT-02'],
-      severity: 'VERIFY',
-    },
-    'OWN-NONE': {
-      triggered: false,
-      ids: ['answer.STR-02', 'probe.PR-STR-OWNER'],
-      severity: 'BLOCK_PILOT',
-    },
-    'BASELINE-MISSING': {
-      triggered: false,
-      ids: ['answer.MET-01', 'profile.primary_goal', 'probe.PR-MET-START'],
-      severity: 'BLOCK_FINANCIAL_CLAIMS',
-    },
-  };
-
-  const profileHighImpact = getProfileString(profile, 'high_impact_ai_workflow') === 'yes';
-  const currentAiUse = getProfileString(profile, 'current_ai_use');
-  const plannedAiUse = getProfileString(profile, 'planned_ai_use');
-  const urgentGate = gateMap['URGENT-REGULATED'] ?? { triggered: false, ids: [], severity: 'BLOCK_PILOT' };
-  urgentGate.triggered =
-    (profileHighImpact && ['team_pilot', 'operational'].includes(currentAiUse)) ||
-    (profileHighImpact && plannedAiUse === 'yes');
-  gateMap['URGENT-REGULATED'] = urgentGate;
-
   const probes = activeProbes(profile, (id) => getAnswerScore(id, coreAnswers[id]));
   const probeAnswers = new Map(probes.map(({id, choices}) => {
     const answer = input.probeAnswers?.[id] ?? '';
     return [id, choices?.includes(answer) ? answer : ''];
   }));
-  const shareProbe = probeAnswers.get('PR-GOV-SHARE');
-  const dataCategory = getProfileString(profile, 'data_category');
-  const gov01Score = getAnswerScore('GOV-01', coreAnswers['GOV-01']);
-  const plannedUseRealData = getProfileString(profile, 'planned_use_real_data');
-  const govDataGate = gateMap['GOV-DATA'] ?? { triggered: false, ids: [], severity: 'BLOCK_UNCONTROLLED_AI' };
-  govDataGate.triggered =
-    (shareProbe === 'Yes' && ['personal', 'restricted'].includes(dataCategory)) ||
-    (gov01Score !== null && gov01Score <= 1 && dataCategory === 'restricted' && plannedUseRealData === 'yes');
-  gateMap['GOV-DATA'] = govDataGate;
-
-  const dat01Missing = getAnswerScore('DAT-01', coreAnswers['DAT-01']) === null;
-  const dat02Missing = getAnswerScore('DAT-02', coreAnswers['DAT-02']) === null;
-  const dat01Score = getAnswerScore('DAT-01', coreAnswers['DAT-01']);
-  const dataUnknownGate = gateMap['DATA-UNKNOWN'] ?? { triggered: false, ids: [], severity: 'VERIFY' };
-  dataUnknownGate.triggered = (dat01Missing && dat02Missing) || dat01Score === 0;
-  gateMap['DATA-UNKNOWN'] = dataUnknownGate;
-
-  const str02Score = getAnswerScore('STR-02', coreAnswers['STR-02']);
-  const strOwnerProbe = probeAnswers.get('PR-STR-OWNER') ?? '';
-  const ownNoneGate = gateMap['OWN-NONE'] ?? { triggered: false, ids: [], severity: 'BLOCK_PILOT' };
-  ownNoneGate.triggered =
-    str02Score === 0 || (['No one yet', 'Not sure'].includes(strOwnerProbe) && str02Score !== null && str02Score <= 1);
-  gateMap['OWN-NONE'] = ownNoneGate;
-
-  const met01Score = getAnswerScore('MET-01', coreAnswers['MET-01']);
-  const primaryGoal = getProfileString(profile, 'primary_goal');
-  const metStartProbe = probeAnswers.get('PR-MET-START');
-  const baselineGate = gateMap['BASELINE-MISSING'] ?? { triggered: false, ids: [], severity: 'BLOCK_FINANCIAL_CLAIMS' };
-  baselineGate.triggered =
-    met01Score !== null && met01Score <= 1 && ['efficiency', 'growth', 'service', 'risk'].includes(primaryGoal) && metStartProbe !== 'Yes';
-  gateMap['BASELINE-MISSING'] = baselineGate;
-
-  const formalGates = Object.entries(gateMap)
-    .filter(([, gate]) => gate.triggered)
-    .map(([id, gate]) => ({ id, triggeringIds: gate.ids, severity: gate.severity }));
-
-  const pilotBlockingGateCount = formalGates.filter((gate) =>
-    ['BLOCK_PILOT', 'BLOCK_UNCONTROLLED_AI', 'BLOCK_FINANCIAL_CLAIMS'].includes(gate.severity),
-  ).length;
-
-  const enabledPaths = new Set<string>();
-  if ((gateMap['URGENT-REGULATED'] ?? { triggered: false, ids: [], severity: 'BLOCK_PILOT' }).triggered) enabledPaths.add('P6');
-  if ((gateMap['GOV-DATA'] ?? { triggered: false, ids: [], severity: 'BLOCK_UNCONTROLLED_AI' }).triggered) enabledPaths.add('P2');
-  if (unknownCount >= 3 || coverageUnits < 150 || (dat01Missing && dat02Missing)) enabledPaths.add('P0');
-  if (dimensions.PRO.upper <= 1.5 || dimensions.DAT.upper <= 1.5) enabledPaths.add('P1');
-  if (scoreAtMost('TEC-01', coreAnswers['TEC-01'], 2) && scoreAtMost('TEC-02', coreAnswers['TEC-02'], 2)) enabledPaths.add('P4');
-  if (dimensions.PEO.upper <= 1.5) enabledPaths.add('P3');
-  if (
-    coverageUnits >= 180 &&
-    dimensions.DAT.lower >= 2 &&
-    scoreAtLeast('GOV-01', coreAnswers['GOV-01'], 2) &&
-    scoreAtLeast('GOV-02', coreAnswers['GOV-02'], 2) &&
-    scoreAtLeast('STR-02', coreAnswers['STR-02'], 2) &&
-    scoreAtLeast('MET-01', coreAnswers['MET-01'], 2) &&
-    scoreAtLeast('PEO-01', coreAnswers['PEO-01'], 2) &&
-    scoreAtLeast('PRO-01', coreAnswers['PRO-01'], 2) &&
-    scoreAtLeast('TEC-01', coreAnswers['TEC-01'], 2) &&
-    ['limited', 'available'].includes(getProfileString(profile, 'staff_capacity')) &&
-    pilotBlockingGateCount === 0
-  ) {
-    enabledPaths.add('P5');
+  const facts = new Map<string, unknown>();
+  Object.entries(profile).forEach(([key, value]) => facts.set('profile.' + key, value));
+  for (const id of QUESTION_ID_ORDER) facts.set('answer.' + id, getAnswerScore(id, coreAnswers[id]));
+  probeAnswers.forEach((value, key) => facts.set('probe.' + key, value));
+  for (const id of DIMENSION_ORDER) {
+    facts.set('dimension.' + id + '.lower', dimensions[id].lower);
+    facts.set('dimension.' + id + '.upper', dimensions[id].upper);
   }
-
-  const primaryPath = (() => {
-    if (enabledPaths.has('P6')) return 'P6';
-    if (enabledPaths.has('P2')) return 'P2';
-    if (enabledPaths.has('P0')) return 'P0';
-    const orderedPaths = ['P1', 'P4', 'P3', 'P5'];
-    for (const path of orderedPaths) {
-      if (enabledPaths.has(path)) return path;
-    }
-    return 'P0';
-  })();
-
-  const secondaryPaths = Array.from(enabledPaths).filter((path) => path !== primaryPath).slice(0, 2);
+  facts.set('metrics.unknownCount', unknownCount);
+  facts.set('metrics.coverageUnits', coverageUnits);
+  const formalGates = rules.gates.flatMap(gate => {
+    const references = new Set<string>();
+    const triggered = matches(gate.predicate_ast_id, facts, references);
+    facts.set('gate.' + gate.id, triggered);
+    return triggered ? [{id: gate.id, severity: gate.severity, triggeringIds: [...references]}] : [];
+  });
+  facts.set('metrics.pilotBlockingGateCount', formalGates.filter(g => g.severity.startsWith('BLOCK_')).length);
+  const enabledPaths = rules.path_priority.filter(path => matches('P-' + path, facts));
+  const primaryPath = enabledPaths[0] ?? 'P0';
+  const secondaryPaths = enabledPaths.slice(1, 3);
 
   const flags: ReadinessResult['flags'] = [];
   for (const questionId of QUESTION_ID_ORDER) {
@@ -295,7 +163,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   const budgetBand = (profile.budget_window === 'no_external_spend' || profile.budget_ceiling === 0
     ? 'none' : getProfileString(profile, 'budget_band')) as BudgetBand;
   const findings = technicalFindings(profile, input.extendedAnswers ?? {});
-  const specialistReview = urgentGate.triggered || findings.some(({flag}) =>
+  const specialistReview = facts.get('gate.URGENT-REGULATED') === true || findings.some(({flag}) =>
     flag === 'flag.high_impact_review' || flag === 'flag.sensitive_data_review',
   );
   const safetyContextConfirmed = Object.entries(SAFETY_CONTEXT_VALUES).every(([field, values]) =>
@@ -345,7 +213,7 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
     secondaryPaths,
     actionIds,
     costFit,
-    ruleVersion: '1.2.0',
+    ruleVersion: rules.version,
   };
 }
 
