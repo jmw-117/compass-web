@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {evaluate} from '../src/domain/evaluate.ts';
-import {getReportGuidance} from '../src/domain/report-guidance.ts';
+import {getReportGuidance, positiveCapabilities} from '../src/domain/report-guidance.ts';
 import bank from '../docs/domain/question_bank.json' with {type:'json'};
 const core=Object.fromEntries(bank.questions.map(q=>[q.id,q.id+'-L4']));
 const base={current_ai_use:'team_pilot',data_category:'routine',planned_ai_use:'yes',planned_use_real_data:'no',high_impact_ai_workflow:'no',staff_capacity:'available',primary_goal:'service',extended_assessment:true};
@@ -31,4 +31,19 @@ test('financial support requires an actual comparison, never changes the decisio
   const r=evaluate({profile:{...base,baseline_known:'yes',impact_measure:'cost'},coreAnswers:core,probeAnswers:{...safe,'PR-FIN-COMPARE':answer!}});
   assert.equal(r.score.lowerEighths,800);assert.equal(r.financialEvidence,status);assert.equal(r.useCaseGuidance,'Eligible for controlled pilot planning');
  }
+});
+
+test('fully answered zero dimensions never appear among strengths', () => {
+  const answers = Object.fromEntries(bank.questions.map(q => [q.id, q.id + '-L0']));
+  const result = evaluate({profile:base, coreAnswers:answers});
+  assert.deepEqual(positiveCapabilities(result.dimensions), []);
+  const improved = evaluate({profile:base, coreAnswers:{...answers, 'STR-01':'STR-01-L3'}});
+  assert.deepEqual(positiveCapabilities(improved.dimensions).map(([id]) => id), ['STR']);
+});
+
+test('action context reflects the reported industry, goal and workflow', () => {
+  const profile = {...base, industry:'trades', value_stream:'lead_to_sale', workflow_bottleneck:'lost_leads'};
+  const result = evaluate({profile, coreAnswers:core, probeAnswers:safe});
+  assert.match(result.actionPlan[0]!.context, /repair booking.*lead to sale.*lost leads.*customer experience/);
+  assert.deepEqual(result.score, evaluate({profile:base, coreAnswers:core, probeAnswers:safe}).score);
 });
