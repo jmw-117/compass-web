@@ -45,6 +45,10 @@ jobs:
           grep -F 'sspark.net' extracted.txt
           if grep -E 'Consultant Review Template|small_sme|Cost class: C[0-9]' extracted.txt; then exit 1; fi
           pdftoppm -scale-to 860 -jpeg synthetic-report.pdf page
+          sudo apt-get install -y --no-install-recommends python3-pil fonts-dejavu-core
+          /usr/bin/python3 "$GITHUB_WORKSPACE/scripts/review-pdf.py"
+          /usr/bin/python3 "$GITHUB_WORKSPACE/scripts/site-card.py"
+          echo "COMPASS_PUBLIC_CARD=$(base64 -w 0 "$GITHUB_WORKSPACE/src/assets/social-preview.png")"
       - name: Retain synthetic report for visual inspection
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:

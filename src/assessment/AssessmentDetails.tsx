@@ -148,7 +148,7 @@ export default function AssessmentDetails({
 
       {(step.id === 'workflow' || step.id === 'capacity') && (
         <div className="profile-form compass-field-grid">
-          {(step.id === 'workflow' ? contextFields : constraintFields).map((field) => (
+          {(step.id === 'workflow' ? contextFields : constraintFields).filter(field => !(profile.budget_window === 'no_external_spend' && ['budget_ceiling','monthly_budget_ceiling','budget_band'].includes(field.id)) && !(field.id === 'decision_authority' && answers['STR-02'] && !answers['STR-02'].endsWith('-UNK')) && !(field.id === 'baseline_known' && ['Yes','No'].includes(probeAnswers['PR-MET-START'] ?? ''))).map((field) => (
             <OptionalField key={field.id} field={field} value={profile[field.id]} update={update} />
           ))}
           {step.id === 'capacity' && (
@@ -179,10 +179,13 @@ export default function AssessmentDetails({
         <div className="profile-form">
           <label className="compass-checkbox">
             <input type="checkbox" checked={profile.extended_assessment === true}
-              onChange={(event) => update('extended_assessment', event.target.checked)} />
+              onChange={(event) => {update('diagnostic_scope','guided');update('extended_assessment', event.target.checked);}} />
             Include technical questions in my assessment
           </label>
           <p className="inline-note">These answers help identify technical issues and leave the readiness score unchanged.</p>
+          {profile.extended_assessment === true && <label>Diagnostic depth
+            <select value={String(profile.diagnostic_scope ?? 'full')} onChange={event=>update('diagnostic_scope',event.target.value)}><option value="guided">Short guided check</option><option value="full">Full technical assessment</option></select>
+          </label>}
           {questions.map((question) => (
             <label key={question.id}>
               <span>{question.prompt}</span>

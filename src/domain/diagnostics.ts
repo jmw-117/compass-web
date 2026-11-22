@@ -19,14 +19,21 @@ function applies(condition: Condition, profile: Record<string, unknown>, score: 
 }
 
 export function activeProbes(profile: Record<string, unknown>, score: (id: string) => number | null) {
-  return probes.rules.filter(({when}) => applies(when, profile, score)).slice(0, probes.cap);
+  return probes.rules.filter(({id,when}) => applies(when, profile, score) &&
+    !(id === 'PR-MET-START' && ['yes','no'].includes(String(profile.baseline_known)))).slice(0, probes.cap);
 }
 
 export function applicableTechnicalQuestions(profile: Record<string, unknown>) {
   if (profile.extended_assessment !== true) return [];
   const currentUse = profile.current_ai_use;
   const currentOrPlanned = currentUse === 'team_pilot' || currentUse === 'operational' || profile.planned_ai_use === 'yes';
-  return extension.questions.filter(({applies_when: condition}) =>
+  if (profile.diagnostic_scope === 'guided') {
+    const ids = currentOrPlanned || currentUse === 'personal'
+      ? ['EX-CMP-01','EX-ARC-02','EX-TST-01','EX-QUICK-VENDOR','EX-QUICK-CONTINUITY']
+      : ['EX-QUICK-FIRST','EX-DTS-01','EX-QUICK-VENDOR','EX-QUICK-CONTINUITY'];
+    return [...extension.questions,...extension.quick_checks].filter(q=>ids.includes(q.id));
+  }
+  return [...extension.questions, ...extension.quick_checks].filter(({applies_when: condition}) =>
     condition === 'ALL' ||
     (condition === 'AI_INTENT' && (currentOrPlanned || currentUse === 'personal')) ||
     (condition === 'CURRENT_OR_PLANNED' && currentOrPlanned),
