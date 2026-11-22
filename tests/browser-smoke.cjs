@@ -197,6 +197,11 @@ async function run(reduceMotion = false) {
       return;
     }
     assert.equal(await js('window.celebrations'),1,'Results should celebrate completion once');
+    if (process.env.COMPASS_PDF_PROOF) {
+      await fs.mkdir(process.env.COMPASS_PDF_PROOF,{recursive:true});
+      const frame = await call('Page.captureScreenshot',{format:'jpeg',quality:65});
+      await fs.writeFile(path.join(process.env.COMPASS_PDF_PROOF,'results-celebration.jpg'),Buffer.from(frame.data,'base64'));
+    }
     const burstLayout = await js('window.burstLayout');
     assert.ok(burstLayout.count >= 60 && burstLayout.height >= burstLayout.screen * 0.8, 'Celebration should cover the screen');
     assert.equal(burstLayout.hit, 'none', 'Confetti intercepted the results controls');
@@ -378,7 +383,12 @@ async function run(reduceMotion = false) {
         return steps.length===5 && steps.every(rect=>rect.top===steps[0].top && Math.abs(rect.width-steps[0].width)<1) &&
           document.querySelector('.wizard-steps').scrollWidth <= document.querySelector('.wizard-steps').clientWidth+1;
       })()`);
-      assert.equal(aligned,true,'Progress labels should share one equally spaced row at '+width);
+      assert.equal(aligned,true,'Progress labels should share one equally spaced row at '+width+' '+await js("JSON.stringify([...document.querySelectorAll('.wizard-steps li')].map(el=>[el.offsetWidth,el.offsetTop,el.scrollWidth]))"));
+      if (width === 1280 && process.env.COMPASS_PDF_PROOF) {
+        const clip = await js("(()=>{const r=document.querySelector('.area-chart').getBoundingClientRect();return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height,scale:0.8}})()");
+        const shot = await call('Page.captureScreenshot',{format:'jpeg',quality:75,clip,captureBeyondViewport:true});
+        await fs.writeFile(path.join(process.env.COMPASS_PDF_PROOF,'readiness-by-area.jpg'),Buffer.from(shot.data,'base64'));
+      }
       assert.equal(await js("document.querySelectorAll('.area-chart-row').length"),7);
       assert.equal(await js("document.querySelectorAll('.area-range').length"),1,'Fixture contains one uncertain dimension');
     }
