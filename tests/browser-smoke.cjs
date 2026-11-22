@@ -111,7 +111,10 @@ async function run(reduceMotion = false) {
           if(label.split(/\\s+/).length>2 && !window.longButtons.includes(label))window.longButtons.push(label);
         }
         const burst=document.querySelector('.completion-confetti');
-        if(burst && burst!==window.lastBurst){window.lastBurst=burst;window.celebrations++;}
+        if(burst && burst!==window.lastBurst){
+          window.lastBurst=burst;window.celebrations++;
+          window.burstLayout={count:burst.children.length,height:burst.getBoundingClientRect().height,screen:innerHeight,hit:getComputedStyle(burst).pointerEvents};
+        }
       };
       scan();
       new MutationObserver(scan).observe(document.body,{subtree:true,childList:true,characterData:true});
@@ -194,6 +197,9 @@ async function run(reduceMotion = false) {
       return;
     }
     assert.equal(await js('window.celebrations'),1,'Results should celebrate completion once');
+    const burstLayout = await js('window.burstLayout');
+    assert.ok(burstLayout.count >= 60 && burstLayout.height >= burstLayout.screen * 0.8, 'Celebration should cover the screen');
+    assert.equal(burstLayout.hit, 'none', 'Confetti intercepted the results controls');
     await pressButton('Back');
     await pressButton('More Details');
     await until(()=>js("document.activeElement.textContent==='Business workflow'"),'Business workflow step missing');
@@ -233,6 +239,8 @@ async function run(reduceMotion = false) {
     await pressButton('Next Section');
     await until(()=>js("document.activeElement.textContent==='Staff capacity, timing and budget'"),'Staff and budget step missing');
     assert.equal(await fieldPairs(),true,'Staff and budget fields should sit side by side');
+    assert.equal(await js("document.querySelector('.budget-detail details').open"),false);
+    await click('.budget-detail summary');
     assert.equal(await js(`(()=>{
       const inputs=[...document.querySelectorAll('.compass-field-grid input[type="number"]')];
       const first=inputs[0].getBoundingClientRect(), second=inputs[1].getBoundingClientRect();
@@ -301,6 +309,10 @@ async function run(reduceMotion = false) {
     assert.equal(new URL(share).origin,'https://wa.me');
     assert.equal(new URL(share).pathname,'/254762057288');
     assert.equal(new URL(share).searchParams.get('text'),await js("document.querySelector('#compass-share-text').value"));
+    await call('Page.setDownloadBehavior',{behavior:'deny'});
+    await pressButton('Export Report');
+    const recovery = await until(()=>js("document.querySelector('.inline-note a[href^=blob]')?.href"),'Missing manual PDF fallback');
+    assert.equal(await js("fetch("+JSON.stringify(recovery)+").then(r=>r.blob()).then(b=>b.type==='application/pdf' && b.size>3000)"),true);
     await call('Page.setDownloadBehavior',{behavior:'allow',downloadPath:profile});
     await pressButton('Export Report');
     const bytes=await until(async()=>{
@@ -361,6 +373,14 @@ async function run(reduceMotion = false) {
     for (const width of [768,1280,320]) {
       await call('Emulation.setDeviceMetricsOverride',{width,height:850,deviceScaleFactor:1,mobile:width<1000});
       assert.equal(await noHorizontalOverflow(),true,'Results overflow at '+width);
+      const aligned = await js(`(()=>{
+        const steps = [...document.querySelectorAll('.wizard-steps li')].map(el=>el.getBoundingClientRect());
+        return steps.length===5 && steps.every(rect=>rect.top===steps[0].top && Math.abs(rect.width-steps[0].width)<1) &&
+          document.querySelector('.wizard-steps').scrollWidth <= document.querySelector('.wizard-steps').clientWidth+1;
+      })()`);
+      assert.equal(aligned,true,'Progress labels should share one equally spaced row at '+width);
+      assert.equal(await js("document.querySelectorAll('.area-chart-row').length"),7);
+      assert.equal(await js("document.querySelectorAll('.area-range').length"),1,'Fixture contains one uncertain dimension');
     }
     const ax=await call('Accessibility.getFullAXTree');
     assert.ok(ax.nodes.some(n=>n.role?.value==='heading' && /readiness/i.test(n.name?.value)),'Missing accessible results heading');

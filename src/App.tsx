@@ -66,6 +66,7 @@ const BUSINESS_GOAL_OPTIONS = [
 const SAFETY_CONTEXT_QUESTIONS = [
   {
     id: 'current_ai_use',
+    hint: 'Include everyday work such as drafting a reply, summarising notes or searching records.',
     label: 'How is AI currently used in this organisation?',
     options: [
       {value: 'none', label: 'No current AI use'},
@@ -77,6 +78,7 @@ const SAFETY_CONTEXT_QUESTIONS = [
   },
   {
     id: 'data_category',
+    hint: 'Think about what the tool would receive: public information, customer contact details or confidential records.',
     label: 'What type of information is expected to be used?',
     options: [
       {value: 'routine', label: 'Routine business information'},
@@ -87,6 +89,7 @@ const SAFETY_CONTEXT_QUESTIONS = [
   },
   {
     id: 'high_impact_ai_workflow',
+    hint: 'Consider who makes the final decision and whether a person can check and override the AI output.',
     label: 'What part would AI play in deciding care, credit, hiring or access to an essential service?',
     options: [
       {value: 'decides', label: 'Make the decision, such as approving credit'},
@@ -99,6 +102,7 @@ const SAFETY_CONTEXT_QUESTIONS = [
   },
   {
     id: 'planned_ai_use',
+    hint: 'Think about one use you are actively considering, even if you have not chosen a tool.',
     label: 'Is an AI use planned?',
     options: [
       {value: 'yes', label: 'Yes'},
@@ -108,6 +112,7 @@ const SAFETY_CONTEXT_QUESTIONS = [
   },
   {
     id: 'planned_use_real_data',
+    hint: 'Real data includes actual orders, messages and payment records. Invented examples are test data.',
     label: 'Would a planned pilot use real business or customer data?',
     options: [
       {value: 'yes', label: 'Yes'},
@@ -282,10 +287,11 @@ export default function App() {
     return {
       dimension,
       label: getDimensionLabel(dimension),
-      upper: Math.ceil((metric.upper / 4) * 100),
+      lower: metric.lower * 25,
+      upper: metric.upper * 25,
       scoreText: metric.lower === metric.upper
         ? `${Math.round((metric.lower / 4) * 100)}%`
-        : `${Math.floor((metric.lower / 4) * 100)} to ${Math.ceil((metric.upper / 4) * 100)}% possible`,
+        : `${Math.floor(metric.lower * 25)}–${Math.ceil(metric.upper * 25)}%`,
       known: metric.known,
     };
   });
@@ -436,8 +442,7 @@ export default function App() {
       <section className="assessment-panel start-panel" aria-labelledby="assessment-title">
         <div className="panel-header">
           <h2 id="assessment-title" tabIndex={-1}>Tell us about your organisation.</h2>
-          <p>Start with three business details, then answer 14 readiness questions and five safety questions. Optional details tailor your recommendations.</p>
-          <p>Choose a goal to frame your assessment. You’ll answer 14 questions and get a readiness summary with recommended next steps.</p>
+          <p>Tell us about your business and its goal, then answer 14 readiness questions and five safety questions for a report with practical next steps.</p>
         </div>
 
         <form
@@ -557,8 +562,8 @@ export default function App() {
             <h2 id="question-panel-title" tabIndex={-1}>{currentQuestion.prompt}</h2>
           </legend>
           <p id="question-example" className="question-example">{currentQuestion.id === 'STR-02' ? (ownership[profile.organizationType] ?? 'The person responsible for this workflow') + ' can take this role.' : questionExamples[currentQuestion.id]}
-          {currentQuestion.id === 'DAT-01' && ' ' + markets.KE.records}
-          {currentQuestion.id === 'TEC-02' && ' ' + markets.KE.continuity}
+          {currentQuestion.id === 'DAT-01' && ' ' + markets.global.records}
+          {currentQuestion.id === 'TEC-02' && ' ' + markets.global.continuity}
           {currentQuestion.id === 'PRO-01' && ' Think of ' + (industryExamples[profile.industry] ?? 'a typical request') + '.'}</p>
           <div className="option-list">
             {currentQuestion.options.map((option) => (
@@ -647,7 +652,7 @@ export default function App() {
     return <section className="assessment-panel question-panel">
       <p className="eyebrow">Safety context · {questionIndex+1} of {SAFETY_CONTEXT_QUESTIONS.length}</p>
       <fieldset className="question-block"><legend><h2 tabIndex={-1}>{question.label}</h2></legend>
-      <p className="question-example">Think about a specific use. Examples of real data include customer phone numbers, ID copies and M-PESA statements.</p>
+      <p className="question-example">{question.hint}</p>
       <div className="option-list">{question.options.map(o=><label className="option-card" key={o.value}><input type="radio" name={question.id} value={o.value}
         checked={profile[question.id]===o.value} onChange={()=>updateProfile(question.id,o.value)}/><span>{o.label}</span></label>)}</div></fieldset>
       <div className="button-row"><button className="button-secondary nav-back" onClick={()=>{if(questionIndex)setQuestionIndex(questionIndex-1);else {setQuestionIndex(remainingQuestions.length-1);setScreen('core');}}}><ActionIcon name="back"/> Back</button>
@@ -778,19 +783,27 @@ export default function App() {
           <p className="recommendation-band">{reportGuidance.bandText}</p>
         </aside>
 
-        <section className="dimension-list" aria-labelledby="dimension-summary-title">
-          <h3 id="dimension-summary-title">Readiness by area</h3>
-          {dimensionSummary.map((dimension) => (
-            <div key={dimension.dimension} className="dimension-row">
-              <div className="dimension-label-row">
-                <span>{dimension.label}</span>
-                <span>{dimension.scoreText} · {dimension.known} of 2 indicators answered</span>
-              </div>
-              <div className="dimension-track" aria-hidden="true">
-                <span style={{width: `${dimension.upper}%`}} />
-              </div>
-            </div>
-          ))}
+        <section className="area-chart" aria-labelledby="dimension-summary-title">
+          <header className="area-chart-heading">
+            <h3 id="dimension-summary-title">Readiness by area</h3>
+            <p>{dimensionSummary.reduce((count, area) => count + area.known, 0)} of 14 indicators answered</p>
+          </header>
+          <ul className="area-chart-rows">
+            {dimensionSummary.map(area => (
+              <li key={area.dimension} className="area-chart-row">
+                <span className="area-name">{area.label}</span>
+                <div className="area-scale" aria-hidden="true">
+                  {area.known < 2 && <span className="area-range" style={{left: area.lower + '%', width: (area.upper - area.lower) + '%'}} />}
+                  <span className="area-known" style={{width: area.lower + '%'}} />
+                </div>
+                <span className="area-value">{area.scoreText}
+                  {area.known < 2 && <small>{area.known} of 2 answered</small>}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {dimensionSummary.some(area => area.known < 2) &&
+            <p className="area-key"><i aria-hidden="true" />Striped ranges show how unanswered indicators could change the score.</p>}
         </section>
 
         <div className="result-notes">

@@ -1,4 +1,8 @@
 export const markets = {
+  global: {
+    records: 'You can check a payment receipt, invoice, spreadsheet or paper ledger.',
+    continuity: 'Consider how work continues if a system or internet connection is unavailable.',
+  },
   KE: {
     records: 'Check a recent M-PESA payment, paper ledger, spreadsheet or eTIMS invoice.',
     continuity: 'Consider how work continues during a power cut or loss of connectivity.',
