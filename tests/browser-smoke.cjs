@@ -137,6 +137,8 @@ async function run(reduceMotion = false) {
     await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
     assert.equal(await js("document.activeElement.id"),'profile-organisation');
     await js(`Array.from(document.querySelectorAll('.profile-form select')).forEach(select=>{select.selectedIndex=1; select.dispatchEvent(new Event('change',{bubbles:true}));}); true`);
+    await js("(()=>{const select=document.querySelector('#profile-goal');select.value='cash_flow';select.dispatchEvent(new Event('change',{bubbles:true}));return true})()");
+    await until(()=>js("document.querySelector('#goal-measure').textContent.includes('receiving payment')"),'Goal-specific measure missing');
     await click('.profile-form button[type="submit"]');
     const {questions}=JSON.parse(await fs.readFile('docs/domain/question_bank.json','utf8'));
     const answer=async(index)=>{

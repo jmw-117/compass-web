@@ -1,3 +1,4 @@
+import {getBusinessGoal} from './business-goals.ts';
 import {industryExamples} from './market.ts';
 import {catalogActions} from './recommendations.ts';
 
@@ -29,11 +30,7 @@ const steps: Record<string,[string,string]> = {
 };
 export function buildActionPlan(ids:string[],profile:Record<string,unknown>) {
   const example = industryExamples[String(profile.industry)] ?? 'a recent case';
-  const goals: Record<string,string> = {
-    efficiency: 'reduce repeated work', growth: 'win or retain business',
-    service: 'improve the customer experience', risk: 'reduce operational risk',
-  };
-  const goal = goals[String(profile.primary_goal)];
+  const goal = getBusinessGoal(profile.primary_goal);
   const workflow = String(profile.value_stream ?? '').replaceAll('_', ' ');
   const bottleneck = String(profile.workflow_bottleneck ?? '').replaceAll('_', ' ');
   const details = [workflow, bottleneck].filter(value => value && !['unknown','other'].includes(value));
@@ -44,7 +41,7 @@ export function buildActionPlan(ids:string[],profile:Record<string,unknown>) {
     const category = ['A20','A23'].includes(id)?'Specialist review':id==='A11'?'Training and enablement':id==='A16'?'Integration or implementation':
       action.cost_class==='C0'?'No external cash':action.cost_class==='C1'?'Low-cost or no-code':'Software or implementation support';
     return {id,title:action.title,step,outcome,
-      context: context + (goal ? ' Check whether the change helps you ' + goal + '.' : ''),
+      context: context + (goal ? ' ' + goal.measure : ''),
       owner:profile.org_type==='sole_proprietor'?'Business owner':action.owner_role,
       effort:action.effort.toLowerCase(),category,validation:action.validation,dependencies:action.prerequisite_ids};
   });

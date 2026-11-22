@@ -1,5 +1,6 @@
 import {encodeDraft,decodeDraft} from './assessment/draft-format';
 import profileSchema from '../docs/domain/profile_schema.json';
+import {businessGoalOptions, getBusinessGoal} from './domain/business-goals';
 import MethodNote from './assessment/MethodNote';
 import {markets, ownership, industryExamples} from './domain/market';
 import {activeProbes} from './domain/diagnostics';
@@ -54,14 +55,6 @@ const ORGANISATION_OPTIONS = [
 
 const INDUSTRY_OPTIONS = profileSchema.early_fields.find(field => field.id === 'industry')!.values.map(value =>
   [value, value.replaceAll('_',' ').replace(/^./, c=>c.toUpperCase())] as const);
-
-const BUSINESS_GOAL_OPTIONS = [
-  ['efficiency', 'Improve efficiency'],
-  ['growth', 'Support growth'],
-  ['service', 'Improve customer service'],
-  ['risk', 'Reduce risk'],
-  ['explore', 'Explore AI opportunities'],
-] as const;
 
 const SAFETY_CONTEXT_QUESTIONS = [
   {
@@ -299,7 +292,7 @@ export default function App() {
   const profileComplete = Boolean(
     profile.organizationType &&
       INDUSTRY_OPTIONS.some(([value]) => value === profile.industry) &&
-      BUSINESS_GOAL_OPTIONS.some(([value]) => value === profile.businessGoal),
+      businessGoalOptions.some(([value]) => value === profile.businessGoal),
   );
   const safetyContextAnswered = SAFETY_CONTEXT_QUESTIONS.every(({id, options}) =>
     options.some(({value}) => profile[id] === value),
@@ -309,7 +302,7 @@ export default function App() {
     ...profile,
     organizationType: getProfileOptionLabel(ORGANISATION_OPTIONS, profile.organizationType),
     industry: getProfileOptionLabel(INDUSTRY_OPTIONS, profile.industry),
-    businessGoal: getProfileOptionLabel(BUSINESS_GOAL_OPTIONS, profile.businessGoal),
+    businessGoal: getProfileOptionLabel(businessGoalOptions, profile.businessGoal),
     current_ai_use: getSafetyContextOptionLabel('current_ai_use', profile.current_ai_use),
     data_category: getSafetyContextOptionLabel('data_category', profile.data_category),
     high_impact_ai_workflow: getSafetyContextOptionLabel('high_impact_ai_workflow', profile.high_impact_ai_workflow),
@@ -482,18 +475,19 @@ export default function App() {
           </label>
 
           <label htmlFor="profile-goal">
-            <span>Business goal</span>
+            <span>Which business outcome matters most?</span>
             <select
               value={profile.businessGoal}
               onChange={(event) => updateProfile('businessGoal', event.target.value)}
-              id="profile-goal" required
+              id="profile-goal" aria-describedby="goal-measure" required
             >
-              <option value="">Choose a goal</option>
-              {BUSINESS_GOAL_OPTIONS.map(([value, label]) => (
+              <option value="">Choose your main goal</option>
+              {businessGoalOptions.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
           </label>
+          <p id="goal-measure" className="inline-note" aria-live="polite">{getBusinessGoal(profile.businessGoal)?.measure ?? 'Choose the outcome you most want to improve first.'}</p>
 
           <p className="inline-note">On a shared device, clear your draft before leaving. Your progress is saved only in this browser.</p>
 
@@ -672,7 +666,7 @@ export default function App() {
             <h3>Profile</h3>
             <p><strong>Type:</strong> {getProfileOptionLabel(ORGANISATION_OPTIONS, profile.organizationType) || 'Not entered'}</p>
             <p><strong>Industry:</strong> {getProfileOptionLabel(INDUSTRY_OPTIONS, profile.industry) || 'Not entered'}</p>
-            <p><strong>Goal:</strong> {getProfileOptionLabel(BUSINESS_GOAL_OPTIONS, profile.businessGoal) || 'Not entered'}</p>
+            <p><strong>Goal:</strong> {getProfileOptionLabel(businessGoalOptions, profile.businessGoal) || 'Not entered'}</p>
           </div>
           <div className="summary-card">
             <h3>Evidence</h3>
