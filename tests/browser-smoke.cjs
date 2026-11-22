@@ -120,6 +120,7 @@ async function run(reduceMotion = false) {
       new MutationObserver(scan).observe(document.body,{subtree:true,childList:true,characterData:true});
       return true;
     })()`);
+    assert.equal(await js("document.querySelector('.landing-guide').textContent.includes('Fictional sample report')"),false,'Removed landing sample returned');
     await click('#take-assessment');
     try {
       await until(()=>js("document.querySelectorAll('.profile-form select').length === 3"),'Profile not rendered');

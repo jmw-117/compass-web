@@ -1,6 +1,6 @@
 # Compass delivery ledger
 
-**21/23 verified, 2 remaining (91.3%).** The latest application release is `c54c75a` (PR #12). Item 20 requires manual accessibility and device testing. Item 22 requires real-business and independent expert validation.
+**21/23 verified, 2 remaining (91.3%).** The pilot usability release is `848fa19` (PR #14). Item 20 requires manual accessibility and device testing. Item 22 requires real-business and independent expert validation.
 
 | Rank | Original v3.0 | Requirement | Implementation and remaining evidence |
 |---|---|---|---|
@@ -22,7 +22,7 @@
 | 16 | 22 | Finish and streamline the branded PDF. | VERIFIED. The synthetic report fits three visually inspected pages with branded header, readiness graphic and AI guidance, actions and evidence. Extracted text, page count, filename and metadata pass. PR #12. |
 | 17 | 23 | Improve the voluntary sharing and consultation experience. | VERIFIED. Exact summary preview, user-controlled outbound message, copy and alternative telephone contact. PRs #8 and #10. |
 | 18 | 9 | Strengthen saved-draft retention and privacy controls. | VERIFIED. Versioning, migration, expiry and corruption checks plus two-tab restore and clear verified in deployed Chrome. PR #11. |
-| 19 | 25 | Improve landing-page information and discoverability. | VERIFIED. Landing information, fictional sample, brand identity, canonical link, favicon and social card shipped. PR #11. |
+| 19 | 25 | Improve landing-page information and discoverability. | VERIFIED. Landing information, brand identity, canonical link, favicon and social card shipped. The owner removed the fictional sample from the landing-page scope after PR #14. |
 | 20 | 24, 26 | Complete accessibility, mobile and performance verification. | PARTIAL. Chrome responsive widths, keyboard focus, accessibility tree, 200% results text, PDF and bundle budget passed. Physical Android, assistive technology and in-app download fallback evidence outstanding. |
 | 21 | 27 | Finalise repository configuration and progress tracking. | VERIFIED. Corrected Pages base, removed obsolete artifacts after reference checks, verified protected build and rollback documentation. PRs #9–#11. This ledger cites the live release. |
 | 22 | 10 | Prepare and execute real-world methodological validation. | EXTERNAL VALIDATION PENDING. Existing pilot materials retained, updated protocol prepared. No participants assessed. |
@@ -102,3 +102,5 @@ A separate in-app browser connection timed out before navigation could be verifi
 ## Pilot usability follow-up
 
 The Results celebration uses a brief two-sided burst, respects reduced motion and leaves the controls accessible. The five progress labels share one row. The chart distinguishes known scores from uncertainty. The profile and safety screens use one introduction and question-specific, market-neutral examples. Exact KES budgets are optional. Browser regression coverage includes blocked automatic PDF downloads and the local Open PDF recovery link. These engineering changes add evidence to item 20. Physical Android, assistive-technology and embedded-browser testing are still open. The participant study and independent review in item 22 remain outstanding. **21/23 verified, 2 remaining.**
+
+The [PR #14 application release](https://github.com/jmw-117/compass-web/pull/14) passed [main and live Pages checks](https://github.com/jmw-117/compass-web/actions/runs/45045561137) at `848fa19`. The subsequent landing-page change removes the fictional sample. Personal report preview, export and sharing remain available after completing an assessment.
