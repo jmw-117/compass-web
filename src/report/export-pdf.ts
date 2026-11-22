@@ -158,7 +158,7 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   const summary = report.querySelector('.report-overview');
   const signal = report.querySelector('.readiness-signal');
   drawBlock('AI readiness assessment', bold, 28, true);
-  drawBlock(readText(report.querySelector('.report-disclaimer')), regular, 10);
+  drawBlock(readText(report.querySelector('.report-disclaimer')) + '. Weights and thresholds are provisional.', regular, 10);
   cursor -= 10;
   const cardY = cursor - 72;
   page.drawRectangle({x: margin, y: cardY, width: contentWidth, height: 76, color: pale});
@@ -252,7 +252,6 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
     cursor -= rowHeight;
     page.drawLine({start:{x:margin, y:cursor+8}, end:{x:pageWidth-margin, y:cursor+8}, thickness:0.4, color:lineColor});
   }
-  drawBlock('Methodology: self-reported practices, provisional weights and thresholds. Confirm material findings independently.',regular,10);
   const pages = pdf.getPages();
   pages.forEach((item, index) => {
     item.drawLine({start: {x: margin, y: 39}, end: {x: pageWidth - margin, y: 39}, thickness: 0.8, color: lineColor});
