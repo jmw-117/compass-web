@@ -1663,3 +1663,5 @@ h3 {
 
 .decision-summary {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr));gap:1rem;padding:1rem 1.25rem;border:1px solid #bec6d0;border-radius:1rem;background:#f5f7fa;color:#182538}
 .decision-summary p,.decision-summary ul {margin:0}.decision-summary ul {grid-column:1/-1;padding-inline-start:1.25rem}.decision-summary strong {color:#0e1828}
+
+.landing-guide {max-width:54rem;margin:1.5rem auto;padding:0 1.25rem;color:#172336}.landing-guide details {padding:1rem 0;border-top:1px solid #cbd2db}.landing-guide summary {cursor:pointer;font-weight:650}.landing-guide a {color:#263c58}body:has(.hero--assessment-active) .landing-guide {display:none}

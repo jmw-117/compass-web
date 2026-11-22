@@ -24,23 +24,11 @@ const navy = rgb(0.05, 0.09, 0.16);
 const charcoal = rgb(0.16, 0.20, 0.25);
 const muted = rgb(0.31, 0.37, 0.44);
 const lineColor = rgb(0.83, 0.86, 0.89);
-const reportBlockSelector = 'h3, h5, p, li, dt, dd, .report-dimension-header';
 
 function readText(element: Element | null) {
   return element?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 }
 
-function blockText(element: Element) {
-  if (element.classList.contains('report-dimension-header')) {
-    return Array.from(element.children, readText).join(' · ');
-  }
-  if (element.tagName !== 'LI') return readText(element);
-  const item = element.cloneNode(true) as Element;
-  item.querySelectorAll('ul, ol, div, p').forEach((child) => child.remove());
-  const list = element.parentElement;
-  const prefix = list?.tagName === 'OL' ? `${Array.from(list.children).indexOf(element) + 1}. ` : '• ';
-  return prefix + readText(item);
-}
 
 function wrap(text: string, width: number, font: PDFFont, size: number) {
   const lines: string[] = [];
@@ -193,63 +181,71 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   for (const item of signal?.querySelectorAll('p:not(.eyebrow)') ?? []) drawBlock(readText(item), regular, 10.5);
   for (const item of summary?.querySelectorAll('.report-score p:not(.result-label, .report-score-value)') ?? []) drawBlock(readText(item), regular, 10.5);
 
-  cursor -= 10;
-  iconHeading('Recommended next step', 'arrow');
-  drawBlock(readText(summary?.querySelector('.report-next-step h5') ?? null), bold, 17, true);
-  drawBlock(readText(summary?.querySelector('.report-next-step p:nth-child(3)') ?? null), regular, 11);
-  sectionHeading('Use-case guidance and feasibility');
+  iconHeading('Use-case guidance and feasibility', 'safety');
   for (const item of report.querySelectorAll('.decision-summary p')) {
     const label = readText(item.querySelector('strong'));
-    drawBlock(label + ': ' + readText(item).slice(label.length).trim(), regular, 11);
+    drawBlock(label + ': ' + readText(item).slice(label.length).trim(), bold, 11);
   }
-  for (const item of report.querySelectorAll('.decision-summary li')) drawBlock(readText(item), regular, 11);
-  const firstAction = report.querySelector('.first-action');
-  if (firstAction) drawBlock(readText(firstAction), regular, 11);
-  cursor -= 10;
-  iconHeading('Safety checks', 'safety');
-  for (const item of report.querySelectorAll('.report-safety li, .report-safety p')) drawBlock(blockText(item), regular, 10.5);
+  const issues = [...report.querySelectorAll('.decision-summary li')];
+  for (const item of issues.slice(0, 2)) drawBlock(readText(item), regular, 11);
+  iconHeading('Recommended next step', 'arrow');
+  drawBlock(readText(summary?.querySelector('.report-next-step h5') ?? null), bold, 15, true);
+  drawBlock(readText(report.querySelector('.first-action')), regular, 11);
+  drawBlock(readText(report.querySelector('.report-safety p')), regular, 11);
+
+  const chart = report.querySelector('#report-seven-dimension-results-title')?.closest('details');
+  ensureSpace(188);
+  sectionHeading('Readiness by dimension');
+  const chartY=cursor;
+  const half=(contentWidth-24)/2;
+  const rows=Array.from(chart?.querySelectorAll<HTMLElement>('[data-dimension]') ?? []);
+  rows.forEach((row,i)=>{
+    const value=dimensions[row.dataset.dimension as keyof typeof dimensions];
+    const label=readText(row.querySelector('.report-dimension-header span'));
+    const x=margin+(i%2)*(half+24);
+    const y=chartY-Math.floor(i/2)*29;
+    const lower=Math.floor(value.lower*25), upper=Math.ceil(value.upper*25);
+    const percent=(value.lower===value.upper?Math.round(value.lower*25):lower+'-'+upper)+'%';
+    page.drawText(encode(label),{x,y,font:bold,size:10,color:navy});
+    page.drawText(percent,{x:x+half-regular.widthOfTextAtSize(percent,10),y,font:regular,size:10,color:muted});
+    for(const [fraction,color] of [[1,pale],[value.upper/4,silver],[value.lower/4,navy]] as const) {
+      if(fraction>0) page.drawRectangle({x,y:y-10,width:half*fraction,height:4,color});
+    }
+  });
+  cursor=chartY-Math.ceil(rows.length/2)*29;
+  drawBlock('Silver extensions show uncertainty from unknown practices.',regular,9);
+  page = addPage();
+  cursor = pageHeight - 102;
+  sectionHeading('Priority actions');
+  for (const action of report.querySelectorAll('.report-list.ordered > li')) {
+    const title = readText(action.querySelector('strong'));
+    const paragraphs = Array.from(action.querySelectorAll('p'), p => readText(p)).filter(Boolean);
+    const height = [title,...paragraphs].reduce((sum,p) => sum + wrap(encode(p),contentWidth,regular,10).length * 15 + 6,0);
+    ensureSpace(Math.min(height,pageHeight-156));
+    drawBlock(title, bold, 11, true);
+    paragraphs.forEach(p => drawBlock(p, regular, 10));
+  }
 
   page = addPage();
   cursor = pageHeight - 102;
-  const chart = report.querySelector('#report-seven-dimension-results-title')?.closest('details');
-  sectionHeading('Seven dimensions of readiness');
-  drawBlock('The dark bar shows the confirmed score. A lighter extension shows how far the score could rise when unknown answers are confirmed.', regular, 10.5);
-  for (const row of chart?.querySelectorAll<HTMLElement>('[data-dimension]') ?? []) {
-    const metric = dimensions[row.dataset.dimension as keyof typeof dimensions];
-    const label = readText(row.querySelector('.report-dimension-header span'));
-    const value = readText(row.querySelector('.report-dimension-header span:last-child'));
-    ensureSpace(34);
-    page.drawText(encode(label), {x: margin, y: cursor, size: 11, font: bold, color: navy});
-    const detail = encode(value);
-    page.drawText(detail, {x: pageWidth - margin - regular.widthOfTextAtSize(detail, 10), y: cursor, size: 10, font: regular, color: muted});
-    const bar = (width: number, color: typeof navy) => {
-      if (width > 0) page.drawRectangle({x: margin, y: cursor - 12, width, height: 5, color});
-    };
-    bar(contentWidth, pale);
-    bar(contentWidth * metric.upper / 4, silver);
-    bar(contentWidth * metric.lower / 4, navy);
-    cursor -= 32;
+  sectionHeading('Supporting evidence');
+  const metadata = [...report.querySelectorAll('.report-metadata > div')].map(row =>
+    readText(row.querySelector('dt')) + ': ' + readText(row.querySelector('dd')));
+  drawBlock(metadata.join('  |  '), regular, 9);
+  const business = report.querySelector('#report-business-snapshot-title')?.closest('details');
+  drawBlock(Array.from(business?.querySelectorAll('li') ?? [], row => readText(row)).slice(0,3).join('  |  '),regular,10);
+  if (issues.length>2) {
+    drawBlock('Other findings to review',bold,12,true);
+    issues.slice(2).forEach(row=>drawBlock(readText(row),regular,10));
   }
-
-  for (const section of report.querySelectorAll('.report-section')) {
-    if (section === chart || section.querySelector('.report-overview')) continue;
-    sectionHeading(readText(section.querySelector('summary h4')));
-    if (section.querySelector('#report-three-priority-actions-title')) {
-      for (const action of section.querySelectorAll('ol > li')) {
-        const paragraphs = [readText(action.querySelector('strong')), ...Array.from(action.querySelectorAll('p'), p => readText(p))].filter(Boolean);
-        const height = paragraphs.reduce((sum,p) => sum + wrap(encode(p),contentWidth,regular,11).length * 16 + 8,0);
-        ensureSpace(Math.min(height,pageHeight-156));
-        paragraphs.forEach((p,i) => drawBlock(p,i===0?bold:regular,11,i===0));
-      }
-      continue;
-    }
-    for (const element of section.querySelectorAll('.report-section-content :is(' + reportBlockSelector + ')')) {
-      const text = blockText(element);
-      const emphasize = element.matches('h3, h5, dt');
-      if (text) drawBlock(text, emphasize ? bold : regular, 10.5, emphasize);
-    }
+  for (const row of report.querySelectorAll('.report-answers > div')) {
+    const prompt = readText(row.querySelector('dt'));
+    const answer = readText(row.querySelector('dd'));
+    ensureSpace(16*(wrap(encode(prompt),contentWidth,bold,10).length+wrap(encode(answer),contentWidth,regular,10).length)+10);
+    drawBlock(prompt,bold,10);
+    drawBlock(answer,regular,10);
   }
-
+  drawBlock('Methodology: self-reported practices, provisional weights and thresholds. Confirm material findings independently.',regular,10);
   const pages = pdf.getPages();
   pages.forEach((item, index) => {
     item.drawLine({start: {x: margin, y: 39}, end: {x: pageWidth - margin, y: 39}, thickness: 0.8, color: lineColor});
