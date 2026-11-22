@@ -9,7 +9,7 @@ import ActionIcon from './report/ActionIcon';
 import {lazy, Suspense, useEffect, useMemo, useRef, useState} from 'react';
 import questionBank from '../docs/domain/question_bank.json';
 import {evaluate} from './domain/evaluate';
-import {getGateLabel, getReportGuidance, getSafetyChecksMessage} from './domain/report-guidance';
+import {getReportGuidance} from './domain/report-guidance';
 import ReadinessSignal from './ReadinessSignal';
 import AssessmentDetails from './assessment/AssessmentDetails';
 import {clearDeviceDraft, restoreDeviceDraft, saveDeviceDraft} from './assessment/local-draft';
@@ -390,17 +390,13 @@ export default function App() {
         if (!saved) setDraftStatus('There is no current saved draft.');
         else if (!applyDraft(saved)) setDraftStatus('Saved draft restored to this session.');
       } else {
-        try {sessionStorage.removeItem(STORAGE_KEY);} catch { /* Continue clearing the independent device store. */ }
-        setAssessmentId(newAssessmentId());
-        setProfile(emptyProfile);
-        setAnswers({});
-        setContext({});
-        setProbeAnswers({});
-        setExtendedAnswers({});
-        setQuestionIndex(0);
-        setEditingFromReview(false);
-        setScreen('start');
+        resetSession();
         await clearDeviceDraft();
+        if (typeof BroadcastChannel === 'function') {
+          const channel = new BroadcastChannel('compass-draft-events');
+          channel.postMessage({type:'clear',assessmentId});
+          channel.close();
+        }
         setDraftStatus('Draft cleared from this session and device.');
       }
     } catch {
@@ -409,6 +405,31 @@ export default function App() {
       setDraftBusy(false);
     }
   }
+
+  function resetSession() {
+    try {sessionStorage.removeItem(STORAGE_KEY);} catch { /* Continue clearing the independent device store. */ }
+    setAssessmentId(newAssessmentId());
+    setProfile(emptyProfile);
+    setAnswers({});
+    setContext({});
+    setProbeAnswers({});
+    setExtendedAnswers({});
+    setQuestionIndex(0);
+    setEditingFromReview(false);
+    setScreen('start');
+  }
+
+  useEffect(() => {
+    if (typeof BroadcastChannel !== 'function') return;
+    const channel = new BroadcastChannel('compass-draft-events');
+    channel.onmessage = event => {
+      if (event.data?.type === 'clear' && event.data.assessmentId === assessmentId) {
+        resetSession();
+        setDraftStatus('This draft was cleared in another tab.');
+      }
+    };
+    return () => channel.close();
+  }, [assessmentId]);
 
   function renderStartScreen() {
     return (
@@ -748,11 +769,6 @@ export default function App() {
         <DecisionSummary result={readinessResult} />
         <aside className="pragmatic-recommendation"><h3>{readinessResult.opportunity.kind}</h3><p>{readinessResult.opportunity.next}</p><p>{readinessResult.opportunity.measure}</p></aside>
 
-        <aside className="pragmatic-recommendation" aria-labelledby="safety-results-title">
-          <h3 id="safety-results-title">Safety and evidence checks</h3>
-          <p>{getSafetyChecksMessage(readinessResult)}</p>
-          {readinessResult.formalGates.length > 0 && <ul>{readinessResult.formalGates.map((gate) => <li key={gate.id}>{getGateLabel(gate.id)}</li>)}</ul>}
-        </aside>
 
         <aside className="pragmatic-recommendation" aria-labelledby="practical-next-step-title">
           <p className="eyebrow">Practical Next Step</p>

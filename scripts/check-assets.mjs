@@ -21,6 +21,8 @@ for(const attribute of html.matchAll(/(?:src|href)="([^"]+)"/g)){
 
 if(!html.includes('This page remains readable without JavaScript'))throw Error('Static HTML fallback is missing.');
 if(!html.includes('The questionnaire, scoring, recommendations'))throw Error('Landing shell must disclose unfinished assessment features.');
+const socialImage=await readFile(path.join(dist,'social-preview.png'));
+if(socialImage.readUInt32BE(16)!==1200||socialImage.readUInt32BE(20)!==630)throw Error('Wrong social preview dimensions.');
 const bundleNames=await readdir(assets);
 const javascript=bundleNames.filter(name=>name.endsWith('.js'));
 if(javascript.length<2)throw Error('Expected a separate, code-split report placeholder chunk.');

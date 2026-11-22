@@ -211,12 +211,12 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   if (noUse && ['decides','influences','yes','assists'].includes(String(profile.high_impact_ai_workflow))) concerns.push('Your answers describe a decision involving AI but no current or planned use. Clarify the workflow.');
   if (scoreOf('STR-01') >= 3 && hasFlag('no_use_case')) concerns.push('Compare the stated goal with the technical finding that no use case has been identified.');
   if (profile.value_stream === 'hire_to_retire' && hasFlag('high_impact_review') && profile.high_impact_ai_workflow === 'no') concerns.push('You described hiring and a consequential technical use while reporting no significant decision. Clarify whether AI ranks or screens candidates.');
-  const hold = hasGate('URGENT-REGULATED') || (hasFlag('high_impact_review') && profile.high_impact_ai_workflow !== 'no') || hasGate('GOV-DATA') || hasGate('OWN-NONE');
+  const hold = hasGate('URGENT-REGULATED') || hasGate('GOV-DATA') || hasGate('OWN-NONE');
   const useCaseGuidance: ReadinessResult['useCaseGuidance'] = hold ? 'Hold' : concerns.length ? 'Review required' : noUse ? 'Not assessed' : 'Eligible for controlled pilot planning';
   const deliveryCapacity = profile.staff_capacity === 'none' ? 'Unavailable' : ['available','limited'].includes(String(profile.staff_capacity)) ? 'Available' : 'Unconfirmed';
   const financialEvidence = hasGate('BASELINE-MISSING') || hasFlag('baseline_missing') || probeAnswers.get('PR-FIN-COMPARE') === 'No' ? 'Unsupported' :
     probeAnswers.get('PR-FIN-COMPARE') === 'Yes' ? 'Supported by available evidence' : 'Unverified';
-  if (scoreOf('MET-01') >= 3 && financialEvidence === 'Unsupported') concerns.push('Measurement is rated highly, but no baseline was identified for this workflow. Record its starting value before estimating benefit.');
+  if (scoreOf('MET-01') >= 3 && (hasGate('BASELINE-MISSING') || hasFlag('baseline_missing'))) concerns.push('Measurement is rated highly, but no baseline was identified for this workflow. Record its starting value before estimating benefit.');
   if (scoreOf('STR-01') === 0 && profile.primary_goal && profile.primary_goal !== 'explore') concerns.push('You selected a goal but reported no agreed outcome. Name the workflow and the change you want to see.');
   const pilotReviewRequired = useCaseGuidance !== 'Eligible for controlled pilot planning';
   const actionPath = primaryPath === 'FEASIBILITY' || (primaryPath === 'P5' && pilotReviewRequired) ? 'P1' : primaryPath;

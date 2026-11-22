@@ -356,6 +356,30 @@ async function run(reduceMotion = false) {
     await call('Target.closeTarget',{targetId:target.targetId});
     assert.deepEqual(await js('window.longButtons'),[],'All button labels must fit within two words');
     assert.equal(await js('window.celebrations'),1,'Revisiting Results must not replay confetti');
+    const draftButton = label => until(()=>js("(()=>{const b=[...document.querySelectorAll('.compass-draft-controls button')].find(x=>x.textContent.trim()==="+JSON.stringify(label)+"); if(!b||b.disabled)return false;b.click();return true})()"),'Missing draft control '+label);
+    for (const width of [768,1280,320]) {
+      await call('Emulation.setDeviceMetricsOverride',{width,height:850,deviceScaleFactor:1,mobile:width<1000});
+      assert.equal(await noHorizontalOverflow(),true,'Results overflow at '+width);
+    }
+    const ax=await call('Accessibility.getFullAXTree');
+    assert.ok(ax.nodes.some(n=>n.role?.value==='heading' && /readiness/i.test(n.name?.value)),'Missing accessible results heading');
+    await click('.compass-draft-controls summary');
+    await draftButton('Save Draft');
+    await until(()=>js("document.querySelector('.compass-draft-controls [role=status]')?.textContent.includes('saved')"),'Device save failed');
+    const draftTab=await call('Target.createTarget',{url:app.href});
+    const {sessionId:otherSession}=await call('Target.attachToTarget',{targetId:draftTab.targetId,flatten:true});
+    const other=async expression=>(await call('Runtime.evaluate',{expression,returnByValue:true},otherSession)).result?.value;
+    await until(()=>other("document.querySelector('#take-assessment')?.disabled===false"),'Could not open second tab');
+    await other("document.querySelector('#take-assessment').click()");
+    await until(()=>other("!!document.querySelector('.compass-draft-controls summary')"),'Missing second tab draft controls');
+    await other("document.querySelector('.compass-draft-controls summary').click()");
+    await other("[...document.querySelectorAll('button')].find(b=>b.textContent==='Restore Draft').click()");
+    await until(()=>other("document.querySelector('#profile-organisation')?.value==='sole_proprietor' && Object.keys(JSON.parse(sessionStorage.getItem('silverspark-compass-draft-v1') || '{}').answers || {}).length===14"),'Device restore did not preserve all answers');
+    await draftButton('Clear draft');
+    await until(()=>other("document.querySelector('#profile-organisation')?.value==='' && sessionStorage.getItem('silverspark-compass-draft-v1')===null"),'Second tab retained a cleared draft');
+    await other("[...document.querySelectorAll('button')].find(b=>b.textContent==='Restore Draft').click()");
+    await until(()=>other("document.querySelector('.compass-draft-controls [role=status]')?.textContent.includes('no current saved draft')"),'Device copy survived clear');
+    await call('Target.closeTarget',{targetId:draftTab.targetId});
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);
     console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, direct results, optional step navigation, responsive field pairs and checkboxes, report hierarchy, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and direct PDF download ('+bytes.length+' bytes). No external requests.');

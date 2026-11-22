@@ -157,7 +157,10 @@ export function getSafetyChecksMessage(
 }
 
 export function getReportGuidance(readiness: ReadinessSummary) {
-  const recommendation = readiness.specialistReview ? PATH_RECOMMENDATIONS.P6 ?? DEFAULT_RECOMMENDATION
+  const recommendation = readiness.useCaseGuidance === 'Not assessed' && ['P5','FEASIBILITY'].includes(readiness.primaryPath) ? {
+      title: 'Choose a workflow to improve',
+      guidance: 'No AI use case was identified. Select a recurring task and record what would make it work better.',
+    } : readiness.specialistReview ? PATH_RECOMMENDATIONS.P6 ?? DEFAULT_RECOMMENDATION
     : readiness.primaryPath === 'FEASIBILITY' ? {
       title: 'Confirm the next practical step',
       guidance: readiness.deliveryCapacity === 'Unconfirmed' ? 'All core answers are known. Confirm who can set aside time for the proposed work.' :

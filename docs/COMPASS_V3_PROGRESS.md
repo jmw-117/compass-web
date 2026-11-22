@@ -62,3 +62,7 @@ PR #9 merged as `8466f99`. Main run 44957016996 passed quality, Pages and live C
 
 - Item 12. tests/opportunity.test.ts and src/domain/opportunity.ts. 4/23 verified, 19 remaining.
 - Item 14. src/App.tsx and tests/browser-smoke.cjs. 5/23 verified, 18 remaining.
+
+## Release verification for PR #10
+
+Branch quality run 44957446179 passed the scenario suite, production build, extended contracts, browser and PDF tests. Visual inspection of its five rendered PDF pages found a sparse final appendix page and repeated safety wording. The next release compacts the dimension chart and groups evidence and actions. Physical-device, screen-reader, independent research and commercial approvals remain open.
