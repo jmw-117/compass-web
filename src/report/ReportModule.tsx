@@ -77,6 +77,8 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
   const [openSections, setOpenSections] = useState(() => new Set(['executive-summary']));
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
+  useEffect(() => () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl); }, [pdfUrl]);
   const [shareOpen, setShareOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState('');
   const summaryRef = useRef<HTMLTextAreaElement>(null);
@@ -129,7 +131,9 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
     setExporting(true);
     try {
       const {downloadReport} = await import('./export-pdf');
-      await downloadReport(report, assessmentId, reportGuidance.signal.color, readiness.dimensions);
+      const url = await downloadReport(report, assessmentId, reportGuidance.signal.color, readiness.dimensions);
+      if (reportRef.current === report) setPdfUrl(url);
+      else URL.revokeObjectURL(url);
     } catch {
       setExportError('The PDF could not be downloaded. Open Preview Report and use your browser’s Print command, or use Copy summary under Send Report.');
     } finally {
@@ -168,6 +172,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
           <ActionIcon name="send" /> Send Report
         </button>
       </div>
+      {pdfUrl && <p className="inline-note" role="status">Download didn’t start? <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Open PDF</a> to view or save your report.</p>}
       {exportError && <p className="storage-error" role="alert">{exportError}</p>}
       <div className="compass-share-preview" id="compass-share-preview" hidden={!shareOpen}>
         <p>Send Report prepares a summary. To share the complete PDF, export it and attach it yourself. WhatsApp opens with this message ready for you to send.</p>

@@ -53,10 +53,10 @@ function labelValue(value: string) {
 
 const contextFields = discovery.fields.filter(({stage}) => stage === 'context' || stage === 'discovery');
 const constraintFieldSources = [...schema.later_fields, ...discovery.fields];
+const amountFields = constraintFieldSources.filter(field => ['budget_ceiling', 'monthly_budget_ceiling'].includes(field.id));
 const constraintFields = [
   'staff_capacity', 'timeline',
   'budget_window', 'budget_band',
-  'budget_ceiling', 'monthly_budget_ceiling',
   'decision_authority', 'preferred_next_step',
 ].flatMap((id) => constraintFieldSources.filter((field) => field.id === id));
 
@@ -152,7 +152,15 @@ export default function AssessmentDetails({
             <OptionalField key={field.id} field={field} value={profile[field.id]} update={update} />
           ))}
           {step.id === 'capacity' && (
-            <p className="inline-note">Separate one-off and monthly amounts. Enter zero for no external cash. Budget does not change readiness.</p>
+            <div className="budget-detail">
+              <p className="inline-note">A budget band is enough to tailor your recommendations. Budget does not change readiness.</p>
+              {profile.budget_window !== 'no_external_spend' && <details open={typeof profile.budget_ceiling === 'number' || typeof profile.monthly_budget_ceiling === 'number' || undefined}>
+                <summary>KES amounts</summary>
+                <p>Optionally add exact amounts if you budget in Kenyan shillings.</p>
+                <div className="profile-form compass-field-grid">{amountFields.map(field =>
+                  <OptionalField key={field.id} field={field} value={profile[field.id]} update={update} />)}</div>
+              </details>}
+            </div>
           )}
         </div>
       )}

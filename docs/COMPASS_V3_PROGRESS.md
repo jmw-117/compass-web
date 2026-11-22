@@ -98,3 +98,7 @@ Real-business participation and independent review are pending. Legal/privacy an
 - Item 16. The exported synthetic report contains three inspected pages. A page-count regression catches a stranded methodology note. 21/23 verified, 2 remaining.
 
 A separate in-app browser connection timed out before navigation could be verified. Item 20 remains open for physical Android, screen-reader operation and in-app download handling. Item 22 remains External Validation Pending. The pilot materials are ready and no participants have been assessed. The live GitHub Pages deployment is for testing. Commercial hosting and privacy clearance remain external; analytics are disabled.
+
+## Pilot usability follow-up
+
+The Results celebration uses a brief two-sided burst, respects reduced motion and leaves the controls accessible. The five progress labels share one row. The chart distinguishes known scores from uncertainty. The profile and safety screens use one introduction and question-specific, market-neutral examples. Exact KES budgets are optional. Browser regression coverage includes blocked automatic PDF downloads and the local Open PDF recovery link. These engineering changes add evidence to item 20. Physical Android, assistive-technology and embedded-browser testing are still open. The participant study and independent review in item 22 remain outstanding. **21/23 verified, 2 remaining.**

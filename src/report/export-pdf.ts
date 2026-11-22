@@ -266,7 +266,13 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   link.href = url;
   link.download = `Silverspark_Compass_AI_Readiness_Report_${nairobiDate()}.pdf`;
   document.body.append(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+  try {
+    link.click();
+    return url;
+  } catch (error) {
+    URL.revokeObjectURL(url);
+    throw error;
+  } finally {
+    link.remove();
+  }
 }

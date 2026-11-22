@@ -786,8 +786,8 @@ h3 {
 
 .wizard-steps {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.35rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(1px, 0.45vw, 6px);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -800,7 +800,13 @@ h3 {
   font-size: 0.875rem;
   font-weight: 600;
   text-align: center;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .wizard-steps li { font-size: .75rem; padding-inline: 0; letter-spacing: -.025em; }
+  .assessment-topbar { overflow-x: auto; }
+  .wizard-steps { min-width: 21em; font-size: .75rem; }
 }
 
 .wizard-steps [aria-current="step"] {
@@ -1635,30 +1641,68 @@ h3 {
 .assessment-panel[aria-labelledby="results-title"] { position: relative; }
 .completion-confetti {
   pointer-events: none;
-  position: absolute;
-  z-index: 1;
-  inset: 0 0 auto;
-  height: 9rem;
+  position: fixed;
+  inset: 0;
+  z-index: 8;
   overflow: hidden;
-  animation: confetti-finish 1100ms linear both;
+  display: none;
 }
-.completion-confetti i {
-  position: absolute;
-  top: 0;
-  width: 5px;
-  height: 9px;
-  border-radius: 2px;
-  animation: confetti-drop 850ms ease-out both;
+@media (prefers-reduced-motion: no-preference) {
+  .completion-confetti { display: block; }
+  .completion-confetti i {
+    position: absolute;
+    top: 43%;
+    opacity: 0;
+    animation-name: confetti-arc;
+    animation-fill-mode: both;
+  }
 }
-@keyframes confetti-drop {
-  from { opacity: 0; transform: translateY(-8px); }
-  12% { opacity: 0.9; }
-  to { opacity: 0; transform: translate(var(--drift), var(--drop)) rotate(var(--spin)); }
+@keyframes confetti-arc {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg); animation-timing-function: ease-out; }
+  7% { opacity: 1; }
+  42% { transform: translate(var(--arc-x), var(--arc-y)) rotate(100deg); animation-timing-function: ease-in; }
+  75% { opacity: 0.95; }
+  100% { opacity: 0; transform: translate(var(--end-x), var(--end-y)) rotate(var(--turn)); }
 }
-@keyframes confetti-finish { from { opacity: 1; } to { opacity: 0.96; } }
-@media (prefers-reduced-motion: reduce) {
-  .completion-confetti { display: none; }
-  .completion-confetti, .completion-confetti i { animation: none; }
+.budget-detail { grid-column: 1 / -1; }
+.budget-detail summary { cursor: pointer; font-weight: 600; }
+.area-chart {
+  margin-block: 1.5rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  background: #f8f9fb;
+  border: 1px solid #dfe4ea;
+  border-radius: 1.4rem;
+  color: #142033;
+}
+.area-chart-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .25rem 1rem; }
+.area-chart-heading h3 { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.65rem); letter-spacing: -.035em; }
+.area-chart-heading p, .area-key { margin: 0; color: #4c5a6c; font-size: .875rem; }
+.area-chart-rows { list-style: none; padding: 0; margin: 1rem 0 0; }
+.area-chart-row {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 1fr) minmax(0, 3fr) minmax(4rem, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: .78rem 0;
+  border-top: 1px solid #dfe4ea;
+}
+.area-name { font-size: 1rem; font-weight: 550; }
+.area-value { text-align: end; font-weight: 650; font-variant-numeric: tabular-nums; }
+.area-value small { display: block; font-weight: 400; color: #4c5a6c; }
+.area-scale { position: relative; height: .5rem; border-radius: 1rem; overflow: hidden; background: #e1e6ec; }
+.area-scale span { position: absolute; inset-block: 0; }
+.area-known { left: 0; border-radius: inherit; background: linear-gradient(90deg,#172b43,#537489); }
+.area-range, .area-key i { background: repeating-linear-gradient(135deg,#73879a 0 2px,#dce3ea 2px 5px); }
+.area-key { display: flex; align-items: baseline; gap: .5rem; margin-top: .9rem; }
+.area-key i { flex: 0 0 1rem; height: .5rem; border-radius: 3px; }
+@media (max-width: 600px) {
+  .area-chart-row { grid-template-columns: minmax(0,1fr) auto; gap: .5rem; }
+  .area-chart-row .area-scale { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (forced-colors: active) {
+  .area-scale { outline: 1px solid CanvasText; }
+  .area-known { background: CanvasText; forced-color-adjust: none; }
+  .area-range { border: 1px dashed CanvasText; }
 }
 
 .decision-summary {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr));gap:1rem;padding:1rem 1.25rem;border:1px solid #bec6d0;border-radius:1rem;background:#f5f7fa;color:#182538}
