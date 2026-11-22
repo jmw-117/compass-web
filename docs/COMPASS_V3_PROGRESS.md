@@ -1,6 +1,6 @@
 # Compass delivery ledger
 
-**18/23 verified, 5 remaining (78%).** Latest verified release `a61113f` (PR #11). Open items are 13, 15, 16, 20 and 22.
+**21/23 verified, 2 remaining (91.3%).** The latest application release is `c54c75a` (PR #12). Item 20 requires manual accessibility and device testing. Item 22 requires real-business and independent expert validation.
 
 | Rank | Original v3.0 | Requirement | Implementation and remaining evidence |
 |---|---|---|---|
@@ -16,10 +16,10 @@
 | 10 | 14 | Personalise Compass by business size, industry and market. | VERIFIED. Four audience profiles, shared industry options and Kenya examples. Four-persona score neutrality regression in PR #10. |
 | 11 | 15 | Strengthen the existing AI-specific diagnostics. | VERIFIED. Guided first-use and current-use diagnostics, full annex and unscored vendor and continuity evidence. PR #10. |
 | 12 | 16 | Introduce deterministic business-opportunity discovery. | VERIFIED. Opportunity tests exercise foundation, process, automation and AI branches. PR #9. |
-| 13 | 17, 18 | Improve the existing three-action recommendation engine. | PARTIAL. Deterministic ranking, cost, dependencies and action steps shipped. Personalisation of the first action is being tested. |
+| 13 | 17, 18 | Improve the existing three-action recommendation engine. | VERIFIED. Industry, goal, workflow and bottleneck inform the first action. Action-specific steps, owners, affordability, dependencies and completion evidence use the existing catalogue. Direct regression and branded export in PR #12. |
 | 14 | 19, 20 | Refine the required and optional assessment journeys. | VERIFIED. PR #9. Live Chrome traversed all safety screens, edit, skip, optional details and results. |
-| 15 | 21 | Simplify the results and client-report content. | PARTIAL. Summary hierarchy and zero-score filter shipped. Dedicated zero-strength regression under verification. |
-| 16 | 22 | Finish and streamline the branded PDF. | PARTIAL. Branded, extractable PDF passes content checks. Visual inspection of the five-page PR #11 PDF found spare chart and continuation pages. Pagination follow-up under verification. |
+| 15 | 21 | Simplify the results and client-report content. | VERIFIED. Results and report lead with guidance and a first action. A dedicated regression checks that zero-score dimensions cannot appear as strengths and a genuine strength can appear. PR #12. |
+| 16 | 22 | Finish and streamline the branded PDF. | VERIFIED. The synthetic report fits three visually inspected pages with branded header, readiness graphic and AI guidance, actions and evidence. Extracted text, page count, filename and metadata pass. PR #12. |
 | 17 | 23 | Improve the voluntary sharing and consultation experience. | VERIFIED. Exact summary preview, user-controlled outbound message, copy and alternative telephone contact. PRs #8 and #10. |
 | 18 | 9 | Strengthen saved-draft retention and privacy controls. | VERIFIED. Versioning, migration, expiry and corruption checks plus two-tab restore and clear verified in deployed Chrome. PR #11. |
 | 19 | 25 | Improve landing-page information and discoverability. | VERIFIED. Landing information, fictional sample, brand identity, canonical link, favicon and social card shipped. PR #11. |
@@ -88,3 +88,13 @@ PR #10 merged at `b201da9`. [Run 45000846232](https://github.com/jmw-117/compass
 | 23 | 18/23 | 5 |
 
 Real-business participation and independent review are pending. Legal/privacy and commercial hosting approvals remain separate. Analytics are off.
+
+## Live release of the client report
+
+[PR #12](https://github.com/jmw-117/compass-web/pull/12) merged at `c54c75a` after the required quality check at `398059a`. [Main release checks](https://github.com/jmw-117/compass-web/actions/runs/45001766849) cover the protected build, deployment and live assessment. The suite passed 49 tests and the extended contract job checked 1,500 reference-score samples. The entry bundle measured 67.41 KiB gzipped against a 90 KiB limit.
+
+- Item 13. The action-context scenario uses a trades business with a service goal and lost leads. 19/23 verified, 4 remaining.
+- Item 15. All-zero and mixed positive/zero scenarios verify the strength selection. 20/23 verified, 3 remaining.
+- Item 16. The exported synthetic report contains three inspected pages. A page-count regression catches a stranded methodology note. 21/23 verified, 2 remaining.
+
+A separate in-app browser connection timed out before navigation could be verified. Item 20 remains open for physical Android, screen-reader operation and in-app download handling. Item 22 remains External Validation Pending. The pilot materials are ready and no participants have been assessed. The live GitHub Pages deployment is for testing. Commercial hosting and privacy clearance remain external; analytics are disabled.
