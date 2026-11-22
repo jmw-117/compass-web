@@ -53,7 +53,7 @@ function labelValue(value: string) {
 
 const contextFields = discovery.fields.filter(({stage}) => stage === 'context' || stage === 'discovery');
 const constraintFieldSources = [...schema.later_fields, ...discovery.fields];
-const amountFields = schema.later_fields.filter(field => ['budget_ceiling', 'monthly_budget_ceiling'].includes(field.id));
+const amountFields = constraintFieldSources.filter(field => ['budget_ceiling', 'monthly_budget_ceiling'].includes(field.id));
 const constraintFields = [
   'staff_capacity', 'timeline',
   'budget_window', 'budget_band',
