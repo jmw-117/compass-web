@@ -324,6 +324,7 @@ async function run(reduceMotion = false) {
     }
     assert.equal(downloadedReport.getTitle(),'Silverspark Compass Assessment Report');
     assert.ok(downloadedReport.getPageCount()>1,'Expected a paginated report');
+    assert.ok(downloadedReport.getPageCount()<=3,'The synthetic report should fit its summary, actions and evidence in three pages');
     const previewUrl=await js("document.querySelector('.report-actions a').href");
     await call('Runtime.evaluate',{expression:"document.querySelector("+JSON.stringify(previewLink)+").click()",userGesture:true});
     const target=await until(async()=>(await call('Target.getTargets')).targetInfos.find(item=>item.type==='page' && item.url===previewUrl),'Report did not open in a new tab');

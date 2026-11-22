@@ -211,3 +211,10 @@ export function getReportGuidance(readiness: ReadinessSummary) {
     firstActionLabel: readiness.actionIds[0] ? getActionLabel(readiness.actionIds[0]) : null,
   };
 }
+
+export function positiveCapabilities(dimensions: ReadinessResult['dimensions']) {
+  return Object.entries(dimensions)
+    .filter(([, dimension]) => dimension.known === 2 && dimension.lower > 0)
+    .sort(([, first], [, second]) => second.lower - first.lower)
+    .slice(0, 2);
+}

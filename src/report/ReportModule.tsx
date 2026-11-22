@@ -10,6 +10,7 @@ import {
   getGateLabel,
   getQuestionLabel,
   getReportGuidance,
+  positiveCapabilities,
 } from '../domain/report-guidance';
 import ReadinessSignal from '../ReadinessSignal';
 import {catalogActions} from '../domain/recommendations';
@@ -72,6 +73,7 @@ function ReportSection({id, title, expanded, onToggle, children}: ReportSectionP
 }
 
 export default function ReportModule({assessmentId, profile, answers, readiness}: ReportModuleProps) {
+  const strengths = positiveCapabilities(readiness.dimensions);
   const [openSections, setOpenSections] = useState(() => new Set(['executive-summary']));
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState('');
@@ -222,7 +224,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
 
           <ReportSection id="three-priority-actions" title="Priority Actions" expanded={openSections.has('three-priority-actions')} onToggle={toggleSection}>
             <ol className="report-list ordered">
-              {readiness.actionPlan.map(({id, title: label, step, outcome, owner, effort, category}) => {
+              {readiness.actionPlan.map(({id, title: label, step, outcome, owner, effort, category, context}) => {
                 const action = catalogActions.get(id);
                 return (
                   <li key={id}>
@@ -230,7 +232,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
                     {action && (
                       <div>
                         <p>Owner: {owner}. Effort: {effort}. Cost: {category}.</p>
-                        <p>{workflow ? 'Apply this to ' + workflow + (bottleneck ? ' to address ' + bottleneck : '') + '.' : 'Choose a recent example from the business.'}</p>
+                        {id === readiness.actionIds[0] && <p>{context}</p>}
                         <p>{step} {outcome}</p>
                         <p>Evidence to review: {action.evidence_question_ids.map(getQuestionLabel).join(', ')}.</p>
                         {action.prerequisite_ids.length > 0 && <p>Complete first: {action.prerequisite_ids.map(getActionLabel).join(', ')}.</p>}
@@ -306,10 +308,9 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
 
           <ReportSection id="positive-capabilities" title="Positive Capabilities" expanded={openSections.has('positive-capabilities')} onToggle={toggleSection}>
             <ul className="report-list">
-              {Object.entries(readiness.dimensions).filter(([, result]) => result.known === 2 && result.lower > 0).length === 0 ? (
-                <li>Provide more evidence to identify relative strengths.</li>
-              ) : Object.entries(readiness.dimensions).filter(([, result]) => result.known === 2 && result.lower > 0)
-                .sort(([, first], [, second]) => second.lower - first.lower).slice(0, 2).map(([id, result]) => (
+              {strengths.length === 0 ? (
+                <li>No confirmed strength emerged from the practices assessed.</li>
+              ) : strengths.map(([id, result]) => (
                   <li key={id}>{DIMENSION_LABELS[id] ?? id} reported {Math.round(result.lower * 25)} out of 100.</li>
                 ))}
             </ul>

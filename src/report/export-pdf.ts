@@ -158,7 +158,7 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   const summary = report.querySelector('.report-overview');
   const signal = report.querySelector('.readiness-signal');
   drawBlock('AI readiness assessment', bold, 28, true);
-  drawBlock(readText(report.querySelector('.report-disclaimer')), regular, 10);
+  drawBlock(readText(report.querySelector('.report-disclaimer')) + '. Weights and thresholds are provisional.', regular, 10);
   cursor -= 10;
   const cardY = cursor - 72;
   page.drawRectangle({x: margin, y: cardY, width: contentWidth, height: 76, color: pale});
@@ -178,7 +178,8 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   });
   cursor = cardY - 24;
   drawBlock(readText(signal?.querySelector('h3') ?? null), bold, 15, true);
-  for (const item of signal?.querySelectorAll('p:not(.eyebrow)') ?? []) drawBlock(readText(item), regular, 10.5);
+  const signalDescription = signal?.querySelector('p:not(.eyebrow)');
+  if (signalDescription) drawBlock(readText(signalDescription), regular, 10.5);
   for (const item of summary?.querySelectorAll('.report-score p:not(.result-label, .report-score-value)') ?? []) drawBlock(readText(item), regular, 10.5);
 
   iconHeading('Use-case guidance and feasibility', 'safety');
@@ -191,10 +192,10 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   iconHeading('Recommended next step', 'arrow');
   drawBlock(readText(summary?.querySelector('.report-next-step h5') ?? null), bold, 15, true);
   drawBlock(readText(report.querySelector('.first-action')), regular, 11);
-  drawBlock(readText(report.querySelector('.report-safety p')), regular, 11);
+  if (!issues.length) drawBlock(readText(report.querySelector('.report-safety p')), regular, 11);
 
   const chart = report.querySelector('#report-seven-dimension-results-title')?.closest('details');
-  ensureSpace(188);
+  ensureSpace(170);
   sectionHeading('Readiness by dimension');
   const chartY=cursor;
   const half=(contentWidth-24)/2;
@@ -214,8 +215,7 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   });
   cursor=chartY-Math.ceil(rows.length/2)*29;
   drawBlock('Silver extensions show uncertainty from unknown practices.',regular,9);
-  page = addPage();
-  cursor = pageHeight - 102;
+  ensureSpace(200);
   sectionHeading('Priority actions');
   for (const action of report.querySelectorAll('.report-list.ordered > li')) {
     const title = readText(action.querySelector('strong'));
@@ -241,11 +241,17 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   for (const row of report.querySelectorAll('.report-answers > div')) {
     const prompt = readText(row.querySelector('dt'));
     const answer = readText(row.querySelector('dd'));
-    ensureSpace(16*(wrap(encode(prompt),contentWidth,bold,10).length+wrap(encode(answer),contentWidth,regular,10).length)+10);
-    drawBlock(prompt,bold,10);
-    drawBlock(answer,regular,10);
+    const promptWidth = contentWidth * 0.45;
+    const answerX = margin + promptWidth + 16;
+    const promptLines = wrap(encode(prompt), promptWidth, bold, 10);
+    const answerLines = wrap(encode(answer), pageWidth - margin - answerX, regular, 10);
+    const rowHeight = Math.max(promptLines.length, answerLines.length) * 14 + 12;
+    ensureSpace(rowHeight);
+    promptLines.forEach((line, i) => page.drawText(line, {x:margin, y:cursor - 14*i, font:bold, size:10, color:navy}));
+    answerLines.forEach((line, i) => page.drawText(line, {x:answerX, y:cursor - 14*i, font:regular, size:10, color:charcoal}));
+    cursor -= rowHeight;
+    page.drawLine({start:{x:margin, y:cursor+8}, end:{x:pageWidth-margin, y:cursor+8}, thickness:0.4, color:lineColor});
   }
-  drawBlock('Methodology: self-reported practices, provisional weights and thresholds. Confirm material findings independently.',regular,10);
   const pages = pdf.getPages();
   pages.forEach((item, index) => {
     item.drawLine({start: {x: margin, y: 39}, end: {x: pageWidth - margin, y: 39}, thickness: 0.8, color: lineColor});
