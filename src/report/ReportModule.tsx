@@ -40,7 +40,7 @@ function ReportSection({id, title, expanded, onToggle, children}: ReportSectionP
   );
 }
 
-export default function ReportModule({assessmentId, profile, answers, readiness}: ReportInput) {
+export default function ReportModule({assessmentId, profile, answers, readiness, onExported}: ReportInput & {onExported: () => void}) {
   const strengths = positiveCapabilities(readiness.dimensions);
   const [openSections, setOpenSections] = useState(() => new Set(['executive-summary']));
   const [exporting, setExporting] = useState(false);
@@ -86,8 +86,10 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
     try {
       const {downloadReport} = await import('./export-pdf');
       const url = await downloadReport(content);
-      if (reportRef.current === report) setPdfUrl(url);
-      else URL.revokeObjectURL(url);
+      if (reportRef.current === report) {
+        setPdfUrl(url);
+        onExported();
+      } else URL.revokeObjectURL(url);
     } catch {
       setExportError('The PDF could not be downloaded. Open Preview Report and use your browser’s Print command, or use Copy summary under Send Report.');
     } finally {

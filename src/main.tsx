@@ -14,6 +14,18 @@ const App = lazy(() => import('./App'));
 const root = createRoot(rootElement);
 let hasLaunched = false;
 
+const returnHome = () => {
+  root.render(null);
+  hasLaunched = false;
+  hero.classList.remove('hero--assessment-active');
+  hero.removeAttribute('aria-label');
+  hero.setAttribute('aria-labelledby', 'hero-title');
+  launchButton.setAttribute('aria-expanded', 'false');
+  history.replaceState(null, '', new URL('./', document.baseURI));
+  launchButton.focus({preventScroll: true});
+  window.scrollTo({top: 0, behavior: 'instant'});
+};
+
 launchButton.addEventListener('click', () => {
   if (hasLaunched) {
     return;
@@ -28,7 +40,7 @@ launchButton.addEventListener('click', () => {
     <StrictMode>
       <LoadBoundary message="Compass could not open the assessment.">
         <Suspense fallback={<p role="status">Loading the assessment…</p>}>
-          <App />
+          <App onHome={returnHome} />
         </Suspense>
       </LoadBoundary>
     </StrictMode>,

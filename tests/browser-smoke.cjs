@@ -230,9 +230,19 @@ async function run(reduceMotion = false) {
     await call('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:reduceMotion ? 'reduce' : 'no-preference'}]});
     await pressButton('View Result');
     await until(()=>js("document.activeElement.id==='results-title'"),'Review did not lead directly to results');
+    await js("window.homePrompts=[]; window.leaveAssessment=false; window.confirm=message=>{window.homePrompts.push(message);return window.leaveAssessment}");
+    await click('header a[data-compass-home]');
+    assert.match(await js("window.homePrompts[0]"),/not been exported.*clear this assessment/);
+    assert.equal(await js("!!document.querySelector('#results-title')"),true,'Cancelling Home should keep the report');
     if(reduceMotion) {
       assert.equal(await js("window.matchMedia('(prefers-reduced-motion: reduce)').matches"),true);
       assert.equal(await js('window.celebrations'),0,'Reduced motion should suppress confetti');
+      await js("window.leaveAssessment=true");
+      await click('footer a[data-compass-home]');
+      await until(()=>js("!document.querySelector('.assessment-shell') && document.activeElement.id==='take-assessment'"),'Confirming Home did not return to the landing page');
+      assert.equal(await js("sessionStorage.getItem('silverspark-compass-draft-v1')"),null);
+      await click('#take-assessment');
+      await until(()=>js("document.querySelector('#profile-goal')?.value===''"),'New assessment retained an old answer');
       return;
     }
     assert.equal(await js('window.celebrations'),1,'Results should celebrate completion once');
@@ -472,6 +482,25 @@ async function run(reduceMotion = false) {
     assert.equal(await js("JSON.parse(sessionStorage.getItem('"+key+"')).assessmentId"),saved.assessmentId);
     assert.deepEqual(await js("JSON.parse(sessionStorage.getItem('"+key+"')).answers"),saved.answers);
     assert.equal(await js("!!document.querySelector('.completion-confetti')"),false);
+    await js("window.homePrompts=0; window.confirm=()=>{window.homePrompts++;return false}");
+    await click('header a[data-compass-home]');
+    await until(()=>js("!document.querySelector('.assessment-shell') && document.activeElement.id==='take-assessment'"),'Exported report did not return directly home after a refresh');
+    assert.equal(await js("window.homePrompts"),0,'Exported report unexpectedly prompted');
+    assert.equal(await js("sessionStorage.getItem('"+key+"')"),null);
+    // Resume the exported fixture, edit a saved answer and confirm the new report is protected.
+    await js("sessionStorage.setItem("+JSON.stringify(key)+","+JSON.stringify(JSON.stringify(saved))+")");
+    await click('#take-assessment');
+    await until(()=>js("!!document.querySelector('#results-title')"),'Fixture did not resume');
+    await click('.results-back');
+    await click('.answer-review summary');
+    await click('[aria-label="Edit Q6"]');
+    await click('input[id="'+questions[5].options[1].id+'"]');
+    await click('.question-panel .button-primary');
+    await pressButton('View Result');
+    await until(()=>js("!!document.querySelector('#results-title')"),'Edited results missing');
+    await click('footer a[data-compass-home]');
+    assert.equal(await js("window.homePrompts"),1,'Changed report should need a new export');
+    assert.equal(await js("!!document.querySelector('#results-title')"),true);
     const draftTab=await call('Target.createTarget',{url:app.href});
     const {sessionId:otherSession}=await call('Target.attachToTarget',{targetId:draftTab.targetId,flatten:true});
     const other=async expression=>(await call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true},otherSession)).result?.value;
