@@ -118,3 +118,7 @@ The profile offers eight business outcomes with a suggested measure for each. Pr
 ### Whole-application audit
 
 [PR #18](https://github.com/jmw-117/compass-web/pull/18) follows up on items 14–18 and 20. It adds direct review corrections, shared dimension presentation, tab checkpoints and loading recovery. The [audit](ASSESSMENT_UX_AUDIT.md) lists coverage and outstanding priorities. **21/23 verified, 2 remaining.**
+
+### Shared report content
+
+[PR #19](https://github.com/jmw-117/compass-web/pull/19) completes the outstanding report architecture recommendation from [the audit](ASSESSMENT_UX_AUDIT.md). The PDF takes structured values directly. Browser and PDF checks compare ranked action text, use-case decisions, concerns, reference data and all 14 question-answer rows. The previous [deployed baseline](https://github.com/jmw-117/compass-web/actions/runs/45169379953) was `1c88777`. **21/23 verified, 2 remaining.**

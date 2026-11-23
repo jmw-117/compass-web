@@ -66,5 +66,8 @@ Examined the Pages release at `aff9f78`, the wizard and evaluator, and all three
 
 ### Remaining priorities
 
-1. PDF sections other than the chart still extract content from report markup. Introduce a shared report-content model incrementally when changing those sections and compare exported text against it.
-2. Observe first-time business owners explaining their result, choosing the first action, and exporting or sharing on a physical phone. Complete the physical Android screen-reader and in-app PDF checks. The automated journey cannot establish comprehension or commercial conversion.
+1. Observe first-time business owners explaining their result, choosing the first action, and exporting or sharing on a physical phone. Complete the physical Android screen-reader and in-app PDF checks. The automated journey cannot establish comprehension or commercial conversion.
+
+## Report architecture follow-up
+
+The preview and PDF now take their recommendations, decisions, assessment answers and provenance from the same typed report content. The exporter draws the document directly from those values. A browser regression records the visible preview’s synthetic content and compares it with text extracted from the downloaded PDF, including both evidence columns.

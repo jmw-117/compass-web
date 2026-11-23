@@ -404,6 +404,27 @@ async function run(reduceMotion = false) {
       const appendix=metadata.closest('details');
       return !appendix.open && appendix.querySelector('summary').textContent.includes('Provenance');
     })()`),true);
+    if (process.env.COMPASS_PDF_PROOF) {
+      const proof = await previewJs(`(() => {
+        const text = selector => [...document.querySelectorAll(selector)].map(el => el.textContent.trim());
+        return {
+          actions: text('.report-list.ordered li strong, .report-list.ordered li p'),
+          prompts: text('.report-answers dt'),
+          answers: text('.report-answers dd'),
+          decisions: [...document.querySelectorAll('.decision-summary p')].map(el => {
+            const label = el.querySelector('strong').textContent;
+            return label + ': ' + el.textContent.slice(label.length);
+          }),
+          concerns: text('.decision-summary li'),
+          metadata: [...document.querySelectorAll('.report-metadata > div')].map(el =>
+            el.querySelector('dt').textContent + ': ' + el.querySelector('dd').textContent.trim()),
+          firstAction: document.querySelector('.first-action').textContent,
+        };
+      })()`);
+      assert.equal(proof.prompts.length, questions.length);
+      assert.ok(proof.actions.length > 3 && proof.decisions.length === 3);
+      await fs.writeFile(path.join(process.env.COMPASS_PDF_PROOF, 'preview-content.json'), JSON.stringify(proof));
+    }
     const bounds = "Array.from(document.querySelectorAll(SELECTOR), row => [row.querySelector('.area-known').style.width,row.querySelector('.area-range')?.style.left,row.querySelector('.area-range')?.style.width])";
     const resultBounds = await js(bounds.replace('SELECTOR', "'.area-chart-row'"));
     const previewBounds = await previewJs(bounds.replace('SELECTOR', "'.report-dimension-item'"));

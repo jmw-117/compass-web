@@ -1,10 +1,7 @@
-import {dimensionRows} from '../domain/dimension-display';
-import {nairobiDate} from './report-date';
+import type {ReportContent} from './report-content';
 import {PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage} from 'pdf-lib';
 
 import logoData from '../assets/silverspark-mark-print.png?inline';
-import type {TrafficLightSignal} from '../domain/report-guidance';
-import type {ReadinessResult} from '../domain/evaluate';
 
 const white = rgb(1, 1, 1);
 const pale = rgb(0.95, 0.96, 0.97);
@@ -25,11 +22,6 @@ const navy = rgb(0.05, 0.09, 0.16);
 const charcoal = rgb(0.16, 0.20, 0.25);
 const muted = rgb(0.31, 0.37, 0.44);
 const lineColor = rgb(0.83, 0.86, 0.89);
-
-function readText(element: Element | null) {
-  return element?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-}
-
 
 function wrap(text: string, width: number, font: PDFFont, size: number) {
   const lines: string[] = [];
@@ -69,11 +61,13 @@ function drawJustifiedLine(page: PDFPage, line: string, y: number, font: PDFFont
   });
 }
 
-export async function downloadReport(report: HTMLElement, assessmentId: string, signalColor: TrafficLightSignal['color'], dimensions: ReadinessResult['dimensions']) {
+export async function downloadReport(content: ReportContent) {
+  const {reportGuidance, concerns, areas} = content;
+  const {signal} = reportGuidance;
   const pdf = await PDFDocument.create();
   pdf.setTitle('Silverspark Compass Assessment Report');
   pdf.setAuthor('Silverspark Consulting');
-  pdf.setSubject('Self-reported AI readiness assessment ' + assessmentId);
+  pdf.setSubject('Self-reported AI readiness assessment ' + content.assessmentId);
   const [regular, bold] = await Promise.all([
     pdf.embedFont(StandardFonts.Helvetica),
     pdf.embedFont(StandardFonts.HelveticaBold),
@@ -156,15 +150,13 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
     cursor -= 25;
   }
 
-  const summary = report.querySelector('.report-overview');
-  const signal = report.querySelector('.readiness-signal');
   drawBlock('AI readiness assessment', bold, 28, true);
-  drawBlock(readText(report.querySelector('.report-disclaimer')) + '. Weights and thresholds are provisional.', regular, 10);
+  drawBlock(content.disclaimer + '. Weights and thresholds are provisional.', regular, 10);
   cursor -= 10;
   const cardY = cursor - 72;
   page.drawRectangle({x: margin, y: cardY, width: contentWidth, height: 76, color: pale});
-  page.drawText(readText(summary?.querySelector('.result-label') ?? null).toUpperCase(), {x: margin + 16, y: cardY + 52, size: 9, font: bold, color: muted});
-  page.drawText(encode(readText(summary?.querySelector('.report-score-value') ?? null)), {x: margin + 16, y: cardY + 18, size: 23, font: bold, color: navy});
+  page.drawText(reportGuidance.scoreLabel.toUpperCase(), {x: margin + 16, y: cardY + 52, size: 9, font: bold, color: muted});
+  page.drawText(encode(reportGuidance.scoreText), {x: margin + 16, y: cardY + 18, size: 23, font: bold, color: navy});
 
   const lampX = pageWidth - margin - 101;
   const lampY = cardY + 39;
@@ -172,35 +164,30 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   for (const x of [lampX, lampX + 60]) page.drawCircle({x, y: lampY, size: 16, color: navy});
   lampOrder.forEach((color, index) => {
     const x = lampX + 4 + 26 * index;
-    const active = color === signalColor;
+    const active = color === signal.color;
     if (active) page.drawCircle({x, y: lampY, size: 12, borderWidth: 1, borderColor: white});
     page.drawCircle({x, y: lampY, size: active ? 8.9 : 6, color: active ? lampColors[color] : silver, opacity: active ? 1 : 0.36});
     if (active) page.drawCircle({x: x - 2, y: lampY + 2.8, size: 2, color: white, opacity: 0.65});
   });
   cursor = cardY - 24;
-  drawBlock(readText(signal?.querySelector('h3') ?? null), bold, 15, true);
-  const signalDescription = signal?.querySelector('p:not(.eyebrow)');
-  if (signalDescription) drawBlock(readText(signalDescription), regular, 10.5);
-  for (const item of summary?.querySelectorAll('.report-score p:not(.result-label, .report-score-value)') ?? []) drawBlock(readText(item), regular, 10.5);
+  drawBlock(signal.label + ': ' + signal.title, bold, 15, true);
+  drawBlock(signal.description, regular, 10.5);
+  drawBlock(content.coverage, regular, 10.5);
+  if (reportGuidance.scoreNote) drawBlock(reportGuidance.scoreNote, regular, 10.5);
 
   iconHeading('Use-case guidance and feasibility', 'safety');
-  for (const item of report.querySelectorAll('.decision-summary p')) {
-    const label = readText(item.querySelector('strong'));
-    drawBlock(label + ': ' + readText(item).slice(label.length).trim(), bold, 11);
-  }
-  const issues = [...report.querySelectorAll('.decision-summary li')];
-  for (const item of issues.slice(0, 2)) drawBlock(readText(item), regular, 11);
+  for (const {label, value} of content.decisions) drawBlock(label + ': ' + value, bold, 11);
+  for (const concern of concerns.slice(0, 2)) drawBlock(concern, regular, 11);
   iconHeading('Recommended next step', 'arrow');
-  drawBlock(readText(summary?.querySelector('.report-next-step h5') ?? null), bold, 15, true);
-  drawBlock(readText(report.querySelector('.first-action')), regular, 11);
-  if (!issues.length) drawBlock(readText(report.querySelector('.report-safety p')), regular, 11);
+  drawBlock(reportGuidance.primaryPathLabel, bold, 15, true);
+  if (reportGuidance.firstActionLabel) drawBlock('Start here. ' + reportGuidance.firstActionLabel, regular, 11);
+  if (!concerns.length) drawBlock(content.opportunity, regular, 11);
 
-  const rows = dimensionRows(dimensions);
   ensureSpace(170);
   sectionHeading('Readiness by dimension');
   const chartY=cursor;
   const half=(contentWidth-24)/2;
-  rows.forEach(({label, lower, upper, scoreText}, i) => {
+  areas.forEach(({label, lower, upper, scoreText}, i) => {
     const x=margin+(i%2)*(half+24);
     const y=chartY-Math.floor(i/2)*29;
     const percent = encode(scoreText);
@@ -210,13 +197,12 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
       if(fraction>0) page.drawRectangle({x,y:y-10,width:half*fraction,height:4,color});
     }
   });
-  cursor=chartY-Math.ceil(rows.length/2)*29;
-  if (rows.some(area => area.upper > area.lower)) drawBlock('Silver extensions show uncertainty from unknown practices.', regular, 9);
+  cursor=chartY-Math.ceil(areas.length/2)*29;
+  if (areas.some(area => area.upper > area.lower)) drawBlock('Silver extensions show uncertainty from unknown practices.', regular, 9);
   ensureSpace(200);
   sectionHeading('Priority actions');
-  for (const action of report.querySelectorAll('.report-list.ordered > li')) {
-    const title = readText(action.querySelector('strong'));
-    const paragraphs = Array.from(action.querySelectorAll('p'), p => readText(p)).filter(Boolean);
+  if (!content.actions.length) drawBlock(content.noActions, regular, 10);
+  for (const {title, paragraphs} of content.actions) {
     const height = [title,...paragraphs].reduce((sum,p) => sum + wrap(encode(p),contentWidth,regular,10).length * 15 + 6,0);
     ensureSpace(Math.min(height,pageHeight-156));
     drawBlock(title, bold, 11, true);
@@ -226,18 +212,13 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   page = addPage();
   cursor = pageHeight - 102;
   sectionHeading('Supporting evidence');
-  const metadata = [...report.querySelectorAll('.report-metadata > div')].map(row =>
-    readText(row.querySelector('dt')) + ': ' + readText(row.querySelector('dd')));
-  drawBlock(metadata.join('  |  '), regular, 9);
-  const business = report.querySelector('#report-business-snapshot-title')?.closest('details');
-  drawBlock(Array.from(business?.querySelectorAll('li') ?? [], row => readText(row)).slice(0,3).join('  |  '),regular,10);
-  if (issues.length>2) {
-    drawBlock('Other findings to review',bold,12,true);
-    issues.slice(2).forEach(row=>drawBlock(readText(row),regular,10));
+  drawBlock(content.metadata.map(({label, value}) => label + ': ' + value).join('  |  '), regular, 9);
+  drawBlock(content.business.map(({label, value}) => label + ': ' + value).join('  |  '), regular, 10);
+  if (concerns.length > 2) {
+    drawBlock('Other findings to review', bold, 12, true);
+    concerns.slice(2).forEach(concern => drawBlock(concern, regular, 10));
   }
-  for (const row of report.querySelectorAll('.report-answers > div')) {
-    const prompt = readText(row.querySelector('dt'));
-    const answer = readText(row.querySelector('dd'));
+  for (const {prompt, answer} of content.evidence) {
     const promptWidth = contentWidth * 0.45;
     const answerX = margin + promptWidth + 16;
     const promptLines = wrap(encode(prompt), promptWidth, bold, 10);
@@ -261,7 +242,7 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   const url = URL.createObjectURL(new Blob([bytes], {type: 'application/pdf'}));
   const link = document.createElement('a');
   link.href = url;
-  link.download = `Silverspark_Compass_AI_Readiness_Report_${nairobiDate()}.pdf`;
+  link.download = `Silverspark_Compass_AI_Readiness_Report_${content.date}.pdf`;
   document.body.append(link);
   try {
     link.click();
