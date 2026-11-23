@@ -50,3 +50,21 @@ The audit applies [Chrome’s form guidance](https://github.com/GoogleChrome/mod
 | Generic opportunities and repeated uncertainty notes competed with the first action. | Display specific opportunities after the toolbar. Keep detailed measurement below the chart and show uncertainty guidance for incomplete evidence. | The existing evaluator supplies the known-answer count for the summary and chart. |
 
 The review covers the web journey and its test fixtures. Field observation with business owners and physical-device screen-reader testing are still pending.
+
+## End-to-end audit · 23 November 2026
+
+Examined the Pages release at `aff9f78`, the wizard and evaluator, and all three report outputs. The published three-page PDF fixture places the decision and dimension breakdown on page one, priority actions on page two, and supporting evidence on page three.
+
+| Area | Finding and disposition | Verification |
+| --- | --- | --- |
+| Landing and delivery | A failed lazy-loaded assessment could leave an empty application. Assessment and report loading now have a visible recovery action. A failed report module leaves the decision summary on screen. | Chrome blocks the assessment module, checks the recovery notice, restores the network, and re-enters the wizard. |
+| Profile, questions and safety | Review lacked a shortcut to correct the business profile. Editing a single safety answer reopened all five questions. Back from a core edit also retained unsaved selections. All three edit paths now keep changes separate until saved and return directly to Review. | Browser checks cover cancel and save, focus, edited responses, and the chosen goal in the exported journey. |
+| Refresh recovery | A refresh previously returned an in-progress assessment to Profile. The tab now remembers its question or optional step. Restoring a checkpoint validates earlier required answers. Unsaved review edits resume at Review with the committed answers. | The regression suite checks invalid, incomplete and out-of-range checkpoints. Chrome reopens an interrupted question. |
+| Optional details | The workflow, capacity, conditional evidence and optional technical screens retain separate skip and continue actions. The technical screen can contain a long list in full mode. | Existing mobile, desktop and keyboard checks cover navigation, field pairs and tool selections. Observe full-mode abandonment in the consented pilot before changing its length. |
+| Results, preview and PDF | The preview painted the upper bound as confirmed readiness. Each channel now uses the same seven rows and rounding rules. Solid fill ends at the lower bound. HTML uses stripes for uncertainty and PDF uses a silver extension. PDF chart generation reads evaluated dimensions directly. | Unit cases cover 0%, fully unknown, partial and exact fractional results. Chrome compares the seven bounds across Results and preview. The PDF gate extracts text and renders actual pages. |
+| WhatsApp and privacy | The exact outbound summary stays visible before confirmation. Report export, independent preview and legacy-copy recovery remain available. | Browser checks compare the outbound message to its preview, verify its destination and exercise PDF download and fallback. |
+
+### Remaining priorities
+
+1. PDF sections other than the chart still extract content from report markup. Introduce a shared report-content model incrementally when changing those sections and compare exported text against it.
+2. Observe first-time business owners explaining their result, choosing the first action, and exporting or sharing on a physical phone. Complete the physical Android screen-reader and in-app PDF checks. The automated journey cannot establish comprehension or commercial conversion.

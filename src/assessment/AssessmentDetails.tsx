@@ -1,5 +1,5 @@
 import ActionIcon from '../report/ActionIcon';
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, type ChangeEvent } from 'react';
 import discovery from '../../docs/domain/prospective_client_discovery.json';
 import schema from '../../docs/domain/profile_schema.json';
 import { activeProbes, applicableTechnicalQuestions } from '../domain/diagnostics';
@@ -10,6 +10,8 @@ type AssessmentDetailsProps = {
   answers: Record<string, string>;
   probeAnswers: Record<string, string>;
   extendedAnswers: Record<string, string>;
+  stepId: string;
+  onStepChange: (id: string) => void;
   onBack: () => void;
   onResults: () => void;
   update: (field: string, value: string | string[] | boolean | number | undefined) => void;
@@ -117,9 +119,8 @@ function OptionalField({field, value, update}: {field: Field; value: unknown; up
 }
 
 export default function AssessmentDetails({
-  profile, answers, probeAnswers, extendedAnswers, update, answerProbe, answerTechnical, onBack, onResults,
+  profile, answers, probeAnswers, extendedAnswers, update, answerProbe, answerTechnical, stepId, onStepChange, onBack, onResults,
 }: AssessmentDetailsProps) {
-  const [stepIndex, setStepIndex] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
   const probes = activeProbes(profile, (id) => getAnswerScore(id, answers[id])).filter(q => !['PR-GOV-SHARE','PR-GOV-PLANNED','PR-HUMAN-REVIEW'].includes(q.id));
   const questions = applicableTechnicalQuestions(profile);
@@ -130,6 +131,7 @@ export default function AssessmentDetails({
     ...(probes.length > 0 ? [{id: 'evidence', title: 'Evidence checks', description: 'A few follow-up questions can clarify your answers.'}] : []),
     {id: 'technical', title: 'Technical assessment', description: 'Add technical detail to help identify safeguards for current or planned AI use.'},
   ];
+  const stepIndex = Math.max(0, steps.findIndex(item => item.id === stepId));
   const step = steps[stepIndex] ?? firstStep;
   const isLastStep = stepIndex === steps.length - 1;
 
@@ -208,7 +210,7 @@ export default function AssessmentDetails({
 
       <div className="button-row wizard-decision">
         <button type="button" className="button-secondary nav-back"
-          onClick={stepIndex === 0 ? onBack : () => setStepIndex((current) => current - 1)}>
+          onClick={stepIndex === 0 ? onBack : () => onStepChange(steps[stepIndex - 1]!.id)}>
           <ActionIcon name="back" /> {stepIndex === 0 ? 'Back' : 'Previous'}
         </button>
         <div className="wizard-forward">
@@ -216,7 +218,7 @@ export default function AssessmentDetails({
             <ActionIcon name="result" /> View Result
           </button>
           {!isLastStep && (
-            <button type="button" className="button-primary" onClick={() => setStepIndex((current) => current + 1)}>
+            <button type="button" className="button-primary" onClick={() => onStepChange(steps[stepIndex + 1]!.id)}>
               <ActionIcon name="next" /> Next Section
             </button>
           )}

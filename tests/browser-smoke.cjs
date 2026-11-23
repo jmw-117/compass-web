@@ -180,6 +180,36 @@ async function run(reduceMotion = false) {
     assert.equal(await js("document.querySelector('[aria-controls=report-module-panel]')===null"),true);
     assert.equal(await js("document.querySelector('.compass-field-grid')===null"),true);
     await checkTextContrast('.answer-review summary','.assessment-panel');
+    // Review edits must return directly and commit only when saved.
+    const reviewButton = label => click('button[aria-label^="' + label + '"]');
+    const pickGoal = async value => js(`(() => {
+      const el = document.querySelector('#profile-goal');
+      el.value = ${JSON.stringify(value)};
+      el.dispatchEvent(new Event('change', {bubbles:true}));
+    })()`);
+    await click('.summary-card button');
+    await until(()=>js("document.activeElement.id==='assessment-title'"),'Profile editor did not receive focus');
+    await pickGoal(goals.find(id=>id!=='cash_flow'));
+    await click('.profile-form .nav-back');
+    await until(()=>js("document.querySelector('.summary-card')?.textContent.includes('Get paid sooner')"),'Back committed the unsaved profile');
+    await click('.summary-card button');
+    await pickGoal(goals.find(id=>id!=='cash_flow'));
+    await click('.profile-form [type=submit]');
+    await until(()=>js("document.querySelector('#review-title') && !document.querySelector('.summary-card').textContent.includes('Get paid sooner')"),'Changed profile did not return to review');
+    await click('.summary-card button');
+    await pickGoal('cash_flow');
+    await click('.profile-form [type=submit]');
+    await click('.answer-review:nth-of-type(2) summary');
+    await reviewButton('Edit safety question 3');
+    await until(()=>js("document.activeElement.id==='safety-question-title' && !!document.querySelector('input[value=decides]')"),'Wrong safety question opened');
+    await click('.question-panel input[value="decides"]');
+    await click('.question-panel .nav-back');
+    await until(()=>js("document.querySelector('#review-title') && document.querySelector('.answer-review:nth-of-type(2) li:nth-child(3) p').textContent.includes('still to clarify')"),'Back committed an unsaved safety change');
+    await click('.answer-review:nth-of-type(2) summary');
+    await reviewButton('Edit safety question 3');
+    await click('.question-panel input[value="decides"]');
+    await click('.question-panel .button-primary');
+    await until(()=>js("document.activeElement.id==='review-title' && document.querySelector('.answer-review:nth-of-type(2) li:nth-child(3) p').textContent.includes('approving credit')"),'Safety edit did not save directly to review');
     await click('.answer-review summary');
     await click('[aria-label="Edit Q6"]');
     await until(()=>js("document.activeElement.id==='question-panel-title' && document.activeElement.textContent==="+JSON.stringify(questions[5].prompt)),
@@ -374,6 +404,10 @@ async function run(reduceMotion = false) {
       const appendix=metadata.closest('details');
       return !appendix.open && appendix.querySelector('summary').textContent.includes('Provenance');
     })()`),true);
+    const bounds = "Array.from(document.querySelectorAll(SELECTOR), row => [row.querySelector('.area-known').style.width,row.querySelector('.area-range')?.style.left,row.querySelector('.area-range')?.style.width])";
+    const resultBounds = await js(bounds.replace('SELECTOR', "'.area-chart-row'"));
+    const previewBounds = await previewJs(bounds.replace('SELECTOR', "'.report-dimension-item'"));
+    assert.deepEqual(previewBounds, resultBounds, 'Report must distinguish confirmed readiness from the uncertain range');
     await previewJs("document.querySelector('#report-appendix-answers-and-provenance-title').click()");
     await until(()=>previewJs("document.querySelector('.report-metadata').closest('details').open && document.querySelector('.report-metadata code').innerText.startsWith('SELF-')"),'Opening the appendix did not show the assessment reference');
     assert.equal(await previewJs("document.querySelectorAll('.report-answers dd').length"),questions.length);
@@ -398,7 +432,7 @@ async function run(reduceMotion = false) {
         await fs.writeFile(path.join(process.env.COMPASS_PDF_PROOF,'readiness-by-area.jpg'),Buffer.from(shot.data,'base64'));
       }
       assert.equal(await js("document.querySelectorAll('.area-chart-row').length"),7);
-      assert.equal(await js("document.querySelectorAll('.area-range').length"),1,'Fixture contains one uncertain dimension');
+      assert.equal(await js("document.querySelectorAll('.area-chart .area-range').length"),1,'Fixture contains one uncertain dimension');
     }
     const ax=await call('Accessibility.getFullAXTree');
     assert.ok(ax.nodes.some(n=>n.role?.value==='heading' && /readiness/i.test(n.name?.value)),'Missing accessible results heading');
@@ -423,6 +457,19 @@ async function run(reduceMotion = false) {
     await openProfile();
     assert.equal(await other("document.querySelector('#profile-goal').value"),'','Fresh tabs must start blank');
     assert.equal(await other("!!document.querySelector('[aria-label=\"Previously saved assessment\"]')"),false);
+    await other(`document.querySelectorAll('.profile-form select').forEach(select=>{
+      select.selectedIndex=1; select.dispatchEvent(new Event('change',{bubbles:true}));
+    })`);
+    await other("document.querySelector('.profile-form [type=submit]').click()");
+    await until(()=>other("!!document.querySelector('.option-card input')"),'Question one missing');
+    await other("document.querySelector('.option-card input').click()");
+    await other("document.querySelector('.question-panel .button-primary').click()");
+    await until(()=>other("document.querySelector('.progress-bar')?.getAttribute('aria-valuenow')==='2'"),'Question two missing');
+    await call('Page.navigate',{url:app.href},otherSession);
+    await until(()=>other("document.querySelector('#take-assessment')?.disabled===false"),'Reload failed');
+    await other("document.querySelector('#take-assessment').click()");
+    await until(()=>other("document.querySelector('.progress-bar')?.getAttribute('aria-valuenow')==='2'"),'Refresh skipped the current question');
+    await other("sessionStorage.removeItem('"+key+"')");
     // Seed the previous release's explicitly saved device record. New assessments never write one.
     const legacy = JSON.stringify({...saved,atResults:false});
     await js(`new Promise((resolve,reject)=>{
@@ -458,6 +505,16 @@ async function run(reduceMotion = false) {
         request.onsuccess=()=>{db.close();resolve(request.result===undefined);};
       };
     })`),true,'Device still contains deleted copy');
+    await call('Network.enable',{},otherSession);
+    await call('Network.setCacheDisabled',{cacheDisabled:true},otherSession);
+    await call('Network.setBlockedURLs',{urls:['*/assets/App-*.js']},otherSession);
+    await call('Page.navigate',{url:app.href},otherSession);
+    await until(()=>other("document.querySelector('#take-assessment')?.disabled===false"),'Landing unavailable');
+    await other("document.querySelector('#take-assessment').click()");
+    await until(()=>other("document.querySelector('[role=alert]')?.textContent.includes('could not open the assessment')"),'Missing failed-load recovery');
+    await call('Network.setBlockedURLs',{urls:[]},otherSession);
+    await other("document.querySelector('.storage-error button').click()");
+    await openProfile();
     await call('Target.closeTarget',{targetId:draftTab.targetId});
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);

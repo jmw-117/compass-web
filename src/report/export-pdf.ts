@@ -1,3 +1,4 @@
+import {dimensionRows} from '../domain/dimension-display';
 import {nairobiDate} from './report-date';
 import {PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage} from 'pdf-lib';
 
@@ -194,27 +195,23 @@ export async function downloadReport(report: HTMLElement, assessmentId: string, 
   drawBlock(readText(report.querySelector('.first-action')), regular, 11);
   if (!issues.length) drawBlock(readText(report.querySelector('.report-safety p')), regular, 11);
 
-  const chart = report.querySelector('#report-seven-dimension-results-title')?.closest('details');
+  const rows = dimensionRows(dimensions);
   ensureSpace(170);
   sectionHeading('Readiness by dimension');
   const chartY=cursor;
   const half=(contentWidth-24)/2;
-  const rows=Array.from(chart?.querySelectorAll<HTMLElement>('[data-dimension]') ?? []);
-  rows.forEach((row,i)=>{
-    const value=dimensions[row.dataset.dimension as keyof typeof dimensions];
-    const label=readText(row.querySelector('.report-dimension-header span'));
+  rows.forEach(({label, lower, upper, scoreText}, i) => {
     const x=margin+(i%2)*(half+24);
     const y=chartY-Math.floor(i/2)*29;
-    const lower=Math.floor(value.lower*25), upper=Math.ceil(value.upper*25);
-    const percent=(value.lower===value.upper?Math.round(value.lower*25):lower+'-'+upper)+'%';
+    const percent = encode(scoreText);
     page.drawText(encode(label),{x,y,font:bold,size:10,color:navy});
     page.drawText(percent,{x:x+half-regular.widthOfTextAtSize(percent,10),y,font:regular,size:10,color:muted});
-    for(const [fraction,color] of [[1,pale],[value.upper/4,silver],[value.lower/4,navy]] as const) {
+    for(const [fraction,color] of [[1,pale],[upper/100,silver],[lower/100,navy]] as const) {
       if(fraction>0) page.drawRectangle({x,y:y-10,width:half*fraction,height:4,color});
     }
   });
   cursor=chartY-Math.ceil(rows.length/2)*29;
-  drawBlock('Silver extensions show uncertainty from unknown practices.',regular,9);
+  if (rows.some(area => area.upper > area.lower)) drawBlock('Silver extensions show uncertainty from unknown practices.', regular, 9);
   ensureSpace(200);
   sectionHeading('Priority actions');
   for (const action of report.querySelectorAll('.report-list.ordered > li')) {

@@ -1,4 +1,5 @@
 import {lazy, StrictMode, Suspense} from 'react';
+import LoadBoundary from './LoadBoundary';
 import {createRoot} from 'react-dom/client';
 
 const rootElement = document.getElementById('react-enhancement');
@@ -25,9 +26,11 @@ launchButton.addEventListener('click', () => {
   hero.classList.add('hero--assessment-active');
   root.render(
     <StrictMode>
-      <Suspense fallback={<p role="status">Loading the assessment…</p>}>
-        <App />
-      </Suspense>
+      <LoadBoundary message="Compass could not open the assessment.">
+        <Suspense fallback={<p role="status">Loading the assessment…</p>}>
+          <App />
+        </Suspense>
+      </LoadBoundary>
     </StrictMode>,
   );
 });
