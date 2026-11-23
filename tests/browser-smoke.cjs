@@ -122,6 +122,7 @@ async function run(reduceMotion = false) {
       return true;
     })()`);
     assert.equal(await js("document.querySelector('.landing-guide').textContent.includes('Fictional sample report')"),false,'Removed landing sample returned');
+    assert.equal(await js("document.querySelector('.report-thumbnail') === null && !document.querySelector('main').textContent.includes('Illustrative report')"),true,'Landing page shows an example result before assessment');
     await click('#take-assessment');
     try {
       await until(()=>js("document.querySelectorAll('.profile-form select').length === 3"),'Profile not rendered');
