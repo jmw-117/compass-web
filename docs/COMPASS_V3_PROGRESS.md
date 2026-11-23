@@ -1,6 +1,6 @@
 # Compass delivery ledger
 
-**21/23 verified, 2 remaining (91.3%).** The pilot usability release is `848fa19` (PR #14). Item 20 requires manual accessibility and device testing. Item 22 requires real-business and independent expert validation.
+**21/23 verified, 2 remaining (91.3%).** The latest verified application release is `8b6de63` (PR #15). Item 20 requires manual accessibility and device testing. Item 22 requires real-business and independent expert validation.
 
 | Rank | Original v3.0 | Requirement | Implementation and remaining evidence |
 |---|---|---|---|
@@ -106,3 +106,5 @@ The Results celebration uses a brief two-sided burst, respects reduced motion an
 The [PR #14 application release](https://github.com/jmw-117/compass-web/pull/14) passed [main and live Pages checks](https://github.com/jmw-117/compass-web/actions/runs/45045561137) at `848fa19`. The subsequent landing-page change removes the fictional sample. Personal report preview, export and sharing remain available after completing an assessment.
 
 The profile offers eight business outcomes with a suggested measure for each. Previous goal IDs continue to restore. The goal selects relevant action guidance and leaves the 14-question readiness instrument unchanged. A fictional professional-services journey was also completed in the live ChatGPT in-app browser through Results and PDF generation. That browser's automation policy blocked opening the generated PDF, so embedded viewing remains unverified. **21/23 verified, 2 remaining.**
+
+[PR #15](https://github.com/jmw-117/compass-web/pull/15) merged as `8b6de63`. [Release verification](https://github.com/jmw-117/compass-web/actions/runs/45139213271) passed all 50 tests, 1,500 reference scoring samples and the deployed browser journey. The browser checked the eight rendered goals against the profile contract, selected “Get paid sooner,” verified its measure in the report preview, restored the selection from a draft and checked that the landing sample was absent. **21/23 verified, 2 remaining.**
