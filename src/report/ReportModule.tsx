@@ -1,42 +1,18 @@
 import {nairobiDate} from './report-date';
-import {dimensionRows, getDimensionLabel} from '../domain/dimension-display';
+import {buildReportContent, type ReportInput} from './report-content';
+import {getDimensionLabel} from '../domain/dimension-display';
 import DimensionBar from '../assessment/DimensionBar';
 import DecisionSummary from '../assessment/DecisionSummary';
 import ActionIcon from './ActionIcon';
 import {createPreviewUrl} from './preview-document';
 import {useEffect, useMemo, useRef, useState, type ReactNode} from 'react';
-import type {ReadinessResult} from '../domain/evaluate';
 import {
-  getActionLabel,
   getCostFitLabel,
   getGateLabel,
   getQuestionLabel,
-  getReportGuidance,
   positiveCapabilities,
 } from '../domain/report-guidance';
 import ReadinessSignal from '../ReadinessSignal';
-import {catalogActions} from '../domain/recommendations';
-import questionBank from '../../docs/domain/question_bank.json';
-import manifest from '../../docs/domain/VERSION_MANIFEST.json';
-
-type ProfileLike = {
-  organizationType?: string;
-  industry?: string;
-  businessGoal?: string;
-  current_ai_use?: string;
-  data_category?: string;
-  high_impact_ai_workflow?: string;
-  planned_ai_use?: string;
-  planned_use_real_data?: string;
-  [key: string]: unknown;
-};
-
-type ReportModuleProps = {
-  assessmentId: string;
-  profile: ProfileLike;
-  answers: Record<string, string>;
-  readiness: ReadinessResult;
-};
 
 const SILVERSPARK_WHATSAPP_NUMBER = '254762057288';
 
@@ -64,8 +40,7 @@ function ReportSection({id, title, expanded, onToggle, children}: ReportSectionP
   );
 }
 
-export default function ReportModule({assessmentId, profile, answers, readiness}: ReportModuleProps) {
-  const areas = dimensionRows(readiness.dimensions);
+export default function ReportModule({assessmentId, profile, answers, readiness}: ReportInput) {
   const strengths = positiveCapabilities(readiness.dimensions);
   const [openSections, setOpenSections] = useState(() => new Set(['executive-summary']));
   const [exporting, setExporting] = useState(false);
@@ -76,6 +51,9 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
   const [copyStatus, setCopyStatus] = useState('');
   const summaryRef = useRef<HTMLTextAreaElement>(null);
   const [reportDate] = useState(() => nairobiDate());
+  const content = useMemo(() => buildReportContent({assessmentId, profile, answers, readiness}, reportDate),
+    [assessmentId, profile, answers, readiness, reportDate]);
+  const {areas, reportGuidance, shareText} = content;
   const reportRef = useRef<HTMLElement>(null);
 
   const [previewUrl, setPreviewUrl] = useState('');
@@ -84,29 +62,12 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
     const url = createPreviewUrl(reportRef.current);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
-  }, [assessmentId, answers, profile, readiness]);
+  }, [content]);
 
   const unknownQuestions = useMemo(
     () => Object.keys(answers).filter((questionId) => !answers[questionId] || answers[questionId].endsWith('-UNK')),
     [answers],
   );
-
-  const reportGuidance = getReportGuidance(readiness);
-  const workflow = typeof profile.value_stream === 'string' ? profile.value_stream.replaceAll('_', ' ') : '';
-  const bottleneck = typeof profile.workflow_bottleneck === 'string' ? profile.workflow_bottleneck.replaceAll('_', ' ') : '';
-
-  const shareText = [
-    'Silverspark Compass readiness summary',
-    'Reference: ' + assessmentId,
-    reportGuidance.scoreLabel + ': ' + reportGuidance.scoreText,
-    [profile.organizationType, profile.industry, profile.businessGoal].filter(Boolean).join(' · '),
-    'AI Use-Case Guidance: ' + readiness.useCaseGuidance,
-    'Delivery Capacity: ' + readiness.deliveryCapacity,
-    'Financial Benefit Evidence: ' + readiness.financialEvidence,
-    ...readiness.concerns.slice(0, 2),
-    'Next step: ' + (reportGuidance.firstActionLabel ?? reportGuidance.title),
-    'I would like to discuss the next steps.',
-  ].join('\n');
 
   function toggleSection(id: string, open: boolean) {
     setOpenSections((current) => {
@@ -124,7 +85,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
     setExporting(true);
     try {
       const {downloadReport} = await import('./export-pdf');
-      const url = await downloadReport(report, assessmentId, reportGuidance.signal.color, readiness.dimensions);
+      const url = await downloadReport(content);
       if (reportRef.current === report) setPdfUrl(url);
       else URL.revokeObjectURL(url);
     } catch {
@@ -184,7 +145,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
         <header className="report-header">
           <div>
             <h1 id="assessment-report-title">Assessment Report</h1>
-            <p className="report-disclaimer">Self-Reported Assessment — Not Independently Verified</p>
+            <p className="report-disclaimer">{content.disclaimer}</p>
           </div>
         </header>
           <ReportSection
@@ -197,18 +158,18 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
               <div className="report-score">
                 <p className="result-label">{reportGuidance.scoreLabel}</p>
                 <p className="report-score-value"><strong>{reportGuidance.scoreValue}</strong> <span>out of 100</span></p>
-                <p>{Object.values(readiness.dimensions).reduce((total, dimension) => total + dimension.known, 0)} of {questionBank.questions.length} core answers are known.</p>
+                <p>{content.coverage}</p>
                 {reportGuidance.scoreNote && <p className="report-score-note">{reportGuidance.scoreNote}</p>}
               </div>
               <div className="report-next-step">
                 <p className="result-label">Recommended next step</p>
                 <h5>{reportGuidance.primaryPathLabel}</h5>
                 <p>{reportGuidance.guidance}</p>
-                <p className="first-action"><strong>Start here.</strong> {reportGuidance.firstActionLabel}</p>
+                {reportGuidance.firstActionLabel && <p className="first-action"><strong>Start here.</strong> {reportGuidance.firstActionLabel}</p>}
               </div>
             </div>
             <ReadinessSignal signal={reportGuidance.signal} />
-            <DecisionSummary result={readiness} />
+            <DecisionSummary result={readiness} rows={content.decisions} />
             <div className="report-safety">
               <h5>Key findings</h5>
               {readiness.formalGates.length > 0 && (
@@ -216,48 +177,23 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
                   {readiness.formalGates.map((gate) => <li key={gate.id}>{getGateLabel(gate.id)}</li>)}
                 </ul>
               )}
-              <p>{readiness.opportunity.kind}. {readiness.opportunity.next} {readiness.opportunity.measure}</p>
+              <p>{content.opportunity}</p>
             </div>
           </ReportSection>
 
           <ReportSection id="three-priority-actions" title="Priority Actions" expanded={openSections.has('three-priority-actions')} onToggle={toggleSection}>
             <ol className="report-list ordered">
-              {readiness.actionPlan.map(({id, title: label, step, outcome, owner, effort, category, context}) => {
-                const action = catalogActions.get(id);
-                return (
-                  <li key={id}>
-                    <strong>{label}</strong> 
-                    {action && (
-                      <div>
-                        <p>Owner: {owner}. Effort: {effort}. Cost: {category}.</p>
-                        {id === readiness.actionIds[0] && <p>{context}</p>}
-                        <p>{step} {outcome}</p>
-                        <p>Evidence to review: {action.evidence_question_ids.map(getQuestionLabel).join(', ')}.</p>
-                        {action.prerequisite_ids.length > 0 && <p>Complete first: {action.prerequisite_ids.map(getActionLabel).join(', ')}.</p>}
-                        <p>Done when: {action.validation}</p>
-                        
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-              {readiness.actionIds.length === 0 && <li>No action was identified from these responses.</li>}
+              {content.actions.map(({id, title, paragraphs}) => <li key={id}>
+                <strong>{title}</strong>
+                {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+              </li>)}
+              {!content.actions.length && <li>{content.noActions}</li>}
             </ol>
           </ReportSection>
 
           <ReportSection id="business-snapshot" title="Business Snapshot" expanded={openSections.has('business-snapshot')} onToggle={toggleSection}>
             <ul className="report-list">
-              <li>Organisation Type: {profile.organizationType || 'Not shared'}</li>
-              <li>Industry / Sector: {profile.industry || 'Not shared'}</li>
-              <li>Business Goal: {profile.businessGoal || 'Not yet defined'}</li>
-              <li>Current AI Use: {profile.current_ai_use || 'Not answered'}</li>
-              <li>Data Category: {profile.data_category || 'Not answered'}</li>
-              <li>High-Impact AI Workflow: {profile.high_impact_ai_workflow || 'Not answered'}</li>
-              <li>Planned AI Use: {profile.planned_ai_use || 'Not answered'}</li>
-              <li>Planned Use of Real Data: {profile.planned_use_real_data || 'Not answered'}</li>
-              {workflow && <li>Workflow: {workflow}</li>}
-              {bottleneck && <li>Main bottleneck: {bottleneck}</li>}
-              <li>Budget Fit: {getCostFitLabel(readiness.costFit)}</li>
+              {[...content.business, ...content.useContext].map(({label, value}) => <li key={label}>{label}: {value}</li>)}
             </ul>
           </ReportSection>
 
@@ -344,17 +280,16 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
 
           <ReportSection id="appendix-answers-and-provenance" title="Appendix Answers And Provenance" expanded={openSections.has('appendix-answers-and-provenance')} onToggle={toggleSection}>
             <dl className="report-metadata">
-              <div><dt>Assessment reference</dt><dd><code>{assessmentId}</code></dd></div>
-              <div><dt>Prepared on</dt><dd><time dateTime={reportDate}>{reportDate}</time></dd></div>
-              <div><dt>Method version</dt><dd>{readiness.ruleVersion}</dd></div>
-              <div><dt>Report version</dt><dd>{manifest.report_version}</dd></div>
+              {content.metadata.map(({key, label, value}) => <div key={key}><dt>{label}</dt><dd>
+                {key === 'reference' ? <code>{value}</code> : key === 'date' ? <time dateTime={value}>{value}</time> : value}
+              </dd></div>)}
             </dl>
             <h5>Your assessment answers</h5>
             <dl className="report-answers">
-              {questionBank.questions.map(({id, prompt, options}) => (
+              {content.evidence.map(({id, prompt, answer}) => (
                 <div key={id}>
                   <dt>{prompt}</dt>
-                  <dd>{options.find((option) => option.id === answers[id])?.label ?? 'No answer recorded'}</dd>
+                  <dd>{answer}</dd>
                 </div>
               ))}
             </dl>

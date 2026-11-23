@@ -218,3 +218,11 @@ export function positiveCapabilities(dimensions: ReadinessResult['dimensions']) 
     .sort(([, first], [, second]) => second.lower - first.lower)
     .slice(0, 2);
 }
+
+export function decisionRows(result: Pick<ReadinessResult, 'useCaseGuidance' | 'deliveryCapacity' | 'financialEvidence'>) {
+  return [
+    {label: 'AI Use-Case Guidance', value: result.useCaseGuidance},
+    {label: 'Delivery Capacity', value: result.deliveryCapacity},
+    {label: 'Financial Benefit Evidence', value: result.financialEvidence},
+  ];
+}
