@@ -182,9 +182,12 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
           </ReportSection>
 
           <ReportSection id="three-priority-actions" title="Priority Actions" expanded={openSections.has('three-priority-actions')} onToggle={toggleSection}>
-            <ol className="report-list ordered">
-              {content.actions.map(({id, title, paragraphs}) => <li key={id}>
-                <strong>{title}</strong>
+            <ol className="report-list ordered editorial-actions">
+              {content.actions.map(({id, title, paragraphs, area, illustration}, index) => <li key={id}>
+                <header className="action-opener">
+                  <svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d={illustration} /></svg>
+                  <div><span className="action-byline">Priority {index + 1} · {area}</span><strong>{title}</strong></div>
+                </header>
                 {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               </li>)}
               {!content.actions.length && <li>{content.noActions}</li>}
@@ -278,17 +281,19 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
           )}
 
 
-          <ReportSection id="appendix-answers-and-provenance" title="Appendix Answers And Provenance" expanded={openSections.has('appendix-answers-and-provenance')} onToggle={toggleSection}>
+          <ReportSection id="appendix-answers-and-provenance" title="Supporting Evidence" expanded={openSections.has('appendix-answers-and-provenance')} onToggle={toggleSection}>
             <dl className="report-metadata">
               {content.metadata.map(({key, label, value}) => <div key={key}><dt>{label}</dt><dd>
                 {key === 'reference' ? <code>{value}</code> : key === 'date' ? <time dateTime={value}>{value}</time> : value}
               </dd></div>)}
             </dl>
             <h5>Your assessment answers</h5>
+            <p>{content.coverage}</p>
             <dl className="report-answers">
-              {content.evidence.map(({id, prompt, answer}) => (
-                <div key={id}>
-                  <dt>{prompt}</dt>
+              {content.evidence.map(({id, area, prompt, answer, uncertain}, index) => (
+                <div key={id} className={uncertain ? 'evidence-uncertain' : undefined}>
+                  <dt>{content.evidence[index - 1]?.area !== area && <small className="evidence-area">{area}</small>}
+                    <span className="evidence-prompt">{prompt}</span></dt>
                   <dd>{answer}</dd>
                 </div>
               ))}

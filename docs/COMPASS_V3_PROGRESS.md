@@ -122,3 +122,7 @@ The profile offers eight business outcomes with a suggested measure for each. Pr
 ### Shared report content
 
 [PR #19](https://github.com/jmw-117/compass-web/pull/19) completes the outstanding report architecture recommendation from [the audit](ASSESSMENT_UX_AUDIT.md). The PDF takes structured values directly. Browser and PDF checks compare ranked action text, use-case decisions, concerns, reference data and all 14 question-answer rows. The previous [deployed baseline](https://github.com/jmw-117/compass-web/actions/runs/45169379953) was `1c88777`. **21/23 verified, 2 remaining.**
+
+### Editorial report design
+
+The shared content architecture shipped in [PR #19](https://github.com/jmw-117/compass-web/pull/19), release `8879b51`. [PR #20](https://github.com/jmw-117/compass-web/pull/20) redesigns the ranked actions and supporting evidence in PDF and preview. CI checks action illustrations, seven evidence groups, uncertain answers, PDF text parity and the rendered three-page fixture. **21/23 verified, 2 remaining.**

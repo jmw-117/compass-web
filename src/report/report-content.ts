@@ -1,5 +1,6 @@
 import type {ReadinessResult} from '../domain/evaluate.ts';
-import {dimensionRows} from '../domain/dimension-display.ts';
+import {actionIllustration} from './action-illustrations.ts';
+import {dimensionRows, getDimensionLabel} from '../domain/dimension-display.ts';
 import {decisionRows, getActionLabel, getCostFitLabel, getQuestionLabel, getReportGuidance} from '../domain/report-guidance.ts';
 import {catalogActions} from '../domain/recommendations.ts';
 import questionBank from '../../docs/domain/question_bank.json' with {type: 'json'};
@@ -28,9 +29,10 @@ export function buildReportContent({assessmentId, profile, answers, readiness}: 
   const reportGuidance = getReportGuidance(readiness);
   const areas = dimensionRows(readiness.dimensions);
   const decisions = decisionRows(readiness);
-  const evidence = questionBank.questions.map(({id, prompt, options}) => ({
-    id, prompt, answer: options.find(option => option.id === answers[id])?.label ?? 'No answer recorded',
-  }));
+  const evidence = questionBank.questions.map(({id, dimension, prompt, options}) => {
+    const selected = options.find(option => option.id === answers[id]);
+    return {id, area: getDimensionLabel(dimension), prompt, answer: selected?.label ?? 'No answer recorded', uncertain: selected?.score == null};
+  });
   const known = areas.reduce((total, area) => total + area.known, 0);
   const actions = readiness.actionPlan.map(({id, title, step, outcome, owner, effort, category, context}) => {
     const action = catalogActions.get(id);
@@ -43,7 +45,8 @@ export function buildReportContent({assessmentId, profile, answers, readiness}: 
       if (action.prerequisite_ids.length) paragraphs.push('Complete first: ' + action.prerequisite_ids.map(getActionLabel).join(', ') + '.');
       paragraphs.push('Done when: ' + action.validation);
     }
-    return {id, title, paragraphs};
+    const dimension = action?.dimension ?? 'PRO';
+    return {id, title, paragraphs, area: getDimensionLabel(dimension), illustration: actionIllustration(id, dimension)};
   });
   const business = [
     {label: 'Organisation Type', value: profile.organizationType || 'Not shared'},
