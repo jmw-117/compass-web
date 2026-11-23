@@ -1,5 +1,5 @@
 {
-  "version": "1.3.4",
+  "version": "1.4.0",
   "report_kind": "self_reported_ai_readiness",
   "mandatory_sections": [
     "document_identity",
@@ -14,7 +14,6 @@
     "primary_path",
     "three_priority_actions",
     "budget_and_capacity_fit",
-    "next_30_60_90_days",
     "client_consultation_cta",
     "appendix_answers_and_provenance"
   ],
@@ -53,10 +52,11 @@
       "definition_of_done",
       "suggested_time_horizon"
     ],
-    "budget": "Do not imply quantified affordability without dated externally reviewed cost bounds"
+    "budget": "Do not imply quantified affordability without dated externally reviewed cost bounds",
+    "measured_benefit": "Report hours separately from documented cash changes. Annual return is a scenario conditional on recurring net cash and a positive setup cost."
   },
   "client_handoff": {
-    "method": "user-controlled WhatsApp or copy summary",
+    "method": "User-approved WhatsApp summary, copied brief, email draft or project enquiry",
     "prohibited": [
       "automatic send",
       "embedded report in querystring",
@@ -65,9 +65,13 @@
     ],
     "payload_fields": [
       "assessment_id",
-      "primary_path",
+      "organisation_type_or_size",
+      "industry",
+      "business_goal",
       "readiness_score_or_interval",
-      "critical_gate_codes",
+      "use_case_guidance",
+      "unresolved_issues",
+      "first_action",
       "request_to_discuss"
     ]
   },
@@ -86,5 +90,10 @@
       "approval_state"
     ],
     "external_to_static_app": true
-  }
+  },
+  "executive_chapters": [
+    "Executive Decision",
+    "Priority Action Plan",
+    "Evidence & Methodology"
+  ]
 }
