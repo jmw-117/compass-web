@@ -130,11 +130,13 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
       {exportError && <p className="storage-error" role="alert">{exportError}</p>}
       <div className="compass-share-preview" id="compass-share-preview" hidden={!shareOpen}>
         <p>Send Report prepares a summary. To share the complete PDF, export it and attach it yourself. WhatsApp opens with this message ready for you to send.</p>
-        <p>To discuss these findings, call <a href="tel:+254762057288">+254 762 057 288</a> or visit the <a href="https://sspark.net/" target="_blank" rel="noopener noreferrer">Silverspark Consulting website</a>.</p>
+        <p>Silverspark can help scope the first action, agree a measure and identify any specialist review. To discuss these findings, call <a href="tel:+254762057288">+254 762 057 288</a> or visit the <a href="https://sspark.net/contact" target="_blank" rel="noopener noreferrer">project enquiry form</a>.</p>
+        <p>For email, copy the summary below and paste it into your draft. You choose what to send.</p>
         <label htmlFor="compass-share-text">Message preview</label>
         <textarea id="compass-share-text" ref={summaryRef} readOnly rows={5} value={shareText} />
         <div className="button-row">
           <button type="button" className="button-secondary" onClick={() => void copySummary()}>Copy summary</button>
+          <a className="button-secondary" href="mailto:jmw.info@icloud.com">Email Silverspark</a>
           <button type="button" className="button-primary" onClick={handleWhatsAppClick}>Open WhatsApp</button>
         </div>
         {copyStatus && <p role="status">{copyStatus}</p>}
@@ -150,7 +152,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
         </header>
           <ReportSection
             id="executive-summary"
-            title="Executive Summary"
+            title="Executive Decision"
             expanded={openSections.has('executive-summary')}
             onToggle={toggleSection}
           >
@@ -171,17 +173,18 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
             <ReadinessSignal signal={reportGuidance.signal} />
             <DecisionSummary result={readiness} rows={content.decisions} />
             <div className="report-safety">
-              <h5>Key findings</h5>
+              <h5>What this means</h5><p>{content.executiveDirection}</p>
               {readiness.formalGates.length > 0 && (
                 <ul className="report-list">
                   {readiness.formalGates.map((gate) => <li key={gate.id}>{getGateLabel(gate.id)}</li>)}
                 </ul>
               )}
-              <p>{content.opportunity}</p>
+              <p>{content.capability}</p><p>{content.opportunity}</p>
+              {content.benefit.map(line => <p key={line}>{line}</p>)}
             </div>
           </ReportSection>
 
-          <ReportSection id="three-priority-actions" title="Priority Actions" expanded={openSections.has('three-priority-actions')} onToggle={toggleSection}>
+          <ReportSection id="three-priority-actions" title="Priority Action Plan" expanded={openSections.has('three-priority-actions')} onToggle={toggleSection}>
             <ol className="report-list ordered editorial-actions">
               {content.actions.map(({id, title, paragraphs, area, illustration}, index) => <li key={id}>
                 <header className="action-opener">
@@ -281,12 +284,13 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
           )}
 
 
-          <ReportSection id="appendix-answers-and-provenance" title="Supporting Evidence" expanded={openSections.has('appendix-answers-and-provenance')} onToggle={toggleSection}>
+          <ReportSection id="appendix-answers-and-provenance" title="Evidence &amp; Methodology" expanded={openSections.has('appendix-answers-and-provenance')} onToggle={toggleSection}>
             <dl className="report-metadata">
               {content.metadata.map(({key, label, value}) => <div key={key}><dt>{label}</dt><dd>
                 {key === 'reference' ? <code>{value}</code> : key === 'date' ? <time dateTime={value}>{value}</time> : value}
               </dd></div>)}
             </dl>
+            <h5>How to read the evidence</h5><p>{content.method}</p>
             <h5>Your assessment answers</h5>
             <p>{content.coverage}</p>
             <dl className="report-answers">

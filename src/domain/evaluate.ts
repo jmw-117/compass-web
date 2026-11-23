@@ -1,3 +1,4 @@
+import {safetyFields} from './safety-scope.ts';
 import {buildActionPlan} from './action-plan.ts';
 import {discoverOpportunity} from './opportunity.ts';
 import bank from '../../docs/domain/question_bank.json' with {type: 'json'};
@@ -175,8 +176,8 @@ export function evaluate(input: AssessmentInput): ReadinessResult {
   const specialistReview = facts.get('gate.URGENT-REGULATED') === true || findings.some(({flag}) =>
     flag === 'flag.high_impact_review' || flag === 'flag.sensitive_data_review',
   );
-  const safetyContextConfirmed = Object.entries(SAFETY_CONTEXT_VALUES).every(([field, values]) =>
-    values.has(getProfileString(profile, field)),
+  const safetyContextConfirmed = safetyFields(profile).every(field =>
+    SAFETY_CONTEXT_VALUES[field]!.has(getProfileString(profile, field)),
   );
   let costFit: ReadinessResult['costFit'];
   if (specialistReview) costFit = 'specialist_review';

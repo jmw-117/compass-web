@@ -14,7 +14,7 @@ test('S5 builds a report contract with the mandatory report sections and volunta
 
   assert.match(app, /<ReportModule\s+profile=\{reportProfile\}/);
   assert.match(report, /Assessment Report/);
-  assert.match(report, /Executive Summary/);
+  assert.match(report, /Executive Decision/);
   assert.match(model, /Industry \/ Sector/);
   assert.doesNotMatch(report, /Path reference:|Cost class:|Consultant Review Template|Next 30, 60 And 90 Days/);
   assert.match(report, /reportGuidance\.primaryPathLabel/);
@@ -59,9 +59,9 @@ test('S5 builds a report contract with the mandatory report sections and volunta
     'Seven Dimension Results',
     'Uncertainty And Coverage',
     'Positive Capabilities',
-    'Priority Actions',
+    'Priority Action Plan',
     'Budget And Capacity Fit',
-    'Supporting Evidence',
+    'Evidence &amp; Methodology',
   ]) {
     assert.ok(report.includes(title), `Missing readable report section title: ${title}`);
   }
