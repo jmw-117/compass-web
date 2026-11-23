@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "early_fields": [
     {
       "id": "org_type",
@@ -35,7 +35,10 @@
       "values": [
         "efficiency",
         "growth",
+        "cash_flow",
         "service",
+        "quality",
+        "insight",
         "risk",
         "explore"
       ]
@@ -146,5 +149,47 @@
     }
   ],
   "report_contact_fields": "Optional and separate, ask only at explicit share action. Never require for reading results.",
-  "safe_text_policy": "No names, customer records, secrets or confidential content in optional examples; cap text length; never place answers in URLs."
+  "safe_text_policy": "No names, customer records, secrets or confidential content in optional examples; cap text length; never place answers in URLs.",
+  "business_goals": {
+    "efficiency": {
+      "label": "Save time on routine work",
+      "measure": "Compare the time needed to complete a recurring task.",
+      "action_tag": "efficiency"
+    },
+    "growth": {
+      "label": "Win more customers",
+      "measure": "Track how many enquiries become paying customers.",
+      "action_tag": "growth"
+    },
+    "cash_flow": {
+      "label": "Get paid sooner",
+      "measure": "Track the days between sending an invoice and receiving payment.",
+      "action_tag": "efficiency"
+    },
+    "service": {
+      "label": "Improve customer service",
+      "measure": "Check the customer experience by tracking time to resolve a request.",
+      "action_tag": "service"
+    },
+    "quality": {
+      "label": "Reduce errors and rework",
+      "measure": "Count cases that need correction or a second attempt.",
+      "action_tag": "risk"
+    },
+    "insight": {
+      "label": "Make better business decisions",
+      "measure": "Check how often a decision can be made with reliable information available on time.",
+      "action_tag": "efficiency"
+    },
+    "risk": {
+      "label": "Manage risk and compliance",
+      "measure": "Count exceptions that go unchecked before work is approved.",
+      "action_tag": "risk"
+    },
+    "explore": {
+      "label": "Find a useful starting point",
+      "measure": "Identify one recurring task worth measuring before choosing an improvement.",
+      "action_tag": "all"
+    }
+  }
 }

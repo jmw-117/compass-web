@@ -1,3 +1,4 @@
+import {businessGoalOptions, getBusinessGoal} from '../src/domain/business-goals.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {evaluate} from '../src/domain/evaluate.ts';
@@ -46,4 +47,18 @@ test('action context reflects the reported industry, goal and workflow', () => {
   const result = evaluate({profile, coreAnswers:core, probeAnswers:safe});
   assert.match(result.actionPlan[0]!.context, /repair booking.*lead to sale.*lost leads.*customer experience/);
   assert.deepEqual(result.score, evaluate({profile:base, coreAnswers:core, probeAnswers:safe}).score);
+});
+
+test('all profile goals preserve maturity and safety and carry an appropriate measure into the plan', () => {
+  const reference = evaluate({profile:base, coreAnswers:core, probeAnswers:safe});
+  const ids = businessGoalOptions.map(([id]) => id);
+  for (const id of ['efficiency','growth','service','risk','explore','cash_flow','quality','insight']) assert.ok(ids.includes(id));
+  for (const [id,label] of businessGoalOptions) {
+    const goal = getBusinessGoal(id)!;
+    assert.equal(goal.label, label);
+    const result = evaluate({profile:{...base, primary_goal:id}, coreAnswers:core, probeAnswers:safe});
+    assert.deepEqual(result.score, reference.score);
+    assert.equal(result.useCaseGuidance, reference.useCaseGuidance);
+    assert.ok(result.actionPlan[0]!.context.includes(goal.measure));
+  }
 });

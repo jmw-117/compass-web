@@ -9,11 +9,11 @@ test('The assessment begins with the required three-field start profile and prev
   for (const [id, label] of [
     ['profile-organisation', 'Organisation type'],
     ['profile-industry', 'Industry or sector'],
-    ['profile-goal', 'Business goal'],
+    ['profile-goal', 'Which business outcome matters most?'],
   ]) {
     assert.ok(app.includes(`htmlFor="${id}"`));
     assert.ok(app.includes(`<span>${label}</span>`));
-    assert.ok(app.includes(`id="${id}" required`));
+    assert.ok(app.includes(`id="${id}"`));
   }
 
   for (const fieldId of ['industry', 'primary_goal']) {
@@ -25,12 +25,12 @@ test('The assessment begins with the required three-field start profile and prev
       continue;
     }
     for (const value of field.values) {
-      assert.ok(app.includes(`['${value}',`), `Missing dropdown option ${value}`);
+      assert.ok(profileSchema.business_goals[value]?.label, `Missing goal label for ${value}`);
     }
   }
 
   assert.match(app, /INDUSTRY_OPTIONS\.some/);
-  assert.match(app, /BUSINESS_GOAL_OPTIONS\.some/);
+  assert.match(app, /businessGoalOptions\.some/);
   assert.match(app, /coreQuestions\.slice\(0, 5\)/);
   assert.match(app, /Your quick preview/);
 });

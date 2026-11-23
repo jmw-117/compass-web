@@ -120,6 +120,7 @@ async function run(reduceMotion = false) {
       new MutationObserver(scan).observe(document.body,{subtree:true,childList:true,characterData:true});
       return true;
     })()`);
+    assert.equal(await js("document.querySelector('.landing-guide').textContent.includes('Fictional sample report')"),false,'Removed landing sample returned');
     await click('#take-assessment');
     try {
       await until(()=>js("document.querySelectorAll('.profile-form select').length === 3"),'Profile not rendered');
@@ -128,6 +129,10 @@ async function run(reduceMotion = false) {
       throw error;
     }
     await until(()=>js("document.activeElement.id==='assessment-title'"),'Profile heading did not receive focus');
+    const schema = JSON.parse(await fs.readFile('docs/domain/profile_schema.json','utf8'));
+    const goals = schema.early_fields.find(field=>field.id==='primary_goal').values;
+    assert.equal(await js("[...document.querySelectorAll('.profile-form select')].every(el=>el.required)"),true);
+    assert.deepEqual(await js("[...document.querySelector('#profile-goal').options].slice(1).map(o=>[o.value,o.text])"),goals.map(id=>[id,schema.business_goals[id].label]));
     assert.equal(await js("Array.from(document.querySelectorAll('.profile-form select')).every(el=>el.labels.length&&parseFloat(getComputedStyle(el).fontSize)>=16)"),true);
     assert.equal(await js(`[...document.querySelectorAll('.profile-form select')].every(select=>
       getComputedStyle(select).fontWeight==='400' && getComputedStyle(select.options[0]).fontWeight==='400' &&
@@ -136,6 +141,8 @@ async function run(reduceMotion = false) {
     await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
     assert.equal(await js("document.activeElement.id"),'profile-organisation');
     await js(`Array.from(document.querySelectorAll('.profile-form select')).forEach(select=>{select.selectedIndex=1; select.dispatchEvent(new Event('change',{bubbles:true}));}); true`);
+    await js("(()=>{const select=document.querySelector('#profile-goal');select.value='cash_flow';select.dispatchEvent(new Event('change',{bubbles:true}));return true})()");
+    await until(()=>js("document.querySelector('#goal-measure').textContent.includes('receiving payment')"),'Goal-specific measure missing');
     await click('.profile-form button[type="submit"]');
     const {questions}=JSON.parse(await fs.readFile('docs/domain/question_bank.json','utf8'));
     const answer=async(index)=>{
@@ -360,6 +367,7 @@ async function run(reduceMotion = false) {
     assert.equal(await previewJs("document.querySelector('.report-safety').innerText.includes('specialist review')"),true);
     assert.equal(await previewJs("document.querySelector('.decision-summary').innerText.includes('Hold')"),true);
     assert.equal(await previewJs("document.querySelector('.report-score-value').textContent.includes('out of 100')"),true);
+    assert.equal(await previewJs("document.querySelector('.report-module').textContent.includes('Get paid sooner') && document.querySelector('.report-module').textContent.includes('receiving payment')"),true,'Missing selected goal or measure in preview');
     assert.equal(await previewJs(`(()=>{
       const metadata=document.querySelector('.report-metadata');
       const appendix=metadata.closest('details');
@@ -405,7 +413,7 @@ async function run(reduceMotion = false) {
     await until(()=>other("!!document.querySelector('.compass-draft-controls summary')"),'Missing second tab draft controls');
     await other("document.querySelector('.compass-draft-controls summary').click()");
     await other("[...document.querySelectorAll('button')].find(b=>b.textContent==='Restore Draft').click()");
-    await until(()=>other("document.querySelector('#profile-organisation')?.value==='sole_proprietor' && Object.keys(JSON.parse(sessionStorage.getItem('silverspark-compass-draft-v1') || '{}').answers || {}).length===14"),'Device restore did not preserve all answers');
+    await until(()=>other("document.querySelector('#profile-organisation')?.value==='sole_proprietor' && document.querySelector('#profile-goal')?.value==='cash_flow' && Object.keys(JSON.parse(sessionStorage.getItem('silverspark-compass-draft-v1') || '{}').answers || {}).length===14"),'Device restore did not preserve all answers');
     await draftButton('Clear draft');
     await until(()=>other("document.querySelector('#profile-organisation')?.value==='' && sessionStorage.getItem('silverspark-compass-draft-v1')===null"),'Second tab retained a cleared draft');
     await other("[...document.querySelectorAll('button')].find(b=>b.textContent==='Restore Draft').click()");

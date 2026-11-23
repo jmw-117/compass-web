@@ -1,3 +1,4 @@
+import {getBusinessGoal} from './business-goals.ts';
 import catalog from '../../docs/domain/action_catalog.json' with { type: 'json' };
 import rules from '../../docs/domain/rules.json' with { type: 'json' };
 import type { DimensionId, ReadinessResult } from './evaluate.ts';
@@ -21,7 +22,7 @@ export function recommendActions(
     : typeof profile.budget_band === 'string' ? profile.budget_band : 'unknown';
   const classes = constraints[budget] ?? ['C0'];
   const hasCapacity = profile.staff_capacity === 'limited' || profile.staff_capacity === 'available';
-  const goal = typeof profile.primary_goal === 'string' ? profile.primary_goal : '';
+  const goal = getBusinessGoal(profile.primary_goal)?.action_tag ?? '';
   const ranking = rules.action_ranking;
 
   function addCandidate(id: string) {
