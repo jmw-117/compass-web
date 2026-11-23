@@ -12,7 +12,9 @@ test('refresh restores the cursor without skipping required evidence', () => {
   safety[2] = false;
   assert.deepEqual(position('results', 0), {screen:'safety', index:2});
   core[6] = false;
-  assert.deepEqual(position('safety', 0), {screen:'core', index:1});
+  assert.deepEqual(position('safety', 0), {screen:'safety', index:0});
+  assert.deepEqual(position('core', 99), {screen:'safety', index:2});
+  safety[2] = true;
   assert.deepEqual(position('core', 99), {screen:'core', index:1});
   core[4] = false;
   assert.deepEqual(position('review', 0), {screen:'preview', index:4});

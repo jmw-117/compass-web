@@ -1,3 +1,5 @@
+import {safetyFields} from '../src/domain/safety-scope.ts';
+import {measuredBenefit} from '../src/domain/measured-benefit.ts';
 import {businessGoalOptions, getBusinessGoal} from '../src/domain/business-goals.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -61,4 +63,27 @@ test('all profile goals preserve maturity and safety and carry an appropriate me
     assert.equal(result.useCaseGuidance, reference.useCaseGuidance);
     assert.ok(result.actionPlan[0]!.context.includes(goal.measure));
   }
+});
+
+test('unneeded safety fields stay unassessed while uncertainty and consequential use trigger review', () => {
+  const noUse = {current_ai_use:'none', planned_ai_use:'no'};
+  assert.deepEqual(safetyFields(noUse), ['current_ai_use','planned_ai_use']);
+  const dormant = evaluate({coreAnswers:core, profile:noUse});
+  assert.equal(dormant.useCaseGuidance,'Not assessed');
+  assert.equal(dormant.safetyContextConfirmed,true);
+  assert.equal(safetyFields({...noUse,current_ai_use:'unknown'}).length,4);
+  const disclosed = evaluate({coreAnswers:core,profile:{...base,high_impact_ai_workflow:'decides'},probeAnswers:safe});
+  assert.deepEqual(disclosed.score,dormant.score);
+  assert.equal(disclosed.useCaseGuidance,'Hold');
+});
+test('measured capacity, net cash and modelled ROI have independent evidence requirements', () => {
+  const input = {baseline_known:'yes',benefit_comparable:true,minutes_before:18,minutes_after:12,cases_month:100,
+    benefit_currency:'USD',cash_benefit:100,cash_running:40,cash_setup:240};
+  assert.deepEqual(measuredBenefit({...input,benefit_comparable:false},'Supported by available evidence'),[]);
+  assert.match(measuredBenefit(input,'Unsupported').join(' '),/10 staff hours released/);
+  assert.equal(measuredBenefit(input,'Unverified').length,1);
+  assert.match(measuredBenefit(input,'Supported by available evidence').join(' '),/USD 60.*200%/);
+  assert.match(measuredBenefit({...input,cash_running:125},'Supported by available evidence').join(' '),/USD -25/);
+  assert.equal(measuredBenefit({...input,cash_setup:0},'Supported by available evidence').length,2);
+  assert.deepEqual(measuredBenefit({...input,minutes_before:Infinity,benefit_currency:''},'Supported by available evidence'),[]);
 });

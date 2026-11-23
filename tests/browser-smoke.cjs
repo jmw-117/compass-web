@@ -165,17 +165,17 @@ async function run(reduceMotion = false) {
       await click('input[id="'+option.id+'"]');
       await click('.question-panel .button-primary');
     };
-    for(let i=0;i<5;i++) await answer(i);
-    await until(()=>js("document.activeElement.id==='preview-summary-title'"),'Quick preview step missing focus');
-    assert.equal(await js("document.querySelector('.panel-header').innerText.includes('1 of the first five answers needs confirmation')"),true);
-    await click('.assessment-panel .button-row .button-primary');
-    for(let i=5;i<questions.length;i++) await answer(i);
-    for (const [index,value] of ['team_pilot','restricted','yes','yes','yes'].entries()) {
+    for (const [index,value] of ['team_pilot','yes','yes','restricted','yes'].entries()) {
       await until(()=>js("document.querySelector('.question-panel .eyebrow')?.textContent.includes("+JSON.stringify((index+1)+' of 5')+")"),'Safety phase did not advance');
       assert.equal(await js("document.querySelector('.question-panel .button-primary').disabled"),true);
       await click('.question-panel input[value="'+value+'"]');
       await click('.question-panel .button-primary');
     }
+    for(let i=0;i<5;i++) await answer(i);
+    await until(()=>js("document.activeElement.id==='preview-summary-title'"),'Quick preview step missing focus');
+    assert.equal(await js("document.querySelector('.panel-header').innerText.includes('1 of the first five answers needs confirmation')"),true);
+    await click('.assessment-panel .button-row .button-primary');
+    for(let i=5;i<questions.length;i++) await answer(i);
     await until(()=>js("document.activeElement.id==='review-title'"),'Safety phase did not open review');
     assert.equal(await js("document.querySelector('[aria-controls=report-module-panel]')===null"),true);
     assert.equal(await js("document.querySelector('.compass-field-grid')===null"),true);
@@ -348,6 +348,7 @@ async function run(reduceMotion = false) {
     await until(()=>js("!document.querySelector('#compass-share-preview').hidden"),'Message preview did not open');
     assert.equal(await js('window.testShareDestination===undefined'),true);
     await click('#compass-share-preview button.button-primary');
+    assert.equal(await js("document.querySelector('#compass-share-preview a[href^=mailto]').getAttribute('href')"),'mailto:jmw.info@icloud.com');
     const share=await js('window.testShareDestination');
     assert.equal(new URL(share).origin,'https://wa.me');
     assert.equal(new URL(share).pathname,'/254762057288');
@@ -379,7 +380,7 @@ async function run(reduceMotion = false) {
     }
     assert.equal(downloadedReport.getTitle(),'Silverspark Compass Assessment Report');
     assert.ok(downloadedReport.getPageCount()>1,'Expected a paginated report');
-    assert.ok(downloadedReport.getPageCount()<=3,'The synthetic report should fit its summary, actions and evidence in three pages');
+    assert.equal(downloadedReport.getPageCount(),4,'Executive decision, action plan, methods and source ledger each occupy one page in this fixture');
     const previewUrl=await js("document.querySelector('.report-actions a').href");
     await call('Runtime.evaluate',{expression:"document.querySelector("+JSON.stringify(previewLink)+").click()",userGesture:true});
     const target=await until(async()=>(await call('Target.getTargets')).targetInfos.find(item=>item.type==='page' && item.url===previewUrl),'Report did not open in a new tab');
@@ -402,7 +403,7 @@ async function run(reduceMotion = false) {
     assert.equal(await previewJs(`(()=>{
       const metadata=document.querySelector('.report-metadata');
       const appendix=metadata.closest('details');
-      return !appendix.open && appendix.querySelector('summary').textContent.includes('Supporting Evidence');
+      return !appendix.open && appendix.querySelector('summary').textContent.includes('Evidence & Methodology');
     })()`),true);
     if (process.env.COMPASS_PDF_PROOF) {
       const proof = await previewJs(`(() => {
@@ -485,7 +486,12 @@ async function run(reduceMotion = false) {
       select.selectedIndex=1; select.dispatchEvent(new Event('change',{bubbles:true}));
     })`);
     await other("document.querySelector('.profile-form [type=submit]').click()");
-    await until(()=>other("!!document.querySelector('.option-card input')"),'Question one missing');
+    for (const [field,value] of [['current_ai_use','none'],['planned_ai_use','no']]) {
+      await until(()=>other(`!!document.querySelector('input[name="${field}"]')`),'Missing early safety context');
+      await other(`document.querySelector('input[name="${field}"][value="${value}"]').click()`);
+      await other("document.querySelector('.question-panel .button-primary').click()");
+    }
+    await until(()=>other("!!document.querySelector('#question-panel-title')"),'No-use route should reach question one after two safety answers');
     await other("document.querySelector('.option-card input').click()");
     await other("document.querySelector('.question-panel .button-primary').click()");
     await until(()=>other("document.querySelector('.progress-bar')?.getAttribute('aria-valuenow')==='2'"),'Question two missing');

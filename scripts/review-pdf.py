@@ -33,14 +33,16 @@ verify_in_order(expected["answers"], extracted("-x", "285", "-y", "0", "-W", "26
 print(f"Verified preview/PDF parity for {len(expected['actions'])} action lines and {len(expected['answers'])} answers.")
 
 pages = sorted(proof.glob("page-*.jpg"))
-assert pages, "No rendered report pages"
+assert len(pages) == 4
+for i, title in enumerate(["Executive Decision", "Priority Action Plan", "Evidence & Methodology", "Source responses"], 1):
+    verify_in_order([title], extracted("-f", str(i), "-l", str(i)))
 tiles = []
 for path in pages:
     with Image.open(path) as page:
         tiles.append(ImageOps.contain(page.convert("RGB"), (320, 458)))
-sheet = Image.new("RGB",(3*336, ((len(tiles)+2)//3)*478), "#c6cbd3")
+sheet = Image.new("RGB",(2*336, ((len(tiles)+1)//2)*478), "#c6cbd3")
 for i, tile in enumerate(tiles):
-    sheet.paste(tile, (8+(i%3)*336, 8+(i//3)*478))
+    sheet.paste(tile, (8+(i%2)*336, 8+(i//2)*478))
 sheet.save(proof/"contact-sheet.jpg",quality=82)
 # Only synthetic public test documents are emitted. Include a small preview for remote review.
 small = io.BytesIO()

@@ -153,6 +153,28 @@ export default function AssessmentDetails({
           {(step.id === 'workflow' ? contextFields : constraintFields).filter(field => !(profile.budget_window === 'no_external_spend' && ['budget_ceiling','monthly_budget_ceiling','budget_band'].includes(field.id)) && !(field.id === 'decision_authority' && answers['STR-02'] && !answers['STR-02'].endsWith('-UNK')) && !(field.id === 'baseline_known' && ['Yes','No'].includes(probeAnswers['PR-MET-START'] ?? ''))).map((field) => (
             <OptionalField key={field.id} field={field} value={profile[field.id]} update={update} />
           ))}
+          {step.id === 'workflow' && profile.baseline_known === 'yes' && <details className="measured-benefit">
+            <summary>Measure benefit</summary>
+            <p>Use figures from comparable work before and after a change. Leave unavailable figures blank.</p>
+            <label className="compass-checkbox"><input type="checkbox" checked={profile.benefit_comparable === true}
+              onChange={event => update('benefit_comparable', event.target.checked)} />I have records for comparable periods.</label>
+            {profile.benefit_comparable === true && <div className="profile-form compass-field-grid">
+              {[
+                ['minutes_before','Minutes per case before'], ['minutes_after','Minutes per case after'], ['cases_month','Cases in a typical month'],
+                ...(['cost','revenue'].includes(String(profile.impact_measure)) ? [
+                  ['cash_benefit','Documented monthly cash benefit before costs'], ['cash_running','Additional monthly running costs'], ['cash_setup','One-time setup cost'],
+                ] : []),
+              ].map(([key, label]) => <label key={key}>{label}<input type="number" min="0" max="1000000000" step={key === 'cases_month' ? '1' : 'any'}
+                value={typeof profile[key!] === 'number' ? String(profile[key!]) : ''} onChange={event => {
+                  const amount = event.target.valueAsNumber;
+                  update(key!, Number.isFinite(amount) && amount >= 0 && amount <= 1e9 ? amount : undefined);
+                }} /></label>)}
+              {['cost','revenue'].includes(String(profile.impact_measure)) && <label>Currency for all cash figures
+                <select value={String(profile.benefit_currency ?? '')} onChange={event => update('benefit_currency',event.target.value)}>
+                  <option value="">Choose currency</option>{['EUR','GBP','KES','USD'].map(code => <option key={code}>{code}</option>)}
+                </select></label>}
+            </div>}
+          </details>}
           {step.id === 'capacity' && (
             <div className="budget-detail">
               <p className="inline-note">A budget band is enough to tailor your recommendations. Budget does not change readiness.</p>

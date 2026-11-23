@@ -1,3 +1,4 @@
+import {safetyFields} from './domain/safety-scope';
 import {encodeDraft,decodeDraft} from './assessment/draft-format';
 import profileSchema from '../docs/domain/profile_schema.json';
 import {businessGoalOptions, getBusinessGoal} from './domain/business-goals';
@@ -145,7 +146,11 @@ const questionExamples: Record<string, string> = {
   'MET-02': 'Think of who checks after a change, when they check and what they do with the findings.',
 };
 
-const wizardSteps = ['Profile', 'Questions', 'Safety', 'Review', 'Results'] as const;
+function safetyQuestions(profile: Profile) {
+  return safetyFields(profile).map(field => SAFETY_CONTEXT_QUESTIONS.find(({id}) => id === field)!);
+}
+
+const wizardSteps = ['Profile', 'Safety', 'Questions', 'Review', 'Results'] as const;
 
 const previewQuestions = coreQuestions.slice(0, 5);
 const remainingQuestions = coreQuestions.slice(5);
@@ -168,13 +173,15 @@ export default function App() {
   const [committedProfile, setProfile] = useState<Profile>(emptyProfile);
   const [committedAnswers, setAnswers] = useState<Record<string, string>>({});
   const [context, setContext] = useState<Record<string, unknown>>({});
-  const [probeAnswers, setProbeAnswers] = useState<Record<string, string>>({});
+  const [committedProbes, setProbeAnswers] = useState<Record<string, string>>({});
   const [extendedAnswers, setExtendedAnswers] = useState<Record<string, string>>({});
   const [detailStep, setDetailStep] = useState('workflow');
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [reviewEdit, setReviewEdit] = useState<{profile: Profile; answers: Record<string, string>} | null>(null);
+  const [reviewEdit, setReviewEdit] = useState<{profile: Profile; answers: Record<string, string>; probes: Record<string, string>} | null>(null);
   const editingFromReview = reviewEdit !== null;
   const profile = reviewEdit?.profile ?? committedProfile;
+  const probeAnswers = reviewEdit?.probes ?? committedProbes;
+  const scopedSafety = safetyQuestions(profile);
   const answers = reviewEdit?.answers ?? committedAnswers;
   const [storageError, setStorageError] = useState('');
   const [legacyAvailable, setLegacyAvailable] = useState(false);
@@ -204,7 +211,7 @@ export default function App() {
     if (resumeJourney && !migrated && validProfile(restored)) {
       const position = restorePosition(fields.screen ?? (fields.atResults ? 'results' : 'start'), fields.questionIndex,
         coreQuestions.map(question => Boolean(validAnswers[question.id])),
-        SAFETY_CONTEXT_QUESTIONS.map(({id, options}) => options.some(({value}) => restored[id] === value)),
+        safetyQuestions(restored).map(({id, options}) => options.some(({value}) => restored[id] === value)),
         previewQuestions.length);
       setScreen(position.screen);
       setQuestionIndex(position.index);
@@ -237,13 +244,13 @@ export default function App() {
     if (!draftLoaded) return;
     try {
       const hasProgress = Object.values(committedProfile).some(Boolean) || Object.keys(committedAnswers).length > 0;
-      if (hasProgress) sessionStorage.setItem(STORAGE_KEY, encodeDraft({assessmentId, profile: committedProfile, answers: committedAnswers, context, probeAnswers, extendedAnswers,
+      if (hasProgress) sessionStorage.setItem(STORAGE_KEY, encodeDraft({assessmentId, profile: committedProfile, answers: committedAnswers, context, probeAnswers: committedProbes, extendedAnswers,
         screen: editingFromReview ? 'review' : screen, questionIndex, detailStep, atResults: screen === 'results'}));
       else sessionStorage.removeItem(STORAGE_KEY);
     } catch {
       setStorageError('This browser cannot save progress for a refresh. Keep this tab open until you export your report.');
     }
-  }, [assessmentId, committedProfile, committedAnswers, context, probeAnswers, extendedAnswers, editingFromReview, screen, questionIndex, detailStep, draftLoaded]);
+  }, [assessmentId, committedProfile, committedAnswers, context, committedProbes, extendedAnswers, editingFromReview, screen, questionIndex, detailStep, draftLoaded]);
 
   useEffect(() => {
     const shell = document.querySelector<HTMLElement>('.assessment-shell');
@@ -279,7 +286,7 @@ export default function App() {
   const dimensionSummary = dimensionRows(readinessResult.dimensions);
 
   const profileComplete = validProfile(profile);
-  const safetyContextAnswered = SAFETY_CONTEXT_QUESTIONS.every(({id, options}) =>
+  const safetyContextAnswered = scopedSafety.every(({id, options}) =>
     options.some(({value}) => profile[id] === value),
   );
   const reportProfile = {
@@ -298,8 +305,13 @@ export default function App() {
   const allCoreQuestionsAnswered = answeredCount === coreQuestions.length;
 
   function updateProfile(field: keyof Profile, value: string) {
-    if (reviewEdit) setReviewEdit({...reviewEdit, profile: {...profile, [field]: value}});
-    else setProfile((current) => ({...current, [field]: value}));
+    const next = {...profile, [field]: value};
+    const relevant = safetyFields(next);
+    for (const {id} of SAFETY_CONTEXT_QUESTIONS) if (!relevant.includes(id)) next[id] = '';
+    const active = activeProbes({...context, ...next}, id => coreQuestions.find(q => q.id === id)?.options.find(o => o.id === answers[id])?.score ?? null);
+    const nextProbes = Object.fromEntries(Object.entries(probeAnswers).filter(([id]) => active.some(q => q.id === id)));
+    if (reviewEdit) setReviewEdit({...reviewEdit, profile: next, probes: nextProbes});
+    else {setProfile(next); setProbeAnswers(nextProbes);}
   }
 
   function setAnswer(questionId: string, optionId: string) {
@@ -314,7 +326,8 @@ export default function App() {
     }
 
     if (screen === 'preview' && questionIndex === 0) {
-      setScreen('start');
+      setQuestionIndex(scopedSafety.length - 1);
+      setScreen('safety');
       return;
     }
 
@@ -353,12 +366,13 @@ export default function App() {
     }
 
     setQuestionIndex(0);
-    setScreen('safety');
+    setScreen('review');
   }
 
   function finishReviewEdit(save: boolean) {
     if (save && reviewEdit) {
       setProfile(reviewEdit.profile);
+      setProbeAnswers(reviewEdit.probes);
       setAnswers(reviewEdit.answers);
     }
     setReviewEdit(null);
@@ -366,14 +380,14 @@ export default function App() {
   }
 
   function editProfileOrSafety(destination: 'start' | 'safety', index = 0) {
-    setReviewEdit({profile, answers});
+    setReviewEdit({profile, answers, probes: probeAnswers});
     setQuestionIndex(index);
     setScreen(destination);
   }
 
   function editQuestion(index: number) {
     const isPreviewQuestion = index < previewQuestions.length;
-    setReviewEdit({profile, answers});
+    setReviewEdit({profile, answers, probes: probeAnswers});
     setQuestionIndex(isPreviewQuestion ? index : index - previewQuestions.length);
     setScreen(isPreviewQuestion ? 'preview' : 'core');
   }
@@ -401,7 +415,7 @@ export default function App() {
       <section className="assessment-panel start-panel" aria-labelledby="assessment-title">
         <div className="panel-header">
           <h2 id="assessment-title" tabIndex={-1}>Tell us about your organisation.</h2>
-          <p>{editingFromReview ? 'Update your business details, then return to your review.' : 'Tell us about your business and its goal, then answer 14 readiness questions and five safety questions for a report with practical next steps.'}</p>
+          <p>{editingFromReview ? 'Update your business details, then return to your review.' : 'Tell us about your business and its goal, then answer two to five safety questions and 14 readiness questions for a report with practical next steps.'}</p>
         </div>
 
         {legacyAvailable && !Object.values(profile).some(Boolean) && <aside aria-label="Previously saved assessment">
@@ -419,7 +433,7 @@ export default function App() {
             if (editingFromReview && profileComplete) finishReviewEdit(true);
             else if (profileComplete) {
               setQuestionIndex(0);
-              setScreen('preview');
+              setScreen('safety');
             }
           }}
         >
@@ -566,7 +580,7 @@ export default function App() {
             disabled={!hasCurrentAnswer}
           >
             <ActionIcon name={editingFromReview || (isFinalQuestion && step === 'core') ? 'review' : 'next'} />
-            {editingFromReview ? 'Save Answer' : isFinalQuestion ? (step === 'preview' ? 'Quick Preview' : 'Safety Context') : 'Next Question'}
+            {editingFromReview ? 'Save Answer' : isFinalQuestion ? (step === 'preview' ? 'Quick Preview' : 'Review Answers') : 'Next Question'}
           </button>
         </div>
       </section>
@@ -592,7 +606,7 @@ export default function App() {
             ? `${followUp} of the first five answers ${followUp === 1 ? 'needs' : 'need'} confirmation. Your report will show how this affects your readiness range.`
             : 'All five answers describe a current practice. Continue to see how your systems, people and safeguards affect your next step.'}</p>
           <p>{observation}</p>
-          <p>Next are {remainingQuestions.length} readiness questions and {SAFETY_CONTEXT_QUESTIONS.length} safety questions.</p>
+          <p>Next are the remaining {remainingQuestions.length} readiness questions.</p>
         </div>
         <div className="button-row">
           <button type="button" className="button-secondary nav-back" onClick={() => {setQuestionIndex(previewQuestions.length - 1); setScreen('preview');}}><ActionIcon name="back" /> Back</button>
@@ -617,29 +631,50 @@ export default function App() {
   }
 
   function renderSafetyScreen() {
-    const question = SAFETY_CONTEXT_QUESTIONS[questionIndex]!;
-    const last = questionIndex === SAFETY_CONTEXT_QUESTIONS.length-1;
+    const question = scopedSafety[questionIndex]!;
+    const last = questionIndex === scopedSafety.length-1;
+    const attached: Record<string,string[]> = {
+      high_impact_ai_workflow: ['PR-HUMAN-REVIEW'],
+      data_category: profile.planned_ai_use === 'no' || profile.current_ai_use !== 'none' ? ['PR-GOV-SHARE'] : [],
+      planned_use_real_data: profile.current_ai_use === 'none' ? ['PR-GOV-PLANNED','PR-GOV-SHARE'] : ['PR-GOV-PLANNED'],
+    };
+    const followUps = activeProbes({...context,...profile}, id => coreQuestions.find(q => q.id === id)?.options.find(o => o.id === answers[id])?.score ?? null)
+      .filter(q => attached[question.id]?.includes(q.id));
     function goBack() {
       if (editingFromReview) finishReviewEdit(false);
       else if (questionIndex > 0) setQuestionIndex(questionIndex - 1);
       else {
-        setQuestionIndex(remainingQuestions.length - 1);
-        setScreen('core');
+        setQuestionIndex(0);
+        setScreen('start');
       }
     }
     function advance() {
-      if (editingFromReview) finishReviewEdit(true);
-      else if (last) setScreen('review');
+      if (editingFromReview) {
+        const missing = scopedSafety.findIndex(({id, options}) => !options.some(o => o.value === profile[id]));
+        if (missing >= 0) setQuestionIndex(missing);
+        else finishReviewEdit(true);
+      }
+      else if (last) {setQuestionIndex(0); setScreen('preview');}
       else setQuestionIndex(questionIndex + 1);
     }
     return <section className="assessment-panel question-panel" aria-labelledby="safety-question-title">
-      <p className="eyebrow">Safety context · {questionIndex+1} of {SAFETY_CONTEXT_QUESTIONS.length}</p>
+      <p className="eyebrow">Safety context · {questionIndex+1} of {scopedSafety.length}</p>
       <fieldset className="question-block" aria-describedby="safety-question-hint"><legend><h2 id="safety-question-title" tabIndex={-1}>{question.label}</h2></legend>
       <p id="safety-question-hint" className="question-example">{question.hint}</p>
       <div className="option-list">{question.options.map(o=><label className="option-card" key={o.value}><input type="radio" name={question.id} value={o.value}
         checked={profile[question.id]===o.value} onChange={()=>updateProfile(question.id,o.value)}/><span>{o.label}</span></label>)}</div></fieldset>
+      {profile[question.id] && followUps.map(q => <label key={q.id} className="profile-form">{q.prompt}
+        <select value={probeAnswers[q.id] ?? ''} onChange={event => {
+          const probes = {...probeAnswers, [q.id]:event.target.value};
+          if (reviewEdit) setReviewEdit({...reviewEdit, probes}); else setProbeAnswers(probes);
+        }}><option value="">Skip for now</option>{q.choices?.map(choice => <option key={choice}>{choice}</option>)}</select>
+      </label>)}
+      {question.id === 'high_impact_ai_workflow' && ['decides','influences','yes'].includes(profile.high_impact_ai_workflow) &&
+        <p className="inline-note" role="status">This use needs specialist review before a pilot. You can continue assessing the organisation.</p>}
+      {followUps.some(q => (q.id === 'PR-GOV-SHARE' && probeAnswers[q.id] === 'Yes') || (q.id === 'PR-GOV-PLANNED' && probeAnswers[q.id] === 'No')) &&
+        <p className="inline-note" role="status">Pause this use of real data and review the safeguards with the person responsible.</p>}
       <div className="button-row"><button className="button-secondary nav-back" onClick={goBack}><ActionIcon name="back"/> Back</button>
-      <button className="button-primary" disabled={!profile[question.id]} onClick={advance}><ActionIcon name={editingFromReview ? 'review' : 'next'}/> {editingFromReview ? 'Save Answer' : last ? 'Review Answers' : 'Next Question'}</button></div>
+      <button className="button-primary" disabled={!profile[question.id]} onClick={advance}><ActionIcon name={editingFromReview ? 'review' : 'next'}/> {editingFromReview ? 'Save Answer' : last ? 'Start Questions' : 'Next Question'}</button></div>
     </section>;
   }
   function renderReviewScreen() {
@@ -682,7 +717,7 @@ export default function App() {
 
         <details className="answer-review"><summary>Safety context</summary>
           <ol className="answer-review-list">
-            {SAFETY_CONTEXT_QUESTIONS.map((question, index) => <li key={question.id}>
+            {scopedSafety.map((question, index) => <li key={question.id}>
               <div><strong>{question.label}</strong><p>{getSafetyContextOptionLabel(question.id, profile[question.id])}</p></div>
               <button type="button" className="button-secondary" aria-label={`Edit safety question ${index + 1}: ${question.label}`}
                 onClick={() => editProfileOrSafety('safety', index)}>Edit</button>
@@ -690,15 +725,6 @@ export default function App() {
           </ol>
         </details>
 
-        <div className="profile-form safety-evidence">
-          {activeProbes({...context,...profile}, id => coreQuestions.find(q=>q.id===id)?.options.find(o=>o.id===answers[id])?.score ?? null)
-            .filter(q => ['PR-GOV-SHARE','PR-GOV-PLANNED','PR-HUMAN-REVIEW'].includes(q.id))
-            .map(q => <label key={q.id}>{q.prompt}
-              <select value={probeAnswers[q.id] ?? ''} onChange={event => setProbeAnswers({...probeAnswers,[q.id]:event.target.value})}>
-                <option value="">Skip for now</option>{q.choices?.map(choice => <option key={choice}>{choice}</option>)}
-              </select>
-            </label>)}
-        </div>
         {(readinessResult.primaryPath === 'FEASIBILITY' || readinessResult.primaryPath === 'P5') && readinessResult.useCaseGuidance === 'Eligible for controlled pilot planning' &&
           <label className="profile-form">Can someone make time to plan a small pilot?
             <select value={String(context.staff_capacity ?? '')} onChange={event => setContext({...context, staff_capacity:event.target.value})}>
@@ -707,8 +733,8 @@ export default function App() {
           </label>}
         <div className="button-row wizard-decision">
           <button type="button" className="button-secondary nav-back" onClick={() => {
-            setQuestionIndex(SAFETY_CONTEXT_QUESTIONS.length - 1);
-            setScreen('safety');
+            setQuestionIndex(remainingQuestions.length - 1);
+            setScreen('core');
           }}>
             <ActionIcon name="back" /> Back
           </button>

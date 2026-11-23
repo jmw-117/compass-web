@@ -6,5 +6,7 @@ export function discoverOpportunity(profile:Record<string,unknown>,eligible:bool
   if(workflow==='lead_to_sale' && (delay==='lost_leads'||systems.includes('whatsapp')))return {kind:'Process improvement',next:'Keep an enquiry list with a responsible person and a follow-up date.',measure:'Compare missed follow-ups before and after the change.'};
   if(delay==='manual_entry'&&systems.length>1&&baseline==='yes')return {kind:'Conventional automation',next:'Map the repeated fields and trial one checked transfer between your existing tools.',measure:'Count duplicate entries and corrections in a sample.'};
   if(delay==='knowledge_search'&&baseline==='yes'&&eligible)return {kind:'AI exploration',next:'Compare a human-reviewed search assistant with the current lookup process on non-sensitive examples.',measure:'Check accuracy and lookup time on the same examples.'};
+  if (workflow === 'order_to_cash' && goal === 'cash_flow')
+    return {kind:'Process improvement',next:'Give each unpaid invoice an owner, a due date and a next contact date.',measure:'Compare median days from invoice to payment for comparable invoices; track overdue invoices separately.'};
   return {kind:'Process improvement',next:'Map one '+String(workflow).replaceAll('_',' ')+' case and address the reported '+String(delay).replaceAll('_',' ')+'.',measure:'Record a starting measure and compare it after the change.'};
 }

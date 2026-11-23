@@ -126,3 +126,13 @@ The profile offers eight business outcomes with a suggested measure for each. Pr
 ### Editorial report design
 
 The shared content architecture shipped in [PR #19](https://github.com/jmw-117/compass-web/pull/19), release `8879b51`. [PR #20](https://github.com/jmw-117/compass-web/pull/20) redesigns the ranked actions and supporting evidence in PDF and preview. CI checks action illustrations, seven evidence groups, uncertain answers, PDF text parity and the rendered three-page fixture. **21/23 verified, 2 remaining.**
+
+### Decision, value and consultation revision
+
+Baseline `af94793` (PR #20). This revision covers feedback 1–10. Original items 2–4, 7, 12–17, 19 and 22 retain their existing scoring and release gates. **21/23 verified, 2 remaining.**
+
+- Feedback 1, 2, 6 and 10. Action-level measures, conditional measured benefits, executive interpretation, priority plan and an evidence chapter with a source-response continuation. Reported time and cash are separate; recurring net and scenario ROI require comparable financial evidence.
+- Feedback 3 and 9. Previewable triage brief with business context, guidance and first action. Email and enquiry form use the destinations published at https://sspark.net/contact. No automatic submission.
+- Feedback 5 and 7. Early context, two-to-five relevant questions, optional disclosure and oversight follow-ups, editable answers and unchanged maturity weights.
+- Feedback 8. A labelled illustrative extract and upfront question count. A completion-time estimate awaits observed sessions.
+- Feedback 4. Reference score checks, contrasting use cases, conditional scope, financial arithmetic and browser-to-PDF parity are engineering checks. Independent expert agreement, observed usefulness and completion times remain External Validation Pending. Physical-device/assistive checks, legal/privacy review and commercial hosting approval remain separate.

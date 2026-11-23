@@ -40,7 +40,19 @@ export function buildActionPlan(ids:string[],profile:Record<string,unknown>) {
     const [step,outcome]=steps[id]!;
     const category = ['A20','A23'].includes(id)?'Specialist review':id==='A11'?'Training and enablement':id==='A16'?'Integration or implementation':
       action.cost_class==='C0'?'No external cash':action.cost_class==='C1'?'Low-cost or no-code':'Software or implementation support';
-    return {id,title:action.title,step,outcome,
+    const verifyImpact: Record<string,string> = {
+      A03:'Count handovers and time spent waiting per completed case.',
+      A04:'Count conflicting versions in the next sample of records.',
+      A05:'Record the share of sampled records that agree with their source.',
+      A09:'Document the affected records and verify that the unsafe route is closed.',
+      A10:'Check whether the reviewer can stop or reverse a sample decision.',
+      A13:'Record how many errors the checklist catches before release.',
+      A14:'Count entries made more than once per completed case.',
+      A16:'Compare corrections per transfer with the previous manual process.',
+      A20:'Record the specialist’s decision, unresolved conditions and who owns each condition.',
+    };
+    const outcomeMeasure = verifyImpact[id];
+    return {id,title:action.title,step,outcome:outcomeMeasure ? outcome + ' ' + outcomeMeasure : outcome,
       context: context + (goal ? ' ' + goal.measure : ''),
       owner:profile.org_type==='sole_proprietor'?'Business owner':action.owner_role,
       effort:action.effort.toLowerCase(),category,validation:action.validation,dependencies:action.prerequisite_ids};

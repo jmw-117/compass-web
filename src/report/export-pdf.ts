@@ -150,7 +150,8 @@ export async function downloadReport(content: ReportContent) {
     cursor -= 25;
   }
 
-  drawBlock('AI readiness assessment', bold, 28, true);
+  drawBlock('Executive Decision', bold, 28, true);
+  drawBlock(content.business.map(row => row.value).join('  /  '), regular, 11);
   drawBlock(content.disclaimer + '. Weights and thresholds are provisional.', regular, 10);
   cursor -= 10;
   const cardY = cursor - 72;
@@ -183,6 +184,10 @@ export async function downloadReport(content: ReportContent) {
   if (reportGuidance.firstActionLabel) drawBlock('Start here. ' + reportGuidance.firstActionLabel, regular, 11);
   if (!concerns.length) drawBlock(content.opportunity, regular, 11);
 
+  drawBlock(content.capability, regular, 11);
+  content.benefit.forEach(line => drawBlock(line, regular, 10.5));
+
+  function dimensionChart() {
   ensureSpace(170);
   sectionHeading('Readiness by dimension');
   const chartY=cursor;
@@ -199,6 +204,7 @@ export async function downloadReport(content: ReportContent) {
   });
   cursor=chartY-Math.ceil(areas.length/2)*29;
   if (areas.some(area => area.upper > area.lower)) drawBlock('Silver extensions show uncertainty from unknown practices.', regular, 9);
+  }
   function openChapter(title: string) {
     page = addPage();
     cursor = pageHeight - 111;
@@ -206,7 +212,7 @@ export async function downloadReport(content: ReportContent) {
     cursor -= 9;
   }
 
-  openChapter('Priority actions');
+  openChapter('Priority Action Plan');
   if (!content.actions.length) drawBlock(content.noActions, regular, 10);
   for (const [index, action] of content.actions.entries()) {
     const titleSize = 15;
@@ -233,7 +239,11 @@ export async function downloadReport(content: ReportContent) {
     cursor -= 12;
   }
 
-  openChapter('Supporting evidence');
+  openChapter('Evidence & Methodology');
+  dimensionChart();
+  drawBlock(content.method, regular, 11);
+  sectionHeading('Decision inputs');
+  for (const {label,value} of content.useContext) drawBlock(label + ': ' + value, regular, 10.5);
   drawBlock(content.coverage, bold, 12, true);
   const metaText = content.metadata.map(({label, value}) => label + ': ' + value).join('  |  ');
   const businessText = content.business.map(({label, value}) => label + ': ' + value).join('  |  ');
@@ -248,6 +258,8 @@ export async function downloadReport(content: ReportContent) {
     drawBlock('Other findings to review', bold, 11, true);
     concerns.slice(2).forEach(concern => drawBlock(concern, regular, 9.5));
   }
+  openChapter('Source responses');
+  drawBlock('Evidence & Methodology  /  ' + content.coverage, regular, 11);
   let previousArea = '';
   for (const {area, prompt, answer, uncertain} of content.evidence) {
     const promptWidth = contentWidth * 0.45;

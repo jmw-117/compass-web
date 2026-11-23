@@ -1714,3 +1714,10 @@ h3 {
   .report-module .report-answers > div { grid-template-columns: minmax(0,1fr); gap: .35rem; }
   .action-opener { grid-template-columns: 3.25rem minmax(0,1fr); gap: .7rem; }
 }
+
+.report-thumbnail {max-width:28rem; margin:1rem 0 1.5rem; padding:1rem 1.25rem; display:grid; gap:.35rem; background:#f5f6f8; border:1px solid #cbd2dc; border-left:4px solid #17273e; border-radius:.65rem; color:#17273e}
+.report-thumbnail figcaption {font-size:.8rem; font-weight:650; color:#48576a}
+.report-thumbnail strong {font-size:1.15rem}
+.report-thumbnail p {margin:.4rem 0 0}
+.measured-benefit {grid-column:1 / -1}
+.measured-benefit summary {cursor:pointer; font-weight:650}
