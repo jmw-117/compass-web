@@ -53,7 +53,7 @@ test('React enhancement loads the report preview on demand and keeps it user-con
   assert.match(app, /lazy\(\(\) => import\('\.\/report\/ReportModule'\)\)/);
   assert.match(report, /target="_blank" rel="noopener noreferrer"/);
   assert.match(app, /<ReportModule\s+profile=\{reportProfile\}/);
-  assert.match(report, /Self-Reported Assessment — Not Independently Verified/);
+  assert.match(report, /className="report-disclaimer">\{content\.disclaimer\}/);
   assert.match(report, /Export Report/);
   assert.match(report, /Copy summary/);
   assert.match(report, /Send Report/);
