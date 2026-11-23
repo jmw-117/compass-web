@@ -254,21 +254,21 @@ export async function downloadReport(content: ReportContent) {
     const answerX = margin + promptWidth + 16;
     const promptLines = wrap(encode(prompt), promptWidth, bold, 10);
     const answerLines = wrap(encode(answer), pageWidth - margin - answerX, regular, 10);
-    const rowHeight = Math.max(promptLines.length, answerLines.length) * 12.5 + 8;
+    const rowHeight = Math.max(promptLines.length, answerLines.length) * 12 + 5;
     const before = page;
-    ensureSpace(rowHeight + (area === previousArea ? 0 : 16));
+    ensureSpace(rowHeight + (area === previousArea ? 0 : 13));
     if (previousArea !== area || page !== before) {
       page.drawLine({start:{x:margin,y:cursor+5},end:{x:pageWidth-margin,y:cursor+5},thickness:.65,color:silver});
-      page.drawText(area.toUpperCase(),{x:margin,y:cursor-5,font:bold,size:8,color:muted});
-      cursor -= 17;
+      page.drawText(area.toUpperCase(),{x:margin,y:cursor-3,font:bold,size:8,color:muted});
+      cursor -= 13;
     }
     previousArea = area;
     if (uncertain) {
       page.drawRectangle({x:answerX-5,y:cursor-rowHeight+9,width:pageWidth-margin-answerX+10,height:rowHeight-2,color:pale});
       page.drawRectangle({x:answerX-6,y:cursor-rowHeight+9,width:1.5,height:rowHeight-2,color:muted});
     }
-    promptLines.forEach((line, i) => page.drawText(line,{x:margin,y:cursor-12.5*i,font:bold,size:10,color:navy}));
-    answerLines.forEach((line, i) => page.drawText(line,{x:answerX,y:cursor-12.5*i,font:regular,size:10,color:charcoal}));
+    promptLines.forEach((line, i) => page.drawText(line,{x:margin,y:cursor-12*i,font:bold,size:10,color:navy}));
+    answerLines.forEach((line, i) => page.drawText(line,{x:answerX,y:cursor-12*i,font:regular,size:10,color:charcoal}));
     cursor -= rowHeight;
   }
   const pages = pdf.getPages();
