@@ -209,7 +209,10 @@ export default function App() {
     ));
     setAnswers(validAnswers);
     if (resumeJourney && !migrated && validProfile(restored)) {
-      const position = restorePosition(fields.screen ?? (fields.atResults ? 'results' : 'start'), fields.questionIndex,
+      const previousSafetyOrder = ['current_ai_use','data_category','high_impact_ai_workflow','planned_ai_use','planned_use_real_data'];
+      const savedSafetyId = fields.safetyField ?? previousSafetyOrder[Number(fields.questionIndex)];
+      const restoredIndex = fields.screen === 'safety' ? Math.max(0,safetyQuestions(restored).findIndex(q => q.id === savedSafetyId)) : fields.questionIndex;
+      const position = restorePosition(fields.screen ?? (fields.atResults ? 'results' : 'start'), restoredIndex,
         coreQuestions.map(question => Boolean(validAnswers[question.id])),
         safetyQuestions(restored).map(({id, options}) => options.some(({value}) => restored[id] === value)),
         previewQuestions.length);
@@ -245,6 +248,7 @@ export default function App() {
     try {
       const hasProgress = Object.values(committedProfile).some(Boolean) || Object.keys(committedAnswers).length > 0;
       if (hasProgress) sessionStorage.setItem(STORAGE_KEY, encodeDraft({assessmentId, profile: committedProfile, answers: committedAnswers, context, probeAnswers: committedProbes, extendedAnswers,
+        safetyField: screen === 'safety' ? safetyQuestions(committedProfile)[questionIndex]?.id : undefined,
         screen: editingFromReview ? 'review' : screen, questionIndex, detailStep, atResults: screen === 'results'}));
       else sessionStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -296,10 +300,10 @@ export default function App() {
     industry: getProfileOptionLabel(INDUSTRY_OPTIONS, profile.industry),
     businessGoal: getProfileOptionLabel(businessGoalOptions, profile.businessGoal),
     current_ai_use: getSafetyContextOptionLabel('current_ai_use', profile.current_ai_use),
-    data_category: getSafetyContextOptionLabel('data_category', profile.data_category),
-    high_impact_ai_workflow: getSafetyContextOptionLabel('high_impact_ai_workflow', profile.high_impact_ai_workflow),
+    data_category: scopedSafety.some(q => q.id === 'data_category') ? getSafetyContextOptionLabel('data_category', profile.data_category) : 'Outside the stated use case',
+    high_impact_ai_workflow: scopedSafety.some(q => q.id === 'high_impact_ai_workflow') ? getSafetyContextOptionLabel('high_impact_ai_workflow', profile.high_impact_ai_workflow) : 'Outside the stated use case',
     planned_ai_use: getSafetyContextOptionLabel('planned_ai_use', profile.planned_ai_use),
-    planned_use_real_data: getSafetyContextOptionLabel('planned_use_real_data', profile.planned_use_real_data),
+    planned_use_real_data: scopedSafety.some(q => q.id === 'planned_use_real_data') ? getSafetyContextOptionLabel('planned_use_real_data', profile.planned_use_real_data) : 'Outside the stated use case',
   };
   const reportGuidance = getReportGuidance(readinessResult);
   const allCoreQuestionsAnswered = answeredCount === coreQuestions.length;
@@ -795,7 +799,7 @@ export default function App() {
           <p className="recommendation-band">{reportGuidance.bandText}</p>
         </aside>
 
-        <p className="inline-note result-privacy">Export the full PDF or review a short WhatsApp summary for Silverspark Consulting.</p>
+        <p className="inline-note result-privacy">Export the full PDF or share a short consultation brief by email or WhatsApp.</p>
         <div className="results-toolbar">
           <button type="button" className="button-secondary results-back" onClick={() => setScreen('review')}>
             <ActionIcon name="back" /> Back

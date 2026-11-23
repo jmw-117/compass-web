@@ -173,7 +173,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
             <ReadinessSignal signal={reportGuidance.signal} />
             <DecisionSummary result={readiness} rows={content.decisions} />
             <div className="report-safety">
-              <h5>Key findings</h5>
+              <h5>What this means</h5><p>{content.executiveDirection}</p>
               {readiness.formalGates.length > 0 && (
                 <ul className="report-list">
                   {readiness.formalGates.map((gate) => <li key={gate.id}>{getGateLabel(gate.id)}</li>)}

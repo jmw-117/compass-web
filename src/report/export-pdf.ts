@@ -177,6 +177,7 @@ export async function downloadReport(content: ReportContent) {
   if (reportGuidance.scoreNote) drawBlock(reportGuidance.scoreNote, regular, 10.5);
 
   iconHeading('Use-case guidance and feasibility', 'safety');
+  drawBlock(content.executiveDirection, regular, 11);
   for (const {label, value} of content.decisions) drawBlock(label + ': ' + value, bold, 11);
   for (const concern of concerns.slice(0, 2)) drawBlock(concern, regular, 11);
   iconHeading('Recommended next step', 'arrow');
@@ -282,6 +283,14 @@ export async function downloadReport(content: ReportContent) {
     promptLines.forEach((line, i) => page.drawText(line,{x:margin,y:cursor-12*i,font:bold,size:10,color:navy}));
     answerLines.forEach((line, i) => page.drawText(line,{x:answerX,y:cursor-12*i,font:regular,size:10,color:charcoal}));
     cursor -= rowHeight;
+  }
+  if (content.followUpEvidence.length) {
+    sectionHeading('Follow-up responses');
+    for (const {prompt, answer} of content.followUpEvidence) {
+      ensureSpace(53);
+      drawBlock(prompt, bold, 10);
+      drawBlock(answer, regular, 10);
+    }
   }
   const pages = pdf.getPages();
   pages.forEach((item, index) => {

@@ -36,6 +36,12 @@ export function buildReportContent({assessmentId, profile, answers, readiness}: 
   });
   const known = areas.reduce((total, area) => total + area.known, 0);
   const strengths = positiveCapabilities(readiness.dimensions).map(([id]) => getDimensionLabel(id));
+  const executiveDirection = {
+    'Hold':'Pause the affected AI use. The business can still improve the underlying workflow while the named constraint is resolved.',
+    'Review required':'Resolve the evidence gaps below before choosing a pilot. Assign one person to collect the missing evidence.',
+    'Not assessed':'No current or planned AI use was identified. Start with the recurring task behind your business goal and measure it before selecting a tool.',
+    'Eligible for controlled pilot planning':'Plan a bounded trial with a named owner, a comparison measure and a stopping condition. The readiness score describes the organisation.',
+  }[readiness.useCaseGuidance];
   const capability = strengths.length ? 'Your strongest reported practices are in ' + strengths.join(' and ') + '.' : 'No area has sufficient positive evidence to identify a strength.';
   const benefit = measuredBenefit(profile, readiness.financialEvidence);
   const method = 'Two questions per area measure practices from 0 to 4. The weighted total gives organisational readiness. Unknown answers span the full scale. A confirmed stop condition takes precedence over a high score. Unresolved safety evidence requires review. The weights and thresholds are provisional.';
@@ -69,6 +75,7 @@ export function buildReportContent({assessmentId, profile, answers, readiness}: 
     if (typeof value === 'string' && value) useContext.push({label, value: value.replaceAll('_', ' ')});
   }
   useContext.push({label: 'Budget Fit', value: getCostFitLabel(readiness.costFit)});
+  const followUpEvidence = readiness.probeEvidence.map(({prompt, answer}) => ({prompt, answer}));
   const metadata = [
     {key: 'reference', label: 'Assessment reference', value: assessmentId},
     {key: 'date', label: 'Prepared on', value: date},
@@ -78,7 +85,7 @@ export function buildReportContent({assessmentId, profile, answers, readiness}: 
   const shareText = [
     'Silverspark Compass readiness summary',
     'Reference: ' + assessmentId,
-    'Business: ' + (profile.organizationType || 'Not supplied') + (typeof profile.business_size === 'string' && profile.business_size ? ' · Team size: ' + profile.business_size.replaceAll('_',' ').replace(' plus','+') : ''),
+    'Business: ' + (profile.organizationType || 'Not supplied') + (typeof profile.business_size === 'string' && profile.business_size ? ' · Team size: ' + profile.business_size.replace(/^(\d+)_(\d+)$/, '$1–$2').replace('_plus', ' or more').replaceAll('_',' ') : ''),
     'Industry: ' + (profile.industry || 'Not supplied'),
     'Goal: ' + (profile.businessGoal || 'Not supplied'),
     reportGuidance.scoreLabel + ': ' + reportGuidance.scoreText,
@@ -89,7 +96,7 @@ export function buildReportContent({assessmentId, profile, answers, readiness}: 
   ].join('\n');
 
   return {
-    assessmentId, date, reportGuidance, areas, decisions, actions, business, useContext, metadata, evidence, shareText, capability, benefit, method,
+    assessmentId, date, reportGuidance, areas, decisions, actions, business, useContext, metadata, evidence, shareText, capability, executiveDirection, benefit, method, followUpEvidence,
     concerns: readiness.concerns,
     coverage: `${known} of ${evidence.length} core answers are known.`,
     opportunity: `${readiness.opportunity.kind}. ${readiness.opportunity.next} ${readiness.opportunity.measure}`,
