@@ -25,7 +25,7 @@ test('S6 preserves the static no-submission privacy boundary', async () => {
   assert.match(report, /hidden=\{!shareOpen\}/);
   assert.match(report, /function handleWhatsAppClick\(\)/);
   assert.match(app, /sessionStorage\.setItem\(STORAGE_KEY/);
-  assert.match(app, /Your progress is saved only in this browser/);
+  assert.match(app, /Progress stays in this tab when you refresh/);
 });
 
 test('S6 ignores local private material without hiding required product documents', () => {
