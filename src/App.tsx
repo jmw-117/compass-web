@@ -165,7 +165,9 @@ function newAssessmentId() {
   return 'SELF-' + (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)).toUpperCase();
 }
 
-export default function App() {
+export default function App({onHome}: {onHome: () => void}) {
+  const [reportCreated, setReportCreated] = useState(false);
+  const [exportedVersion, setExportedVersion] = useState('');
   const [assessmentId, setAssessmentId] = useState(newAssessmentId);
   const celebratedAssessment = useRef('');
   const [showConfetti, setShowConfetti] = useState(false);
@@ -187,6 +189,11 @@ export default function App() {
   const [legacyAvailable, setLegacyAvailable] = useState(false);
   const [draftBusy, setDraftBusy] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // A download covers only the committed answers used to produce that report.
+  const reportVersion = useMemo(() => JSON.stringify([committedProfile, committedAnswers, context, committedProbes, extendedAnswers]),
+    [committedProfile, committedAnswers, context, committedProbes, extendedAnswers]);
+  const reportExported = reportVersion === exportedVersion;
 
   function applyDraft(raw: string, resumeJourney = true) {
     const {fields,migrated} = decodeDraft(raw);
@@ -220,10 +227,16 @@ export default function App() {
       setQuestionIndex(position.index);
       if (position.screen === 'context' && typeof fields.detailStep === 'string') setDetailStep(fields.detailStep);
     }
-    setContext(fields.context && typeof fields.context === 'object' && !Array.isArray(fields.context)
-      ? fields.context as Record<string, unknown> : {});
-    setProbeAnswers(knownStrings(fields.probeAnswers));
-    setExtendedAnswers(knownStrings(fields.extendedAnswers));
+    const restoredContext = fields.context && typeof fields.context === 'object' && !Array.isArray(fields.context)
+      ? fields.context as Record<string, unknown> : {};
+    const probes = knownStrings(fields.probeAnswers);
+    const extended = knownStrings(fields.extendedAnswers);
+    setContext(restoredContext);
+    setProbeAnswers(probes);
+    setExtendedAnswers(extended);
+    setReportCreated(!migrated && (fields.reportCreated === true || fields.atResults === true || fields.screen === 'results'));
+    setExportedVersion(!migrated && fields.reportExported === true
+      ? JSON.stringify([restored, validAnswers, restoredContext, probes, extended]) : '');
   }
 
   useEffect(() => {
@@ -247,20 +260,38 @@ export default function App() {
     if (!draftLoaded) return;
     try {
       const hasProgress = Object.values(committedProfile).some(Boolean) || Object.keys(committedAnswers).length > 0;
-      if (hasProgress) sessionStorage.setItem(STORAGE_KEY, encodeDraft({assessmentId, profile: committedProfile, answers: committedAnswers, context, probeAnswers: committedProbes, extendedAnswers,
+      if (hasProgress) sessionStorage.setItem(STORAGE_KEY, encodeDraft({assessmentId, reportCreated, reportExported, profile: committedProfile, answers: committedAnswers, context, probeAnswers: committedProbes, extendedAnswers,
         safetyField: screen === 'safety' ? safetyQuestions(committedProfile)[questionIndex]?.id : undefined,
         screen: editingFromReview ? 'review' : screen, questionIndex, detailStep, atResults: screen === 'results'}));
       else sessionStorage.removeItem(STORAGE_KEY);
     } catch {
       setStorageError('This browser cannot save progress for a refresh. Keep this tab open until you export your report.');
     }
-  }, [assessmentId, committedProfile, committedAnswers, context, committedProbes, extendedAnswers, editingFromReview, screen, questionIndex, detailStep, draftLoaded]);
+  }, [assessmentId, reportCreated, reportExported, committedProfile, committedAnswers, context, committedProbes, extendedAnswers, editingFromReview, screen, questionIndex, detailStep, draftLoaded]);
 
   useEffect(() => {
     const shell = document.querySelector<HTMLElement>('.assessment-shell');
     shell?.querySelector('h2')?.focus({preventScroll: true});
     shell?.scrollIntoView({block: 'start', behavior: 'instant'});
   }, [screen, questionIndex]);
+
+  useEffect(() => {
+    const links = document.querySelectorAll<HTMLAnchorElement>('a[data-compass-home]');
+    function goHome(event: MouseEvent) {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      if (reportCreated && !reportExported && !window.confirm(
+        'Your latest report has not been exported. Returning home will clear this assessment and its answers. Return home?',
+      )) return;
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem('compass.lastCelebrated');
+      } catch { /* The in-memory assessment is cleared even when storage is unavailable. */ }
+      onHome();
+    }
+    links.forEach(link => link.addEventListener('click', goHome));
+    return () => links.forEach(link => link.removeEventListener('click', goHome));
+  }, [onHome, reportCreated, reportExported]);
 
   const answeredCount = coreQuestions.filter((question) =>
     question.options.some((option) => option.id === answers[question.id]),
@@ -631,6 +662,7 @@ export default function App() {
     }
     celebratedAssessment.current = assessmentId;
     setShowConfetti(firstVisit && !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    setReportCreated(true);
     setScreen('results');
   }
 
@@ -807,7 +839,7 @@ export default function App() {
           {allCoreQuestionsAnswered && (
             <LoadBoundary message="Compass could not open the report actions.">
               <Suspense fallback={<p role="status">Preparing report actions…</p>}>
-                <ReportModule profile={reportProfile} assessmentId={assessmentId} answers={answers} readiness={readinessResult} />
+                <ReportModule profile={reportProfile} assessmentId={assessmentId} answers={answers} readiness={readinessResult} onExported={() => setExportedVersion(reportVersion)} />
               </Suspense>
             </LoadBoundary>
           )}
