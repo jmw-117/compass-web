@@ -39,9 +39,9 @@ test('S3 keeps local draft behavior explicit and self-reported results separate 
   const app = await readFile('src/App.tsx', 'utf8');
 
   assert.match(app, /sessionStorage/);
-  assert.match(app, /Your progress is saved only in this browser/);
+  assert.match(app, /Progress stays in this tab when you refresh/);
   assert.match(app, /storageError &&/);
-  assert.doesNotMatch(app, /Draft saved locally in this browser|Clear saved draft|assessment-footer/);
+  assert.doesNotMatch(app, /Draft saved locally in this browser|Draft controls|Save Draft|assessment-footer/);
   assert.match(app, /not a validated\s+client assessment/i);
   assert.match(app, /Unknown answers widen uncertainty/);
 });

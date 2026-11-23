@@ -25,11 +25,8 @@ async function draftOperation(mode: IDBTransactionMode, operation: (store: IDBOb
   }
 }
 
-export async function saveDeviceDraft(draft: string) {
-  await draftOperation('readwrite', (store) => store.put({draft, savedAt: Date.now()}, 'current'));
-}
-
 export async function restoreDeviceDraft(): Promise<string | undefined> {
+  if (typeof indexedDB.databases === 'function' && !(await indexedDB.databases()).some(db => db.name === 'silverspark-compass')) return;
   const database = await openDraftStore();
   try {
     return await new Promise<string | undefined>((resolve,reject) => {

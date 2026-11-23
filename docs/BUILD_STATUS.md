@@ -5,7 +5,7 @@ Compass reaches 100% when the agreed product works and the merged build is runni
 | Milestone | Points | Evidence |
 | --- | ---: | --- |
 | Assessment and recommendations | 15 | Core flow, optional diagnostic, safety checks and evidence-linked actions work. |
-| Report and local drafts | 15 | Report and direct PDF download, local save, restore and deletion are implemented. |
+| Report and session recovery | 15 | Direct PDF export and same-tab recovery. Previously saved device copies support explicit resume or deletion. |
 | Silverspark WhatsApp | 10 | The user-controlled preview opens the designated business chat. |
 | Automated checks | 15 | The current release commit passes contracts, unit tests, typecheck and static build checks. |
 | Browser and PDF verification | 10 | A browser smoke test completes the flow at a narrow viewport and downloads and parses the multipage PDF. |
