@@ -13,7 +13,7 @@ import {evaluate} from './domain/evaluate';
 import {getReportGuidance} from './domain/report-guidance';
 import ReadinessSignal from './ReadinessSignal';
 import AssessmentDetails from './assessment/AssessmentDetails';
-import {clearDeviceDraft, restoreDeviceDraft, saveDeviceDraft} from './assessment/local-draft';
+import {clearDeviceDraft, restoreDeviceDraft} from './assessment/local-draft';
 
 const ReportModule = lazy(() => import('./report/ReportModule'));
 const STORAGE_KEY = 'silverspark-compass-draft-v1';
@@ -178,13 +178,13 @@ export default function App() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [editingFromReview, setEditingFromReview] = useState(false);
   const [storageError, setStorageError] = useState('');
-  const [draftStatus, setDraftStatus] = useState('');
+  const [legacyAvailable, setLegacyAvailable] = useState(false);
   const [draftBusy, setDraftBusy] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
 
   function applyDraft(raw: string) {
     const {fields,migrated} = decodeDraft(raw);
-    if (migrated) setDraftStatus('Business details restored. Answer the revised readiness questions again.');
+    if (migrated) setStorageError('Business details restored. Answer the revised readiness questions again.');
     if (typeof fields.assessmentId === 'string' && /^SELF-[A-Z0-9-]{6,48}$/.test(fields.assessmentId)) setAssessmentId(fields.assessmentId);
     function knownStrings(value: unknown) {
       if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -198,39 +198,47 @@ export default function App() {
     restored.organizationType = savedTypes[type] ?? type;
     setProfile(restored);
     const savedAnswers = knownStrings(fields.answers);
-    setAnswers(Object.fromEntries(coreQuestions.flatMap(({id, options}) =>
+    const validAnswers = Object.fromEntries(coreQuestions.flatMap(({id, options}) =>
       options.some((option) => option.id === savedAnswers[id]) ? [[id, savedAnswers[id] ?? '']] : [],
-    )));
+    ));
+    setAnswers(validAnswers);
+    if (fields.atResults === true && !migrated && Object.keys(validAnswers).length === coreQuestions.length &&
+        SAFETY_CONTEXT_QUESTIONS.every(({id, options}) => options.some(({value}) => restored[id] === value))) {
+      setScreen('results');
+    }
     setContext(fields.context && typeof fields.context === 'object' && !Array.isArray(fields.context)
       ? fields.context as Record<string, unknown> : {});
     setProbeAnswers(knownStrings(fields.probeAnswers));
     setExtendedAnswers(knownStrings(fields.extendedAnswers));
-    return migrated;
   }
 
   useEffect(() => {
+    let active = true;
     try {
-      void restoreDeviceDraft().catch(() => undefined);
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) applyDraft(raw);
+      void restoreDeviceDraft().then(saved => {
+        if (active && !raw && saved) setLegacyAvailable(true);
+      }).catch(() => undefined);
     } catch {
       try {sessionStorage.removeItem(STORAGE_KEY);} catch { /* Storage may be blocked. */ }
       setStorageError('The session draft could not be restored. You can start a new assessment.');
     } finally {
       setDraftLoaded(true);
     }
+    return () => {active = false;};
   }, []);
 
   useEffect(() => {
     if (!draftLoaded) return;
     try {
       const hasProgress = Object.values(profile).some(Boolean) || Object.keys(answers).length > 0;
-      if (hasProgress) sessionStorage.setItem(STORAGE_KEY, encodeDraft({assessmentId, profile, answers, context, probeAnswers, extendedAnswers}));
+      if (hasProgress) sessionStorage.setItem(STORAGE_KEY, encodeDraft({assessmentId, profile, answers, context, probeAnswers, extendedAnswers, atResults: screen === 'results'}));
       else sessionStorage.removeItem(STORAGE_KEY);
     } catch {
-      setStorageError('Draft storage is blocked, so you can continue in this session without saving.');
+      setStorageError('This browser cannot save progress for a refresh. Keep this tab open until you export your report.');
     }
-  }, [assessmentId, profile, answers, context, probeAnswers, extendedAnswers, draftLoaded]);
+  }, [assessmentId, profile, answers, context, probeAnswers, extendedAnswers, screen, draftLoaded]);
 
   useEffect(() => {
     const shell = document.querySelector<HTMLElement>('.assessment-shell');
@@ -261,19 +269,7 @@ export default function App() {
       }),
     [answers, profile, context, probeAnswers, extendedAnswers],
   );
-  const scoreSummary = useMemo(() => {
-    const scoredEntries = Object.entries(answers)
-      .map(([questionId, optionId]) => {
-        const question = coreQuestions.find((item) => item.id === questionId);
-        const option = question?.options.find((entry) => entry.id === optionId);
-        return {questionId, score: option?.score ?? null};
-      })
-      .filter((entry) => entry.score !== null);
-
-    return {
-      answered: scoredEntries.length,
-    };
-  }, [answers]);
+  const knownAnswers = Object.values(readinessResult.dimensions).reduce((count, area) => count + area.known, 0);
 
   const dimensionSummary = (['STR', 'PRO', 'DAT', 'TEC', 'PEO', 'GOV', 'MET'] as const).map((dimension) => {
     const metric = readinessResult.dimensions[dimension];
@@ -378,57 +374,23 @@ export default function App() {
     setScreen(isPreviewQuestion ? 'preview' : 'core');
   }
 
-  async function manageDeviceDraft(action: 'save' | 'restore' | 'clear') {
+  async function handleLegacyCopy(resume: boolean) {
     setDraftBusy(true);
     try {
-      if (action === 'save') {
-        await saveDeviceDraft(encodeDraft({assessmentId, profile, answers, context, probeAnswers, extendedAnswers}));
-        setDraftStatus('Draft saved on this device.');
-      } else if (action === 'restore') {
+      if (resume) {
         const saved = await restoreDeviceDraft();
-        if (!saved) setDraftStatus('There is no current saved draft.');
-        else if (!applyDraft(saved)) setDraftStatus('Saved draft restored to this session.');
+        if (saved) applyDraft(saved);
+        else setStorageError('The saved copy has expired or was removed.');
       } else {
-        resetSession();
         await clearDeviceDraft();
-        if (typeof BroadcastChannel === 'function') {
-          const channel = new BroadcastChannel('compass-draft-events');
-          channel.postMessage({type:'clear',assessmentId});
-          channel.close();
-        }
-        setDraftStatus('Draft cleared from this session and device.');
       }
+      setLegacyAvailable(false);
     } catch {
-      setDraftStatus('The browser could not complete the draft action.');
+      setStorageError('The saved copy could not be opened or removed. Please try again.');
     } finally {
       setDraftBusy(false);
     }
   }
-
-  function resetSession() {
-    try {sessionStorage.removeItem(STORAGE_KEY);} catch { /* Continue clearing the independent device store. */ }
-    setAssessmentId(newAssessmentId());
-    setProfile(emptyProfile);
-    setAnswers({});
-    setContext({});
-    setProbeAnswers({});
-    setExtendedAnswers({});
-    setQuestionIndex(0);
-    setEditingFromReview(false);
-    setScreen('start');
-  }
-
-  useEffect(() => {
-    if (typeof BroadcastChannel !== 'function') return;
-    const channel = new BroadcastChannel('compass-draft-events');
-    channel.onmessage = event => {
-      if (event.data?.type === 'clear' && event.data.assessmentId === assessmentId) {
-        resetSession();
-        setDraftStatus('This draft was cleared in another tab.');
-      }
-    };
-    return () => channel.close();
-  }, [assessmentId]);
 
   function renderStartScreen() {
     return (
@@ -437,6 +399,14 @@ export default function App() {
           <h2 id="assessment-title" tabIndex={-1}>Tell us about your organisation.</h2>
           <p>Tell us about your business and its goal, then answer 14 readiness questions and five safety questions for a report with practical next steps.</p>
         </div>
+
+        {legacyAvailable && !Object.values(profile).some(Boolean) && <aside aria-label="Previously saved assessment">
+          <p>You previously saved an assessment on this device.</p>
+          <div className="button-row">
+            <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void handleLegacyCopy(true)}>Resume</button>
+            <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void handleLegacyCopy(false)}>Delete copy</button>
+          </div>
+        </aside>}
 
         <form
           className="profile-form"
@@ -489,7 +459,7 @@ export default function App() {
           </label>
           <p id="goal-measure" className="inline-note" aria-live="polite">{getBusinessGoal(profile.businessGoal)?.measure ?? 'Choose the outcome you most want to improve first.'}</p>
 
-          <p className="inline-note">On a shared device, clear your draft before leaving. Your progress is saved only in this browser.</p>
+          <p className="inline-note">Progress stays in this tab when you refresh. Export your report to keep a copy.</p>
 
           {!profileComplete && (
             <p className="inline-note" aria-live="polite">
@@ -616,7 +586,7 @@ export default function App() {
             ? `${followUp} of the first five answers ${followUp === 1 ? 'needs' : 'need'} confirmation. Your report will show how this affects your readiness range.`
             : 'All five answers describe a current practice. Continue to see how your systems, people and safeguards affect your next step.'}</p>
           <p>{observation}</p>
-          <p>{remainingQuestions.length} questions remain before the final review.</p>
+          <p>Next are {remainingQuestions.length} readiness questions and {SAFETY_CONTEXT_QUESTIONS.length} safety questions.</p>
         </div>
         <div className="button-row">
           <button type="button" className="button-secondary nav-back" onClick={() => {setQuestionIndex(previewQuestions.length - 1); setScreen('preview');}}><ActionIcon name="back" /> Back</button>
@@ -671,7 +641,7 @@ export default function App() {
           <div className="summary-card">
             <h3>Evidence</h3>
             <p>{answeredCount} of {coreQuestions.length} questions answered</p>
-            <p>{scoreSummary.answered} answers describe a known practice</p>
+            <p>{knownAnswers} answers describe a known practice</p>
           </div>
         </div>
 
@@ -759,15 +729,12 @@ export default function App() {
           </div>
           <div>
             <p className="result-label">Known Answers</p>
-            <h3>{scoreSummary.answered} of {coreQuestions.length}</h3>
+            <h3>{knownAnswers} of {coreQuestions.length}</h3>
           </div>
         </div>
 
-        <MethodNote />
         <ReadinessSignal signal={reportGuidance.signal} />
         <DecisionSummary result={readinessResult} />
-        <aside className="pragmatic-recommendation"><h3>{readinessResult.opportunity.kind}</h3><p>{readinessResult.opportunity.next}</p><p>{readinessResult.opportunity.measure}</p></aside>
-
 
         <aside className="pragmatic-recommendation" aria-labelledby="practical-next-step-title">
           <p className="eyebrow">Practical Next Step</p>
@@ -777,10 +744,26 @@ export default function App() {
           <p className="recommendation-band">{reportGuidance.bandText}</p>
         </aside>
 
+        <p className="inline-note result-privacy">Export the full PDF or review a short WhatsApp summary for Silverspark Consulting.</p>
+        <div className="results-toolbar">
+          <button type="button" className="button-secondary results-back" onClick={() => setScreen('review')}>
+            <ActionIcon name="back" /> Back
+          </button>
+          {allCoreQuestionsAnswered && (
+            <Suspense fallback={<p role="status">Preparing report actions…</p>}>
+              <ReportModule profile={reportProfile} assessmentId={assessmentId} answers={answers} readiness={readinessResult} />
+            </Suspense>
+          )}
+        </div>
+
+        {readinessResult.opportunity.kind !== 'Foundation' && readinessResult.useCaseGuidance !== 'Hold' && (
+          <aside className="pragmatic-recommendation"><h3>{readinessResult.opportunity.kind}</h3><p>{readinessResult.opportunity.next}</p><p>{readinessResult.opportunity.measure}</p></aside>
+        )}
+
         <section className="area-chart" aria-labelledby="dimension-summary-title">
           <header className="area-chart-heading">
             <h3 id="dimension-summary-title">Readiness by area</h3>
-            <p>{dimensionSummary.reduce((count, area) => count + area.known, 0)} of 14 indicators answered</p>
+            <p>{knownAnswers} of 14 indicators answered</p>
           </header>
           <ul className="area-chart-rows">
             {dimensionSummary.map(area => (
@@ -800,28 +783,17 @@ export default function App() {
             <p className="area-key"><i aria-hidden="true" />Striped ranges show how unanswered indicators could change the score.</p>}
         </section>
 
+        <MethodNote />
         <div className="result-notes">
           <p>
             This summary is based on the answers recorded in this browser and is not a validated
             client assessment or certification.
           </p>
-          <p>
+          {knownAnswers < coreQuestions.length && <p>
             Unknown answers widen uncertainty and should be checked before making a decision.
-          </p>
+          </p>}
         </div>
 
-        <p className="inline-note result-privacy">Your answers stay in this browser. You choose whether to save or share your report.</p>
-
-        <div className="results-toolbar">
-          <button type="button" className="button-secondary results-back" onClick={() => setScreen('review')}>
-            <ActionIcon name="back" /> Back
-          </button>
-          {allCoreQuestionsAnswered && (
-            <Suspense fallback={<p role="status">Preparing report actions…</p>}>
-              <ReportModule profile={reportProfile} assessmentId={assessmentId} answers={answers} readiness={readinessResult} />
-            </Suspense>
-          )}
-        </div>
       </section>
     );
   }
@@ -858,16 +830,6 @@ export default function App() {
         />
       )}
       {screen === 'results' && renderResultsScreen()}
-      <details className="compass-draft-controls">
-        <summary>Draft controls</summary>
-        <p>Your progress is saved for this browser tab. You can explicitly save a copy on this device to restore later. Copies expire after 30 days. Opening Compass removes expired copies. On a shared device, clear your draft before leaving.</p>
-        <div className="button-row">
-          <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('save')}>Save Draft</button>
-          {screen === 'start' && <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('restore')}>Restore Draft</button>}
-          <button className="button-secondary" type="button" disabled={draftBusy} onClick={() => void manageDeviceDraft('clear')}>Clear draft</button>
-        </div>
-        {draftStatus && <p role="status">{draftStatus}</p>}
-      </details>
     </div>
   );
 }

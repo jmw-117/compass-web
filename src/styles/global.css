@@ -831,8 +831,7 @@ h3 {
   letter-spacing: 0.09em;
 }
 
-.assessment-panel :is(h2, summary, input, select, textarea):focus-visible,
-.compass-draft-controls summary:focus-visible {
+.assessment-panel :is(h2, summary, input, select, textarea):focus-visible {
   outline: 3px solid #3c5d87;
   outline-offset: 4px;
 }
@@ -1464,12 +1463,11 @@ h3 {
   width: 100%; padding: 0.6rem; border: 1px solid #8995a3; border-radius: 0.3rem; font: inherit; color: inherit; background: #fff;
 }
 
-.compass-draft-controls, .compass-share-preview { margin: 1rem; padding: 1rem; border: 1px solid #cbd2db; border-radius: 0.6rem; }
-.compass-draft-controls summary { cursor: pointer; font-weight: 600; }
+.compass-share-preview { margin: 1rem; padding: 1rem; border: 1px solid #cbd2db; border-radius: 0.6rem; }
 .compass-share-preview label { display: block; margin: 0.75rem 0 0.35rem; font-weight: 600; }
 
 @media print {
-  .compass-draft-controls, .compass-share-preview { display: none !important; }
+  .compass-share-preview { display: none !important; }
   @page {
     margin: 15mm;
   }
@@ -1579,7 +1577,7 @@ h3 {
   text-decoration: none;
 }
 .results-toolbar svg { flex: none; }
-.results-toolbar > :is(.compass-share-preview, .storage-error) { grid-column: 1 / -1; }
+.results-toolbar > :is(.compass-share-preview, .storage-error, .inline-note) { grid-column: 1 / -1; }
 .standalone-report {
   max-width: 58rem;
   margin: 0 auto;

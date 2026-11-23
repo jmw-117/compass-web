@@ -160,17 +160,17 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
   return (
     <>
       <div className="report-actions" role="group" aria-label="Report actions">
-        <a className="button-primary" href={previewUrl || undefined} target="_blank" rel="noopener noreferrer"
-          aria-description="Opens in a new tab" aria-disabled={!previewUrl}>
-          <ActionIcon name="preview" /> Preview Report
-        </a>
-        <button type="button" className="button-secondary" onClick={() => void handleExportReport()} disabled={exporting}>
+        <button type="button" className="button-primary" onClick={() => void handleExportReport()} disabled={exporting}>
           <ActionIcon name="export" /> {exporting ? 'Exporting…' : 'Export Report'}
         </button>
         <button type="button" className="button-secondary" aria-expanded={shareOpen} aria-controls="compass-share-preview"
           onClick={() => {setShareOpen((open) => !open); setCopyStatus('');}}>
           <ActionIcon name="send" /> Send Report
         </button>
+        <a className="button-secondary" href={previewUrl || undefined} target="_blank" rel="noopener noreferrer"
+          aria-description="Opens in a new tab" aria-disabled={!previewUrl}>
+          <ActionIcon name="preview" /> Preview Report
+        </a>
       </div>
       {pdfUrl && <p className="inline-note" role="status">Download didn’t start? <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Open PDF</a> to view or save your report.</p>}
       {exportError && <p className="storage-error" role="alert">{exportError}</p>}
@@ -248,7 +248,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
                   </li>
                 );
               })}
-              {readiness.actionIds.length === 0 && <li>No action is recommended in the current local draft.</li>}
+              {readiness.actionIds.length === 0 && <li>No action was identified from these responses.</li>}
             </ol>
           </ReportSection>
 
@@ -306,7 +306,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
                   </li>
                 ))
               ) : (
-                <li>No unknown answers were declared in this draft.</li>
+                <li>All readiness questions have known answers.</li>
               )}
             </ul>
           </ReportSection>

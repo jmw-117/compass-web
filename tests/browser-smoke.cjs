@@ -104,6 +104,7 @@ async function run(reduceMotion = false) {
       window.longButtons=[];
       window.celebrations=0;
       const scan=()=>{
+        if (document.querySelector('.compass-draft-controls')) window.sawDraftControls = true;
         for(const button of document.querySelectorAll('button,a.button-primary,a.button-secondary')){
           const copy=button.cloneNode(true);
           copy.querySelectorAll('[aria-hidden=true]').forEach(node=>node.remove());
@@ -310,7 +311,7 @@ async function run(reduceMotion = false) {
     assert.equal(await noHorizontalOverflow(),true,'Result actions overflow at 320px');
     assert.equal(await js("document.querySelector('.report-module').getClientRects().length"),0,'Report should stay off the results page');
     assert.deepEqual(await js("[...document.querySelectorAll('.results-toolbar > .results-back, .report-actions > *')].map(el=>[el.textContent.trim(),!!el.querySelector('svg[aria-hidden=true]')])"),
-      [['Back',true],['Preview Report',true],['Export Report',true],['Send Report',true]]);
+      [['Back',true],['Export Report',true],['Send Report',true],['Preview Report',true]]);
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
     await js(`window.open=(url)=>{window.testShareDestination=url;}; true`);
     await click('[aria-controls="compass-share-preview"]');
@@ -382,7 +383,6 @@ async function run(reduceMotion = false) {
     await call('Target.closeTarget',{targetId:target.targetId});
     assert.deepEqual(await js('window.longButtons'),[],'All button labels must fit within two words');
     assert.equal(await js('window.celebrations'),1,'Revisiting Results must not replay confetti');
-    const draftButton = label => until(()=>js("(()=>{const b=[...document.querySelectorAll('.compass-draft-controls button')].find(x=>x.textContent.trim()==="+JSON.stringify(label)+"); if(!b||b.disabled)return false;b.click();return true})()"),'Missing draft control '+label);
     for (const width of [768,1280,320]) {
       await call('Emulation.setDeviceMetricsOverride',{width,height:850,deviceScaleFactor:1,mobile:width<1000});
       assert.equal(await noHorizontalOverflow(),true,'Results overflow at '+width);
@@ -402,22 +402,62 @@ async function run(reduceMotion = false) {
     }
     const ax=await call('Accessibility.getFullAXTree');
     assert.ok(ax.nodes.some(n=>n.role?.value==='heading' && /readiness/i.test(n.name?.value)),'Missing accessible results heading');
-    await click('.compass-draft-controls summary');
-    await draftButton('Save Draft');
-    await until(()=>js("document.querySelector('.compass-draft-controls [role=status]')?.textContent.includes('saved')"),'Device save failed');
+    assert.equal(await js("Boolean(window.sawDraftControls)"),false,'Draft controls appeared in the journey');
+    assert.ok(await js("document.querySelector('.results-toolbar').compareDocumentPosition(document.querySelector('.area-chart')) & Node.DOCUMENT_POSITION_FOLLOWING"));
+    const key = 'silverspark-compass-draft-v1';
+    const saved = await js("JSON.parse(sessionStorage.getItem('"+key+"'))");
+    await call('Page.navigate',{url:app.href});
+    await click('#take-assessment');
+    await until(()=>js("!!document.querySelector('#results-title')"),'Could not resume completed results after refresh');
+    assert.equal(await js("JSON.parse(sessionStorage.getItem('"+key+"')).assessmentId"),saved.assessmentId);
+    assert.deepEqual(await js("JSON.parse(sessionStorage.getItem('"+key+"')).answers"),saved.answers);
+    assert.equal(await js("!!document.querySelector('.completion-confetti')"),false);
     const draftTab=await call('Target.createTarget',{url:app.href});
     const {sessionId:otherSession}=await call('Target.attachToTarget',{targetId:draftTab.targetId,flatten:true});
-    const other=async expression=>(await call('Runtime.evaluate',{expression,returnByValue:true},otherSession)).result?.value;
-    await until(()=>other("document.querySelector('#take-assessment')?.disabled===false"),'Could not open second tab');
-    await other("document.querySelector('#take-assessment').click()");
-    await until(()=>other("!!document.querySelector('.compass-draft-controls summary')"),'Missing second tab draft controls');
-    await other("document.querySelector('.compass-draft-controls summary').click()");
-    await other("[...document.querySelectorAll('button')].find(b=>b.textContent==='Restore Draft').click()");
-    await until(()=>other("document.querySelector('#profile-organisation')?.value==='sole_proprietor' && document.querySelector('#profile-goal')?.value==='cash_flow' && Object.keys(JSON.parse(sessionStorage.getItem('silverspark-compass-draft-v1') || '{}').answers || {}).length===14"),'Device restore did not preserve all answers');
-    await draftButton('Clear draft');
-    await until(()=>other("document.querySelector('#profile-organisation')?.value==='' && sessionStorage.getItem('silverspark-compass-draft-v1')===null"),'Second tab retained a cleared draft');
-    await other("[...document.querySelectorAll('button')].find(b=>b.textContent==='Restore Draft').click()");
-    await until(()=>other("document.querySelector('.compass-draft-controls [role=status]')?.textContent.includes('no current saved draft')"),'Device copy survived clear');
+    const other=async expression=>(await call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true},otherSession)).result?.value;
+    async function openProfile() {
+      await until(()=>other("document.querySelector('#take-assessment')?.disabled===false"),'Second tab did not load');
+      await other("document.querySelector('#take-assessment').click()");
+      await until(()=>other("!!document.querySelector('#profile-goal')"),'Missing profile in independent tab');
+    }
+    await openProfile();
+    assert.equal(await other("document.querySelector('#profile-goal').value"),'','Fresh tabs must start blank');
+    assert.equal(await other("!!document.querySelector('[aria-label=\"Previously saved assessment\"]')"),false);
+    // Seed the previous release's explicitly saved device record. New assessments never write one.
+    const legacy = JSON.stringify({...saved,atResults:false});
+    await js(`new Promise((resolve,reject)=>{
+      const open=indexedDB.open('silverspark-compass',1);
+      open.onupgradeneeded=()=>open.result.createObjectStore('local-drafts');
+      open.onerror=()=>reject(open.error);
+      open.onsuccess=()=>{
+        const db=open.result;
+        const tx=db.transaction('local-drafts','readwrite');
+        tx.objectStore('local-drafts').put({draft:${JSON.stringify(legacy)},savedAt:Date.now()},'current');
+        tx.oncomplete=()=>{db.close();resolve(true);};
+        tx.onerror=()=>reject(tx.error);
+      };
+    })`);
+    await call('Page.navigate',{url:app.href},otherSession);
+    await openProfile();
+    const legacyButtons = "document.querySelectorAll('aside[aria-label] button')";
+    await until(()=>other(legacyButtons+".length===2"),'Missing previously saved copy');
+    await other(legacyButtons+"[0].click()");
+    await until(()=>other("document.querySelector('#profile-goal').value==='cash_flow'"),'Explicit resume failed');
+    assert.deepEqual(await other("JSON.parse(sessionStorage.getItem('"+key+"')).answers"),saved.answers);
+    await other("sessionStorage.removeItem('"+key+"')");
+    await call('Page.navigate',{url:app.href},otherSession);
+    await openProfile();
+    await until(()=>other(legacyButtons+".length===2"),'Missing removal option');
+    await other(legacyButtons+"[1].click()");
+    await until(()=>other(legacyButtons+".length===0"),'Could not remove legacy copy');
+    assert.equal(await js(`new Promise(resolve=>{
+      const open=indexedDB.open('silverspark-compass',1);
+      open.onsuccess=()=>{
+        const db=open.result;
+        const request=db.transaction('local-drafts').objectStore('local-drafts').get('current');
+        request.onsuccess=()=>{db.close();resolve(request.result===undefined);};
+      };
+    })`),true,'Device still contains deleted copy');
     await call('Target.closeTarget',{targetId:draftTab.targetId});
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);

@@ -39,3 +39,14 @@ The snapshot leads from the score or range to a labeled readiness signal, safety
 | Static delivery | Relative base for project Pages, lazy assessment and report chunks, system fonts, no external requests during the tested journey, SHA-pinned deployment and live checks. |
 
 The audit applies [Chrome’s form guidance](https://github.com/GoogleChrome/modern-web-guidance/blob/main/skills/modern-web-guidance/guides/forms/forms.md), [Chrome’s accessibility guidance](https://github.com/GoogleChrome/modern-web-guidance-src/blob/main/guides/accessibility/accessibility/guide.md), [Chrome’s HTML guidance](https://github.com/GoogleChrome/modern-web-guidance/blob/main/skills/modern-web-guidance/guides/html/html.md) and [WCAG 2.2 text resize guidance](https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html). The evidence consists of source inspection and the checks in `tests/browser-smoke.cjs`. Broader assistive-technology testing, formal accessibility certification and validation with prospective clients require separate evidence.
+
+## Journey review · 23 November 2026
+
+| Observed friction | Change | Regression evidence |
+| --- | --- | --- |
+| The five-question checkpoint understated the remaining work. | Show the remaining readiness and safety question counts. | Counts come from the same question collections as the wizard. |
+| Device draft controls repeated beneath every screen. | Retain same-tab refresh recovery. Offer resume or deletion only for an existing device copy on an empty profile. | Browser tests complete the wizard, revisit Results, open an independent tab, and exercise legacy resume and deletion. |
+| Report actions followed the chart and caveats. Preview was the primary action. | Place Export Report first alongside Send Report and Preview Report, after the first recommended action. Explain PDF export and voluntary sharing at the point of choice. | The browser suite checks order, PDF download and fallback, separate preview, exact message and explicit WhatsApp confirmation. |
+| Generic opportunities and repeated uncertainty notes competed with the first action. | Display specific opportunities after the toolbar. Keep detailed measurement below the chart and show uncertainty guidance for incomplete evidence. | The existing evaluator supplies the known-answer count for the summary and chart. |
+
+The review covers the web journey and its test fixtures. Field observation with business owners and physical-device screen-reader testing are still pending.
