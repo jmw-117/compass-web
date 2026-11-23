@@ -199,36 +199,77 @@ export async function downloadReport(content: ReportContent) {
   });
   cursor=chartY-Math.ceil(areas.length/2)*29;
   if (areas.some(area => area.upper > area.lower)) drawBlock('Silver extensions show uncertainty from unknown practices.', regular, 9);
-  ensureSpace(200);
-  sectionHeading('Priority actions');
-  if (!content.actions.length) drawBlock(content.noActions, regular, 10);
-  for (const {title, paragraphs} of content.actions) {
-    const height = [title,...paragraphs].reduce((sum,p) => sum + wrap(encode(p),contentWidth,regular,10).length * 15 + 6,0);
-    ensureSpace(Math.min(height,pageHeight-156));
-    drawBlock(title, bold, 11, true);
-    paragraphs.forEach(p => drawBlock(p, regular, 10));
+  function openChapter(title: string) {
+    page = addPage();
+    cursor = pageHeight - 111;
+    drawBlock(title, bold, 26, true);
+    cursor -= 9;
   }
 
-  page = addPage();
-  cursor = pageHeight - 102;
-  sectionHeading('Supporting evidence');
-  drawBlock(content.metadata.map(({label, value}) => label + ': ' + value).join('  |  '), regular, 9);
-  drawBlock(content.business.map(({label, value}) => label + ': ' + value).join('  |  '), regular, 10);
-  if (concerns.length > 2) {
-    drawBlock('Other findings to review', bold, 12, true);
-    concerns.slice(2).forEach(concern => drawBlock(concern, regular, 10));
+  openChapter('Priority actions');
+  if (!content.actions.length) drawBlock(content.noActions, regular, 10);
+  for (const [index, action] of content.actions.entries()) {
+    const titleSize = 15;
+    const titleLines = wrap(encode(action.title), contentWidth - 82, bold, titleSize);
+    const openerHeight = Math.max(51, 20 + titleLines.length * 17);
+    const paragraphHeight = action.paragraphs.reduce((height, p) =>
+      height + wrap(encode(p), contentWidth, regular, 10.5).length * 15.1 + 5, 0);
+    ensureSpace(openerHeight + paragraphHeight + 15);
+    page.drawLine({start:{x:margin,y:cursor+4},end:{x:pageWidth-margin,y:cursor+4},thickness:0.8,color:silver});
+    page.drawRectangle({x:margin,y:cursor-41,width:62,height:41,color:navy});
+    page.drawSvgPath(action.illustration, {x:margin+7,y:cursor-2,scale:.75,borderWidth:1.8,borderColor:white});
+    page.drawText('PRIORITY ' + (index + 1) + '   /   ' + action.area.toUpperCase(),
+      {x:margin+75,y:cursor-10,font:bold,size:8.5,color:muted});
+    titleLines.forEach((line, i) => page.drawText(line,
+      {x:margin+75,y:cursor-29-i*17,font:bold,size:titleSize,color:navy}));
+    cursor -= openerHeight;
+    for (const [i, paragraph] of action.paragraphs.entries()) {
+      if (i === action.paragraphs.length - 1) {
+        const height = wrap(encode(paragraph),contentWidth,regular,10.5).length * 15.1;
+        page.drawRectangle({x:margin-5,y:cursor-height+9,width:contentWidth+10,height:height+3,color:pale});
+      }
+      drawBlock(paragraph, regular, 10.5);
+    }
+    cursor -= 12;
   }
-  for (const {prompt, answer} of content.evidence) {
+
+  openChapter('Supporting evidence');
+  drawBlock(content.coverage, bold, 12, true);
+  const metaText = content.metadata.map(({label, value}) => label + ': ' + value).join('  |  ');
+  const businessText = content.business.map(({label, value}) => label + ': ' + value).join('  |  ');
+  const metaHeight = wrap(encode(metaText), contentWidth, regular, 9).length * 13 +
+    wrap(encode(businessText), contentWidth, regular, 10).length * 14.3 + 12;
+  cursor -= 7;
+  page.drawRectangle({x:margin-6, y:cursor-metaHeight+10, width:contentWidth+12, height:metaHeight+4, color:pale});
+  drawBlock(metaText, regular, 9);
+  drawBlock(businessText, regular, 10);
+  cursor -= 8;
+  if (concerns.length > 2) {
+    drawBlock('Other findings to review', bold, 11, true);
+    concerns.slice(2).forEach(concern => drawBlock(concern, regular, 9.5));
+  }
+  let previousArea = '';
+  for (const {area, prompt, answer, uncertain} of content.evidence) {
     const promptWidth = contentWidth * 0.45;
     const answerX = margin + promptWidth + 16;
     const promptLines = wrap(encode(prompt), promptWidth, bold, 10);
     const answerLines = wrap(encode(answer), pageWidth - margin - answerX, regular, 10);
-    const rowHeight = Math.max(promptLines.length, answerLines.length) * 14 + 12;
-    ensureSpace(rowHeight);
-    promptLines.forEach((line, i) => page.drawText(line, {x:margin, y:cursor - 14*i, font:bold, size:10, color:navy}));
-    answerLines.forEach((line, i) => page.drawText(line, {x:answerX, y:cursor - 14*i, font:regular, size:10, color:charcoal}));
+    const rowHeight = Math.max(promptLines.length, answerLines.length) * 12.5 + 8;
+    const before = page;
+    ensureSpace(rowHeight + (area === previousArea ? 0 : 16));
+    if (previousArea !== area || page !== before) {
+      page.drawLine({start:{x:margin,y:cursor+5},end:{x:pageWidth-margin,y:cursor+5},thickness:.65,color:silver});
+      page.drawText(area.toUpperCase(),{x:margin,y:cursor-5,font:bold,size:8,color:muted});
+      cursor -= 17;
+    }
+    previousArea = area;
+    if (uncertain) {
+      page.drawRectangle({x:answerX-5,y:cursor-rowHeight+9,width:pageWidth-margin-answerX+10,height:rowHeight-2,color:pale});
+      page.drawRectangle({x:answerX-6,y:cursor-rowHeight+9,width:1.5,height:rowHeight-2,color:muted});
+    }
+    promptLines.forEach((line, i) => page.drawText(line,{x:margin,y:cursor-12.5*i,font:bold,size:10,color:navy}));
+    answerLines.forEach((line, i) => page.drawText(line,{x:answerX,y:cursor-12.5*i,font:regular,size:10,color:charcoal}));
     cursor -= rowHeight;
-    page.drawLine({start:{x:margin, y:cursor+8}, end:{x:pageWidth-margin, y:cursor+8}, thickness:0.4, color:lineColor});
   }
   const pages = pdf.getPages();
   pages.forEach((item, index) => {

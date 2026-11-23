@@ -402,14 +402,14 @@ async function run(reduceMotion = false) {
     assert.equal(await previewJs(`(()=>{
       const metadata=document.querySelector('.report-metadata');
       const appendix=metadata.closest('details');
-      return !appendix.open && appendix.querySelector('summary').textContent.includes('Provenance');
+      return !appendix.open && appendix.querySelector('summary').textContent.includes('Supporting Evidence');
     })()`),true);
     if (process.env.COMPASS_PDF_PROOF) {
       const proof = await previewJs(`(() => {
         const text = selector => [...document.querySelectorAll(selector)].map(el => el.textContent.trim());
         return {
           actions: text('.report-list.ordered li strong, .report-list.ordered li p'),
-          prompts: text('.report-answers dt'),
+          prompts: text('.report-answers .evidence-prompt'),
           answers: text('.report-answers dd'),
           decisions: [...document.querySelectorAll('.decision-summary p')].map(el => {
             const label = el.querySelector('strong').textContent;
@@ -425,6 +425,9 @@ async function run(reduceMotion = false) {
       assert.ok(proof.actions.length > 3 && proof.decisions.length === 3);
       await fs.writeFile(path.join(process.env.COMPASS_PDF_PROOF, 'preview-content.json'), JSON.stringify(proof));
     }
+    assert.equal(await previewJs("document.querySelectorAll('.action-opener svg path').length"),3);
+    assert.equal(await previewJs("document.querySelectorAll('.report-answers .evidence-area').length"),7);
+    assert.equal(await previewJs("document.querySelectorAll('.report-answers .evidence-uncertain').length"),1);
     const bounds = "Array.from(document.querySelectorAll(SELECTOR), row => [row.querySelector('.area-known').style.width,row.querySelector('.area-range')?.style.left,row.querySelector('.area-range')?.style.width])";
     const resultBounds = await js(bounds.replace('SELECTOR', "'.area-chart-row'"));
     const previewBounds = await previewJs(bounds.replace('SELECTOR', "'.report-dimension-item'"));

@@ -1692,3 +1692,25 @@ h3 {
 .decision-summary p,.decision-summary ul {margin:0}.decision-summary ul {grid-column:1/-1;padding-inline-start:1.25rem}.decision-summary strong {color:#0e1828}
 
 .landing-guide {max-width:54rem;margin:1.5rem auto;padding:0 1.25rem;color:#172336}.landing-guide details {padding:1rem 0;border-top:1px solid #cbd2db}.landing-guide summary {cursor:pointer;font-weight:650}.landing-guide a {color:#263c58}body:has(.hero--assessment-active) .landing-guide {display:none}
+
+.report-module .editorial-actions { list-style: none; padding: 0; margin: 0; }
+.editorial-actions > li { padding: 1.25rem 0; border-top: 1px solid #b7c2cc; }
+.action-opener { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); align-items: center; gap: 1rem; margin-bottom: .8rem; }
+.action-opener svg { box-sizing: border-box; width: 100%; padding: .5rem; background: #17283b; border-radius: .45rem; }
+.action-opener path { fill: none; stroke: #e3e9ee; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.action-byline, .evidence-area { display: block; color: #475868; font-size: .78rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.action-opener strong { display: block; margin-top: .2rem; font: 600 clamp(1.12rem,2.2vw,1.55rem)/1.2 Helvetica,Arial,sans-serif; color: #0e1828; }
+.editorial-actions p:first-of-type { font-size: .925rem; color: #435362; }
+.editorial-actions p:last-of-type { padding: .65rem .9rem; background: #eff3f6; border-inline-start: 2px solid #778b9c; }
+.report-module .report-metadata { grid-template-columns: repeat(auto-fit,minmax(min(100%,13rem),1fr)); padding: 1rem; background: #f1f4f6; }
+.report-module .report-metadata > div { min-width: 0; border: 0; }
+.report-module .report-answers { margin: 0; }
+.report-module .report-answers > div { display: grid; grid-template-columns: 1fr 1.15fr; gap: 1rem; padding: .85rem .7rem; border-top: 1px solid #cad2d8; }
+.report-answers dt { color: #182737; font-weight: 600; }
+.report-answers dd { align-self: end; margin: 0; color: #344556; }
+.evidence-area { margin-bottom: .25rem; }
+.evidence-uncertain { background: #eef2f5; border-inline-start: 3px solid #64798a; }
+@media (max-width: 38rem) {
+  .report-module .report-answers > div { grid-template-columns: minmax(0,1fr); gap: .35rem; }
+  .action-opener { grid-template-columns: 3.25rem minmax(0,1fr); gap: .7rem; }
+}

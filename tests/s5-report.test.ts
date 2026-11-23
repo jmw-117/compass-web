@@ -61,7 +61,7 @@ test('S5 builds a report contract with the mandatory report sections and volunta
     'Positive Capabilities',
     'Priority Actions',
     'Budget And Capacity Fit',
-    'Appendix Answers And Provenance',
+    'Supporting Evidence',
   ]) {
     assert.ok(report.includes(title), `Missing readable report section title: ${title}`);
   }
