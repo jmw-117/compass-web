@@ -112,3 +112,9 @@ The profile offers eight business outcomes with a suggested measure for each. Pr
 ## Results flow revision · 23 November 2026
 
 21/23 backlog items verified, 2 remaining. [PR #17](https://github.com/jmw-117/compass-web/pull/17) tracks implementation, merge and release checks for the revised flow. Original backlog coverage is unchanged. Physical-device assistive technology checks and independent field validation remain open.
+
+[PR #17](https://github.com/jmw-117/compass-web/pull/17) deployed as `aff9f78`. [Live release verification](https://github.com/jmw-117/compass-web/actions/runs/45158738747) passed.
+
+### Whole-application audit
+
+[PR #18](https://github.com/jmw-117/compass-web/pull/18) follows up on items 14–18 and 20. It adds direct review corrections, shared dimension presentation, tab checkpoints and loading recovery. The [audit](ASSESSMENT_UX_AUDIT.md) lists coverage and outstanding priorities. **21/23 verified, 2 remaining.**

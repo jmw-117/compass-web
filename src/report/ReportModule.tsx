@@ -1,4 +1,6 @@
 import {nairobiDate} from './report-date';
+import {dimensionRows, getDimensionLabel} from '../domain/dimension-display';
+import DimensionBar from '../assessment/DimensionBar';
 import DecisionSummary from '../assessment/DecisionSummary';
 import ActionIcon from './ActionIcon';
 import {createPreviewUrl} from './preview-document';
@@ -38,16 +40,6 @@ type ReportModuleProps = {
 
 const SILVERSPARK_WHATSAPP_NUMBER = '254762057288';
 
-const DIMENSION_LABELS: Record<string, string> = {
-  STR: 'Strategy',
-  PRO: 'Processes',
-  DAT: 'Data',
-  TEC: 'Technology',
-  PEO: 'People',
-  GOV: 'Governance',
-  MET: 'Measurement',
-};
-
 type ReportSectionProps = {
   id: string;
   title: string;
@@ -73,6 +65,7 @@ function ReportSection({id, title, expanded, onToggle, children}: ReportSectionP
 }
 
 export default function ReportModule({assessmentId, profile, answers, readiness}: ReportModuleProps) {
+  const areas = dimensionRows(readiness.dimensions);
   const strengths = positiveCapabilities(readiness.dimensions);
   const [openSections, setOpenSections] = useState(() => new Set(['executive-summary']));
   const [exporting, setExporting] = useState(false);
@@ -277,22 +270,16 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
 
           <ReportSection id="seven-dimension-results" title="Seven Dimension Results" expanded={openSections.has('seven-dimension-results')} onToggle={toggleSection}>
             <div className="dimension-report-list">
-              {Object.entries(readiness.dimensions).map(([dimensionId, metric]) => (
-                <div key={dimensionId} data-dimension={dimensionId} className="report-dimension-item">
+              {areas.map(area => (
+                <div key={area.dimension} data-dimension={area.dimension} className="report-dimension-item">
                   <div className="report-dimension-header">
-                    <span>{DIMENSION_LABELS[dimensionId] ?? dimensionId}</span>
-                    <span>
-                      {metric.lower === metric.upper
-                        ? `${Math.round((metric.lower / 4) * 100)}%`
-                        : `${Math.floor((metric.lower / 4) * 100)} to ${Math.ceil((metric.upper / 4) * 100)}% possible`}
-                      {' · '}{metric.known} of 2 indicators answered
-                    </span>
+                    <span>{area.label}</span>
+                    <span>{area.scoreText}{area.known < 2 && ' possible'} · {area.known} of 2 indicators answered</span>
                   </div>
-                  <div className="dimension-track" aria-hidden="true">
-                    <span style={{width: `${Math.min(100, (metric.upper / 4) * 100)}%`}} />
-                  </div>
+                  <DimensionBar lower={area.lower} upper={area.upper} />
                 </div>
               ))}
+              {areas.some(area => area.upper > area.lower) && <p className="area-key"><i aria-hidden="true" />Striped ranges show uncertainty from unknown answers.</p>}
             </div>
           </ReportSection>
 
@@ -316,7 +303,7 @@ export default function ReportModule({assessmentId, profile, answers, readiness}
               {strengths.length === 0 ? (
                 <li>No confirmed strength emerged from the practices assessed.</li>
               ) : strengths.map(([id, result]) => (
-                  <li key={id}>{DIMENSION_LABELS[id] ?? id} reported {Math.round(result.lower * 25)} out of 100.</li>
+                  <li key={id}>{getDimensionLabel(id)} reported {Math.round(result.lower * 25)} out of 100.</li>
                 ))}
             </ul>
           </ReportSection>

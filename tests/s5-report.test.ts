@@ -47,7 +47,7 @@ test('S5 builds a report contract with the mandatory report sections and volunta
   assert.match(app, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
   assert.match(report, /<ReadinessSignal signal=\{reportGuidance\.signal\} \/>/);
   assert.match(signal, /This signal is not approval to deploy AI/);
-  assert.match(report, /to \$\{Math\.ceil\(\(metric\.upper \/ 4\) \* 100\)\}% possible/);
+  assert.match(report, /<DimensionBar lower=\{area\.lower\} upper=\{area\.upper\}/);
   assert.doesNotMatch(report, /\[\$\{metric\.lower\}, \$\{metric\.upper\}\]/);
   for (const title of [
     'Business Snapshot',
