@@ -24,6 +24,7 @@ def verify_in_order(values, text):
         start = position + len(needle)
 
 full = extracted()
+assert "+254" not in full, "A Kenyan phone number appeared in the exported client report"
 for field in ("actions", "decisions", "metadata", "concerns"):
     verify_in_order(expected[field], full)
 verify_in_order([expected["firstAction"]], full)

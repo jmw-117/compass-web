@@ -61,7 +61,7 @@ function drawJustifiedLine(page: PDFPage, line: string, y: number, font: PDFFont
   });
 }
 
-export async function downloadReport(content: ReportContent) {
+export async function createReportFile(content: ReportContent) {
   const {reportGuidance, concerns, areas} = content;
   const {signal} = reportGuidance;
   const pdf = await PDFDocument.create();
@@ -295,16 +295,21 @@ export async function downloadReport(content: ReportContent) {
   const pages = pdf.getPages();
   pages.forEach((item, index) => {
     item.drawLine({start: {x: margin, y: 39}, end: {x: pageWidth - margin, y: 39}, thickness: 0.8, color: lineColor});
-    item.drawText('Silverspark Consulting   |   sspark.net   |   +254 762 057 288', {x: margin, y: 24, size: 8.5, font: regular, color: muted});
+    item.drawText('Silverspark Consulting   |   sspark.net', {x: margin, y: 24, size: 8.5, font: regular, color: muted});
     const counter = `${index + 1} / ${pages.length}`;
     item.drawText(counter, {x: pageWidth - margin - regular.widthOfTextAtSize(counter, 8.5), y: 24, size: 8.5, font: regular, color: muted});
   });
 
   const bytes = new Uint8Array(await pdf.save());
-  const url = URL.createObjectURL(new Blob([bytes], {type: 'application/pdf'}));
+  return new File([bytes], `Silverspark_Compass_AI_Readiness_Report_${content.date}.pdf`, {type: 'application/pdf'});
+}
+
+export async function downloadReport(content: ReportContent) {
+  const file = await createReportFile(content);
+  const url = URL.createObjectURL(file);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `Silverspark_Compass_AI_Readiness_Report_${content.date}.pdf`;
+  link.download = file.name;
   document.body.append(link);
   try {
     link.click();

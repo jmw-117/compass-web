@@ -140,3 +140,7 @@ Baseline `af94793` (PR #20). This revision covers feedback 1–10. Original item
 [PR #21](https://github.com/jmw-117/compass-web/pull/21), initial implementation `1411f4a`: [quality run](https://github.com/jmw-117/compass-web/actions/runs/45211961262) passed **54 tests**, both browser journeys and four-page PDF rendering. The reference fixture matched the preview for 16 action lines and all 14 core responses. The final revision also prints follow-up evidence and preserves the identity of the safety question when restoring older sessions. The PR timeline records the release SHA and Pages verification.
 
 Application release `4528b25` ([PR #21](https://github.com/jmw-117/compass-web/pull/21)) passed [GitHub Pages deployment and live journey verification](https://github.com/jmw-117/compass-web/actions/runs/45212995028/attempts/2). The first deployment succeeded but the live runner timed out starting Chrome. The rerun passed the unchanged browser assertions. Report contract 1.4.0. **21/23 verified, 2 remaining (91.3%).**
+
+### Portfolio sharing update
+
+Item 17 now supports sending the complete PDF to the respondent’s own WhatsApp chat. The browser prepares a PDF attachment for the native share menu, with an export-and-attach route when file sharing is unavailable. The WhatsApp link has no selected recipient or assessment details. The report footer lists the consulting website. **21/23 verified, 2 remaining.**
