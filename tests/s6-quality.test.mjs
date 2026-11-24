@@ -20,10 +20,9 @@ test('S6 preserves the static no-submission privacy boundary', async () => {
   const activeClientCode = await readClientSource();
 
   assert.doesNotMatch(activeClientCode, /\bfetch\s*\(|XMLHttpRequest|sendBeacon|new WebSocket/);
-  assert.match(report, /SILVERSPARK_WHATSAPP_NUMBER = '254762057288'/);
-  assert.match(report, /window\.open\('https:\/\/wa\.me\/' \+ SILVERSPARK_WHATSAPP_NUMBER \+ '\?text=' \+ message/);
+  assert.doesNotMatch(activeClientCode, /wa\.me\/\d|href="tel:|\+254[\s-]*\d/);
+  assert.match(report, /navigator\.share\(\{files: \[attachment\]\}\)/);
   assert.match(report, /hidden=\{!shareOpen\}/);
-  assert.match(report, /function handleWhatsAppClick\(\)/);
   assert.match(app, /sessionStorage\.setItem\(STORAGE_KEY/);
   assert.match(app, /Progress stays in this tab when you refresh/);
 });

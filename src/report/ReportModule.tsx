@@ -14,7 +14,7 @@ import {
 } from '../domain/report-guidance';
 import ReadinessSignal from '../ReadinessSignal';
 
-const SILVERSPARK_WHATSAPP_NUMBER = '254762057288';
+
 
 type ReportSectionProps = {
   id: string;
@@ -48,6 +48,10 @@ export default function ReportModule({assessmentId, profile, answers, readiness,
   const [pdfUrl, setPdfUrl] = useState('');
   useEffect(() => () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl); }, [pdfUrl]);
   const [shareOpen, setShareOpen] = useState(false);
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [shareMode, setShareMode] = useState<'preparing' | 'native' | 'manual'>('preparing');
+  const [shareStatus, setShareStatus] = useState('');
+  const [sharing, setSharing] = useState(false);
   const [copyStatus, setCopyStatus] = useState('');
   const summaryRef = useRef<HTMLTextAreaElement>(null);
   const [reportDate] = useState(() => nairobiDate());
@@ -91,15 +95,51 @@ export default function ReportModule({assessmentId, profile, answers, readiness,
         onExported();
       } else URL.revokeObjectURL(url);
     } catch {
-      setExportError('The PDF could not be downloaded. Open Preview Report and use your browser’s Print command, or use Copy summary under Send Report.');
+      setExportError('The PDF could not be downloaded. Open Preview Report and use your browser’s Print command, or use Copy summary in the consultation options.');
     } finally {
       setExporting(false);
     }
   }
 
-  function handleWhatsAppClick() {
-    const message = encodeURIComponent(shareText);
-    window.open('https://wa.me/' + SILVERSPARK_WHATSAPP_NUMBER + '?text=' + message, '_blank', 'noopener,noreferrer');
+  useEffect(() => {
+    if (!shareOpen) return;
+    let current = true;
+    setShareStatus('');
+    setAttachment(null);
+    setShareMode('preparing');
+    async function prepare() {
+      try {
+        if (!navigator.share || !navigator.canShare) {
+          if (current) setShareMode('manual');
+          return;
+        }
+        const {createReportFile} = await import('./export-pdf');
+        const file = await createReportFile(content);
+        if (!current) return;
+        if (navigator.canShare({files: [file]})) {
+          setAttachment(file);
+          setShareMode('native');
+        } else setShareMode('manual');
+      } catch {
+        if (current) setShareMode('manual');
+      }
+    }
+    void prepare();
+    return () => {current = false;};
+  }, [shareOpen, content]);
+
+  async function sharePdf() {
+    if (!attachment || sharing) return;
+    setSharing(true);
+    setShareStatus('');
+    try {
+      await navigator.share({files: [attachment]});
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') setShareStatus('Sharing cancelled. Your report is still here.');
+      else setShareMode('manual');
+    } finally {
+      setSharing(false);
+    }
   }
 
   async function copySummary() {
@@ -131,17 +171,32 @@ export default function ReportModule({assessmentId, profile, answers, readiness,
       {pdfUrl && <p className="inline-note" role="status">Download didn’t start? <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Open PDF</a> to view or save your report.</p>}
       {exportError && <p className="storage-error" role="alert">{exportError}</p>}
       <div className="compass-share-preview" id="compass-share-preview" hidden={!shareOpen}>
-        <p>Send Report prepares a summary. To share the complete PDF, export it and attach it yourself. WhatsApp opens with this message ready for you to send.</p>
-        <p>Silverspark can help scope the first action, agree a measure and identify any specialist review. To discuss these findings, call <a href="tel:+254762057288">+254 762 057 288</a> or visit the <a href="https://sspark.net/contact" target="_blank" rel="noopener noreferrer">project enquiry form</a>.</p>
-        <p>For email, copy the summary below and paste it into your draft. You choose what to send.</p>
-        <label htmlFor="compass-share-text">Message preview</label>
-        <textarea id="compass-share-text" ref={summaryRef} readOnly rows={5} value={shareText} />
-        <div className="button-row">
-          <button type="button" className="button-secondary" onClick={() => void copySummary()}>Copy summary</button>
-          <a className="button-secondary" href="mailto:jmw.info@icloud.com">Email Silverspark</a>
-          <button type="button" className="button-primary" onClick={handleWhatsAppClick}>Open WhatsApp</button>
-        </div>
-        {copyStatus && <p role="status">{copyStatus}</p>}
+        <h3>Send yourself a copy</h3>
+        {shareMode === 'preparing' && <p role="status">Preparing your PDF…</p>}
+        {shareMode === 'native' && <>
+          <p>Choose <strong>Share PDF</strong>, select WhatsApp, then choose your own chat (You) and send the file.</p>
+          <button type="button" className="button-primary" disabled={sharing} onClick={() => void sharePdf()}>Share PDF</button>
+        </>}
+        {shareMode === 'native' && <p className="inline-note">If WhatsApp is missing from the share menu, use the download option below.</p>}
+        {shareStatus && <p role="status">{shareStatus}</p>}
+        {shareMode !== 'preparing' && <details open={shareMode === 'manual' || undefined}>
+          <summary>Download and attach</summary>
+          <p>Choose <strong>Export Report</strong> to save your PDF. Open WhatsApp, select your own chat (You), then attach the saved PDF as a document.</p>
+          <div className="button-row">
+            <button type="button" className="button-secondary" disabled={exporting} onClick={() => void handleExportReport()}>Export Report</button>
+            <a className="button-secondary" href="https://wa.me/?text=My%20Compass%20report" target="_blank" rel="noopener noreferrer">Open WhatsApp</a>
+          </div>
+        </details>}
+        <details><summary>Consultation options</summary>
+          <p>To discuss your first action with Silverspark, copy the brief into an email draft or use the <a href="https://sspark.net/contact" target="_blank" rel="noopener noreferrer">project enquiry form</a>.</p>
+          <label htmlFor="compass-share-text">Message preview</label>
+          <textarea id="compass-share-text" ref={summaryRef} readOnly rows={5} value={shareText} />
+          <div className="button-row">
+            <button type="button" className="button-secondary" onClick={() => void copySummary()}>Copy summary</button>
+            <a className="button-secondary" href="mailto:jmw.info@icloud.com">Email Silverspark</a>
+          </div>
+          {copyStatus && <p role="status">{copyStatus}</p>}
+        </details>
       </div>
 
       <div hidden>

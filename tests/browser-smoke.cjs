@@ -354,16 +354,31 @@ async function run(reduceMotion = false) {
     assert.deepEqual(await js("[...document.querySelectorAll('.results-toolbar > .results-back, .report-actions > *')].map(el=>[el.textContent.trim(),!!el.querySelector('svg[aria-hidden=true]')])"),
       [['Back',true],['Export Report',true],['Send Report',true],['Preview Report',true]]);
     assert.equal(await js("document.querySelector('#compass-share-preview').hidden"),true);
-    await js(`window.open=(url)=>{window.testShareDestination=url;}; true`);
+    await js(`window.open=(url)=>{window.testShareDestination=url;};
+      Object.defineProperty(navigator,'canShare',{configurable:true,value:({files})=>files?.[0]?.type==='application/pdf'});
+      Object.defineProperty(navigator,'share',{configurable:true,value:async({files})=>{
+        window.sharedFile={name:files[0].name,header:await files[0].slice(0,5).text()};
+        if(window.cancelShare)throw new DOMException('Cancelled','AbortError');
+      }});true`);
     await click('[aria-controls="compass-share-preview"]');
-    await until(()=>js("!document.querySelector('#compass-share-preview').hidden"),'Message preview did not open');
-    assert.equal(await js('window.testShareDestination===undefined'),true);
+    await until(()=>js("document.querySelector('#compass-share-preview button.button-primary')?.textContent==='Share PDF'"),'PDF attachment was not prepared');
+    assert.equal(await js('window.sharedFile===undefined && window.testShareDestination===undefined'),true);
+    await js("window.cancelShare=true");
     await click('#compass-share-preview button.button-primary');
+    await until(()=>js("document.querySelector('#compass-share-preview').innerText.includes('Sharing cancelled')"),'Cancelled share lost its recovery path');
+    await js("window.cancelShare=false");
+    await click('#compass-share-preview button.button-primary');
+    assert.equal(await js("window.sharedFile.header"),'%PDF-');
+    assert.match(await js("window.sharedFile.name"),/^Silverspark_Compass_AI_Readiness_Report_.*\.pdf$/);
+    await click('[aria-controls="compass-share-preview"]');
+    await js("Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>false})");
+    await click('[aria-controls="compass-share-preview"]');
+    await until(()=>js("!!document.querySelector('#compass-share-preview details[open]')"),'Manual attachment fallback missing');
+    const share=await js(`document.querySelector('#compass-share-preview a[href*="wa.me"]').href`);
+    assert.equal(new URL(share).pathname,'/');
+    assert.equal(new URL(share).searchParams.get('text'),'My Compass report');
+    assert.equal(await js("document.querySelector('a[href^=tel]')===null"),true);
     assert.equal(await js("document.querySelector('#compass-share-preview a[href^=mailto]').getAttribute('href')"),'mailto:jmw.info@icloud.com');
-    const share=await js('window.testShareDestination');
-    assert.equal(new URL(share).origin,'https://wa.me');
-    assert.equal(new URL(share).pathname,'/254762057288');
-    assert.equal(new URL(share).searchParams.get('text'),await js("document.querySelector('#compass-share-text').value"));
     await call('Page.setDownloadBehavior',{behavior:'deny'});
     await pressButton('Export Report');
     const recovery = await until(()=>js("document.querySelector('.inline-note a[href^=blob]')?.href"),'Missing manual PDF fallback');
@@ -578,7 +593,7 @@ async function run(reduceMotion = false) {
     await call('Target.closeTarget',{targetId:draftTab.targetId});
     assert.equal(errors.length,0,errors.join('\n'));
     assert.deepEqual([...destinations].filter(url=>new URL(url).origin!==app.origin),[]);
-    console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, direct results, optional step navigation, responsive field pairs and checkboxes, report hierarchy, text contrast, 200% results text, specialist review, exact WhatsApp preview/destination, and direct PDF download ('+bytes.length+' bytes). No external requests.');
+    console.log('PASS Chrome: keyboard focus, 320px reflow, 18px answers, contract copy, edit from review, direct results, optional step navigation, responsive field pairs and checkboxes, report hierarchy, text contrast, 200% results text, specialist review, self-sharing PDF and manual WhatsApp fallback, and direct PDF download ('+bytes.length+' bytes). No external requests.');
   } catch(error) { if(messages) console.error(messages.split('\n').slice(0,5).join('\n')); throw error; }
   finally { socket?.close(); child.kill(); preview?.kill(); }
 }

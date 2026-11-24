@@ -831,7 +831,7 @@ export default function App({onHome}: {onHome: () => void}) {
           <p className="recommendation-band">{reportGuidance.bandText}</p>
         </aside>
 
-        <p className="inline-note result-privacy">Export the full PDF or share a short consultation brief by email or WhatsApp.</p>
+        <p className="inline-note result-privacy">Save your PDF or send a copy to your own WhatsApp chat.</p>
         <div className="results-toolbar">
           <button type="button" className="button-secondary results-back" onClick={() => setScreen('review')}>
             <ActionIcon name="back" /> Back

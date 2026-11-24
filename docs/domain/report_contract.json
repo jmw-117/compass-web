@@ -56,7 +56,7 @@
     "measured_benefit": "Report hours separately from documented cash changes. Annual return is a scenario conditional on recurring net cash and a positive setup cost."
   },
   "client_handoff": {
-    "method": "User-approved WhatsApp summary, copied brief, email draft or project enquiry",
+    "method": "User-selected PDF attachment to the respondent’s own WhatsApp chat, or export and attach manually. A consultation brief can be copied separately.",
     "prohibited": [
       "automatic send",
       "embedded report in querystring",
